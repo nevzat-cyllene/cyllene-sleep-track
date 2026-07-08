@@ -46,7 +46,7 @@ export function SleepScoreRing({ score, size = 160, className }: SleepScoreRingP
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-4xl font-bold tabular-nums">{score}</span>
+        <span className="text-5xl font-semibold tracking-tight tabular-nums">{score}</span>
         <span className="text-xs uppercase tracking-widest text-muted-foreground">
           Uyku Skoru
         </span>

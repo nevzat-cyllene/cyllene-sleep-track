@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { calculateSleepScore, countEventsByType } from "@/lib/sleep-utils";
 import type { LocalSleepSession } from "@/types";
+import { saveSession } from "./session-store";
 
 export async function syncSessionToSupabase(
   session: LocalSleepSession,
@@ -48,6 +49,7 @@ export async function syncSessionToSupabase(
 
   if (session.events.length > 0) {
     const events = session.events.map((event) => ({
+      id: event.id,
       session_id: insertedSession.id,
       occurred_at: new Date(event.timestamp).toISOString(),
       duration_ms: event.durationMs,
@@ -61,6 +63,9 @@ export async function syncSessionToSupabase(
       console.error("Events sync error:", eventsError);
     }
   }
+
+  session.synced = true;
+  await saveSession(session);
 
   return insertedSession.id;
 }

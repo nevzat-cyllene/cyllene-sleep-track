@@ -22,16 +22,20 @@ export function RecordPageClient() {
   }, []);
 
   const onSessionComplete = async (session: LocalSleepSession) => {
-    if (!userId) {
-      router.push("/dashboard");
-      return;
-    }
     setSyncing(true);
     try {
-      await syncSessionToSupabase(session, userId);
+      const supabase = createClient();
+      const { data } = await supabase.auth.getUser();
+      const uid = userId ?? data.user?.id;
+
+      if (uid) {
+        const remoteId = await syncSessionToSupabase(session, uid);
+        router.push(remoteId ? `/dashboard?session=${remoteId}` : "/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
     } finally {
       setSyncing(false);
-      router.push("/dashboard");
     }
   };
 
@@ -40,19 +44,24 @@ export function RecordPageClient() {
     currentDb,
     elapsedMs,
     eventCount,
+    detectedEvents,
     error,
     wakeLockActive,
+    wakeLockMethod,
     startRecording,
     stopRecording,
   } = useRecording({ userId, onSessionComplete });
 
-  if (status === "recording") {
+  if (status === "recording" || status === "stopping") {
     return (
       <SleepModeScreen
         elapsedMs={elapsedMs}
         currentDb={currentDb}
         eventCount={eventCount}
+        detectedEvents={detectedEvents}
         wakeLockActive={wakeLockActive}
+        wakeLockMethod={wakeLockMethod}
+        syncing={syncing || status === "stopping"}
         onStop={() => void stopRecording()}
       />
     );

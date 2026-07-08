@@ -54,14 +54,14 @@ export function NightTimelineChart({
                 <stop offset="100%" stopColor="oklch(0.68 0.2 285)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.3 0.05 265 / 40%)" />
-            <XAxis dataKey="time" stroke="oklch(0.6 0.04 265)" fontSize={12} />
-            <YAxis stroke="oklch(0.6 0.04 265)" fontSize={12} domain={[20, 80]} />
+            <CartesianGrid strokeDasharray="3 3" stroke="oklch(1 0 0 / 6%)" />
+            <XAxis dataKey="time" stroke="oklch(0.7 0.04 265)" fontSize={12} />
+            <YAxis stroke="oklch(0.7 0.04 265)" fontSize={12} domain={[20, 80]} />
             <Tooltip
               contentStyle={{
-                background: "oklch(0.16 0.04 265)",
-                border: "1px solid oklch(0.3 0.05 265 / 40%)",
-                borderRadius: "8px",
+                background: "oklch(0.16 0.04 265 / 95%)",
+                border: "1px solid oklch(1 0 0 / 10%)",
+                borderRadius: "12px",
               }}
             />
             <Area
@@ -87,14 +87,14 @@ export function NightTimelineChart({
               <stop offset="100%" stopColor="oklch(0.68 0.2 285)" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.3 0.05 265 / 40%)" />
-          <XAxis dataKey="time" stroke="oklch(0.6 0.04 265)" fontSize={12} />
-          <YAxis stroke="oklch(0.6 0.04 265)" fontSize={12} domain={[20, 80]} />
+          <CartesianGrid strokeDasharray="3 3" stroke="oklch(1 0 0 / 6%)" />
+          <XAxis dataKey="time" stroke="oklch(0.7 0.04 265)" fontSize={12} />
+          <YAxis stroke="oklch(0.7 0.04 265)" fontSize={12} domain={[20, 80]} />
           <Tooltip
             contentStyle={{
-              background: "oklch(0.16 0.04 265)",
-              border: "1px solid oklch(0.3 0.05 265 / 40%)",
-              borderRadius: "8px",
+              background: "oklch(0.16 0.04 265 / 95%)",
+              border: "1px solid oklch(1 0 0 / 10%)",
+              borderRadius: "12px",
             }}
             formatter={(value, _name, props) => [
               `${value} dB (${props.payload.type})`,

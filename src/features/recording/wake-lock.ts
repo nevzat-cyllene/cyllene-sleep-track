@@ -2,12 +2,24 @@ type WakeLockSentinel = {
   release: () => Promise<void>;
 };
 
+export type WakeLockMethod = "api" | "fallback" | "none";
+
+export interface WakeLockResult {
+  active: boolean;
+  method: WakeLockMethod;
+}
+
 export class WakeLockManager {
   private wakeLock: WakeLockSentinel | null = null;
   private noSleepVideo: HTMLVideoElement | null = null;
   private active = false;
+  private method: WakeLockMethod = "none";
 
-  async acquire(): Promise<boolean> {
+  getState(): WakeLockResult {
+    return { active: this.active && this.method !== "none", method: this.method };
+  }
+
+  async acquire(): Promise<WakeLockResult> {
     this.active = true;
 
     if ("wakeLock" in navigator) {
@@ -21,13 +33,16 @@ export class WakeLockManager {
         this.wakeLock &&
           document.addEventListener("visibilitychange", this.onVisibilityChange);
 
-        return true;
+        this.method = "api";
+        return { active: true, method: "api" };
       } catch {
         // Fall through to video fallback
       }
     }
 
-    return this.acquireVideoFallback();
+    const fallbackOk = this.acquireVideoFallback();
+    this.method = fallbackOk ? "fallback" : "none";
+    return { active: fallbackOk, method: this.method };
   }
 
   private onVisibilityChange = async () => {
@@ -67,6 +82,7 @@ export class WakeLockManager {
 
   async release(): Promise<void> {
     this.active = false;
+    this.method = "none";
     document.removeEventListener("visibilitychange", this.onVisibilityChange);
 
     if (this.wakeLock) {

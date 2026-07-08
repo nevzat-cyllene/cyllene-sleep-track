@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Activity, Clock, Moon, Volume2, Wind } from "lucide-react";
 import { SleepScoreRing } from "./components/sleep-score-ring";
 import { NightTimelineChart } from "./components/night-timeline-chart";
 import { StatCard } from "./components/stat-card";
 import { SessionHistory } from "./components/session-history";
+import { DetectedEventsList } from "./components/detected-events-list";
 import { PremiumPlaceholder } from "@/features/billing/premium-placeholder";
 import { fetchSessionEvents, fetchUserSessions } from "@/features/recording/sync-session";
 import { createClient } from "@/lib/supabase/client";
 import { formatDate, formatTime } from "@/lib/sleep-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import type { SleepEvent, SleepSession } from "@/types";
 
 interface DashboardClientProps {
@@ -80,20 +83,30 @@ export function DashboardClient({
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Sabah Raporu</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-semibold tracking-tight">Sabah Raporu</h1>
+            <span className="hidden sm:inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-muted-foreground">
+              {formatDate(activeSession.started_at)}
+            </span>
+          </div>
           <p className="text-muted-foreground">{formatDate(activeSession.started_at)}</p>
         </div>
-        <p className="text-sm text-muted-foreground">
-          {formatTime(activeSession.started_at)} —{" "}
-          {activeSession.ended_at ? formatTime(activeSession.ended_at) : "devam ediyor"}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="hidden text-sm text-muted-foreground sm:block">
+            {formatTime(activeSession.started_at)} —{" "}
+            {activeSession.ended_at ? formatTime(activeSession.ended_at) : "devam ediyor"}
+          </p>
+          <Button size="sm" className="rounded-xl" render={<Link href="/record" />}>
+            Bu gece kayda başla
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[auto_1fr]">
-        <Card className="glass flex items-center justify-center border-white/5 p-6">
-          <SleepScoreRing score={activeSession.sleep_score ?? 0} size={180} />
+        <Card className="glass flex items-center justify-center border-white/10 p-6 shadow-soft">
+          <SleepScoreRing score={activeSession.sleep_score ?? 0} size={190} />
         </Card>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -121,7 +134,28 @@ export function DashboardClient({
         </div>
       </div>
 
-      <Card className="glass border-white/5">
+      <Card className="glass border-white/10 shadow-soft">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Wind className="h-5 w-5 text-primary" />
+            Tespit Edilen Olaylar
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loadingEvents ? (
+            <div className="flex h-32 items-center justify-center text-muted-foreground">
+              Yükleniyor...
+            </div>
+          ) : (
+            <DetectedEventsList
+              events={events}
+              emptyMessage="Bu gece için tespit edilen olay yok."
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="glass border-white/10 shadow-soft">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Moon className="h-5 w-5 text-primary" />

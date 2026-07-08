@@ -12,7 +12,7 @@ export const DEFAULT_DETECTOR_CONFIG: EventDetectorConfig = {
   thresholdDb: 42,
   releaseDb: 36,
   minDurationMs: 800,
-  maxDurationMs: 8000,
+  maxDurationMs: 30000,
   silenceGapMs: 1200,
 };
 
@@ -34,7 +34,8 @@ export class EventDetector {
     samples: [],
   };
   private audioBuffer: Float32Array[] = [];
-  private readonly maxBufferSeconds = 5;
+  private readonly maxBufferSeconds = 10;
+  private readonly maxClipSeconds = 30;
   private sampleRate = 44100;
 
   constructor(config: Partial<EventDetectorConfig> = {}) {
@@ -119,7 +120,7 @@ export class EventDetector {
 
   private mergeSamples(chunks: Float32Array[]): Float32Array {
     const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
-    const merged = new Float32Array(Math.min(totalLength, this.sampleRate * 5));
+    const merged = new Float32Array(Math.min(totalLength, this.sampleRate * this.maxClipSeconds));
     let offset = 0;
     const startOffset = Math.max(0, totalLength - merged.length);
     let skipped = 0;

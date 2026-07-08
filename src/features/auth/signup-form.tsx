@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export function SignupForm() {
   const router = useRouter();
@@ -46,10 +47,15 @@ export function SignupForm() {
   };
 
   return (
-    <Card className="glass mx-auto w-full max-w-md border-white/10">
+    <Card className="glass mx-auto w-full max-w-md border-white/10 shadow-soft">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Hesap oluştur</CardTitle>
-        <CardDescription>Ücretsiz CySleep hesabınızı açın</CardDescription>
+        <div className="flex items-center justify-center pb-2">
+          <Badge variant="secondary" className="bg-white/5 text-muted-foreground">
+            CySleep · Free Plan
+          </Badge>
+        </div>
+        <CardTitle className="text-2xl tracking-tight">Hesap oluştur</CardTitle>
+        <CardDescription>Bu gece ilk kaydına başlayabilirsin.</CardDescription>
       </CardHeader>
       <CardContent>
         {success ? (

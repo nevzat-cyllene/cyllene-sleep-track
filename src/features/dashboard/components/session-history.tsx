@@ -14,7 +14,7 @@ interface SessionHistoryProps {
 export function SessionHistory({ sessions }: SessionHistoryProps) {
   if (sessions.length === 0) {
     return (
-      <Card className="glass border-white/5">
+      <Card className="glass border-white/10 shadow-soft">
         <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
           <Moon className="h-10 w-10 text-muted-foreground" />
           <p className="text-muted-foreground">Henüz kayıtlı gece yok.</p>
@@ -30,7 +30,7 @@ export function SessionHistory({ sessions }: SessionHistoryProps) {
     <div className="space-y-3">
       {sessions.map((session) => (
         <Link key={session.id} href={`/dashboard?session=${session.id}`}>
-          <Card className="glass border-white/5 transition hover:border-primary/30">
+          <Card className="glass border-white/10 shadow-soft transition hover:border-white/20">
             <CardContent className="flex items-center justify-between py-4">
               <div>
                 <p className="font-medium">{formatDate(session.started_at)}</p>

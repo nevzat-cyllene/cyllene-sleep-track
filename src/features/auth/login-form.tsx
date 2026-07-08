@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export function LoginForm() {
   const router = useRouter();
@@ -45,10 +46,15 @@ export function LoginForm() {
   };
 
   return (
-    <Card className="glass mx-auto w-full max-w-md border-white/10">
+    <Card className="glass mx-auto w-full max-w-md border-white/10 shadow-soft">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Tekrar hoş geldin</CardTitle>
-        <CardDescription>CySleep hesabınıza giriş yapın</CardDescription>
+        <div className="flex items-center justify-center pb-2">
+          <Badge variant="secondary" className="bg-white/5 text-muted-foreground">
+            CySleep · Secure Login
+          </Badge>
+        </div>
+        <CardTitle className="text-2xl tracking-tight">Tekrar hoş geldin</CardTitle>
+        <CardDescription>Sabah raporuna kaldığın yerden devam et.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleLogin} className="space-y-4">

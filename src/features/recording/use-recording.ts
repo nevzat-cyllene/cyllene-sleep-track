@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EventDetector } from "./event-detector";
-import { WakeLockManager } from "./wake-lock";
+import { WakeLockManager, type WakeLockMethod } from "./wake-lock";
 import {
   createSession,
   getActiveSession,
   saveSession,
 } from "./session-store";
+import { saveEventClip } from "./audio-clip-store";
+import { float32ToWav } from "@/lib/audio-clip-utils";
 import { classifyAudio, preloadYamnet } from "./yamnet-classifier";
 import { calculateSleepScore } from "@/lib/sleep-utils";
 import type { LocalSleepEvent, LocalSleepSession, NoiseSample } from "@/types";
@@ -16,7 +18,7 @@ export type RecordingStatus = "idle" | "preparing" | "recording" | "stopping";
 
 interface UseRecordingOptions {
   userId?: string;
-  onSessionComplete?: (session: LocalSleepSession) => void;
+  onSessionComplete?: (session: LocalSleepSession) => void | Promise<void>;
 }
 
 interface PendingEventPayload {
@@ -29,8 +31,10 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
   const [currentDb, setCurrentDb] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [eventCount, setEventCount] = useState(0);
+  const [detectedEvents, setDetectedEvents] = useState<LocalSleepEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [wakeLockActive, setWakeLockActive] = useState(false);
+  const [wakeLockMethod, setWakeLockMethod] = useState<WakeLockMethod>("none");
 
   const sessionRef = useRef<LocalSleepSession | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -61,8 +65,20 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
         confidence,
       };
 
+      const wavBlob = float32ToWav(payload.audioData, sampleRate);
+
+      await saveEventClip({
+        eventId: classifiedEvent.id,
+        sessionId: sessionRef.current.id,
+        occurredAt: classifiedEvent.timestamp,
+        sampleRate,
+        wavBlob,
+        durationMs: classifiedEvent.durationMs,
+      });
+
       sessionRef.current.events.push(classifiedEvent);
       setEventCount(sessionRef.current.events.length);
+      setDetectedEvents([...sessionRef.current.events]);
       await persistSession();
     },
     [persistSession]
@@ -91,6 +107,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
 
     await wakeLockRef.current.release();
     setWakeLockActive(false);
+    setWakeLockMethod("none");
   }, []);
 
   const startRecording = useCallback(async () => {
@@ -170,8 +187,9 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
       source.connect(processor);
       processor.connect(audioContext.destination);
 
-      const wakeOk = await wakeLockRef.current.acquire();
-      setWakeLockActive(wakeOk);
+      const wakeState = await wakeLockRef.current.acquire();
+      setWakeLockActive(wakeState.active);
+      setWakeLockMethod(wakeState.method);
 
       saveIntervalRef.current = setInterval(() => {
         void persistSession();
@@ -185,6 +203,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
       await saveSession(session);
       setStatus("recording");
       setEventCount(session.events.length);
+      setDetectedEvents([...session.events]);
       setElapsedMs(0);
     } catch (err) {
       await cleanupAudio();
@@ -214,7 +233,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
           : undefined;
 
       await saveSession(sessionRef.current);
-      onSessionComplete?.(sessionRef.current);
+      await onSessionComplete?.(sessionRef.current);
     }
 
     await cleanupAudio();
@@ -233,7 +252,10 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
         }
       } else if (wasHiddenRef.current && status === "recording") {
         wasHiddenRef.current = false;
-        void wakeLockRef.current.acquire().then(setWakeLockActive);
+        void wakeLockRef.current.acquire().then((state) => {
+          setWakeLockActive(state.active);
+          setWakeLockMethod(state.method);
+        });
       }
     };
 
@@ -252,8 +274,10 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
     currentDb,
     elapsedMs,
     eventCount,
+    detectedEvents,
     error,
     wakeLockActive,
+    wakeLockMethod,
     startRecording,
     stopRecording,
     session: sessionRef.current,
