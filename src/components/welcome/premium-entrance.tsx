@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, MoonStar, Volume2, VolumeX } from "lucide-react";
 import { AmbientWelcomeSound } from "@/lib/ambient-welcome-sound";
@@ -160,78 +161,82 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
         <div className="absolute inset-x-0 bottom-0 h-[44%] bg-[linear-gradient(180deg,transparent_0%,#02050d_82%)]" />
 
         <motion.div
-          className="absolute left-1/2 top-[14%] z-[2] h-72 w-72 -translate-x-1/2 rounded-full border border-[#9cc8ff]/18 bg-[radial-gradient(circle,rgba(178,211,255,.12)_0%,rgba(94,143,255,.06)_42%,transparent_70%)] blur-[0.2px] sm:top-[17%] sm:h-96 sm:w-96"
-          initial={{ opacity: 0, y: "-36vh", scale: 0.55, rotate: -30 }}
+          className="absolute z-[2] h-72 w-72 rounded-full border border-[#9cc8ff]/18 bg-[radial-gradient(circle,rgba(178,211,255,.16)_0%,rgba(94,143,255,.07)_45%,transparent_72%)] blur-[0.3px] sm:h-96 sm:w-96"
+          initial={{ left: "88%", top: "5%", x: "-50%", opacity: 0, scale: 0.48, rotate: -24 }}
           animate={{
-            opacity: exiting ? 0 : started ? 0.18 : [0.16, 0.34, 0.22],
-            y: exiting ? "-18vh" : started ? "-1.2rem" : 0,
-            scale: exiting ? 0.9 : started ? 1.24 : [0.86, 1.04, 0.98],
-            rotate: started ? 18 : 4,
+            left: exiting ? "70%" : started ? "50%" : ["88%", "80%", "64%", "50%"],
+            top: exiting ? "-8%" : started ? "15%" : ["5%", "7%", "11.5%", "14%"],
+            x: "-50%",
+            opacity: exiting ? 0 : started ? 0.18 : [0, 0.16, 0.34, 0.22],
+            scale: exiting ? 0.88 : started ? 1.2 : [0.48, 0.68, 0.94, 1],
+            rotate: exiting ? 24 : started ? 14 : [-24, -12, 4, 10],
           }}
           transition={{
-            duration: reduceMotion ? 0.2 : exiting ? 0.85 : started ? 0.9 : 2.15,
-            repeat: !reduceMotion && !started && !exiting ? Infinity : 0,
-            repeatDelay: 1.15,
+            duration: reduceMotion ? 0.2 : exiting ? 0.95 : started ? 1.15 : 4.7,
             ease,
           }}
         />
         <motion.div
-          className="absolute left-1/2 top-[14%] z-[3] h-48 w-48 sm:top-[17%] sm:h-64 sm:w-64"
+          className="absolute z-[3] h-52 w-52 sm:h-72 sm:w-72"
           style={{ perspective: 1100 }}
           initial={{
+            left: "88%",
+            top: "5%",
             x: "-50%",
-            y: "-46vh",
             opacity: 0,
-            scale: 0.56,
-            rotateX: 20,
-            rotateY: -58,
-            rotateZ: -18,
-            filter: "blur(18px)",
+            scale: 0.42,
+            rotateX: 18,
+            rotateY: -48,
+            rotateZ: 20,
+            filter: "blur(14px)",
           }}
           animate={{
+            left: exiting ? "68%" : started ? "50%" : ["88%", "79%", "64%", "50%"],
+            top: exiting ? "-10%" : started ? "14%" : ["5%", "8%", "11.5%", "14%"],
             x: "-50%",
-            y: exiting ? "-24vh" : started ? "-1rem" : 0,
-            opacity: exiting ? 0 : started ? 0.72 : 0.96,
-            scale: exiting ? 0.88 : started ? 1.07 : 1,
-            rotateX: exiting ? -8 : started ? 6 : 0,
-            rotateY: exiting ? 42 : started ? 18 : 0,
-            rotateZ: exiting ? 14 : started ? 8 : 0,
-            filter: exiting ? "blur(20px)" : "blur(0px)",
+            opacity: exiting ? 0 : started ? 0.78 : 0.97,
+            scale: exiting ? 0.86 : started ? 1.04 : [0.42, 0.62, 0.9, 1],
+            rotateX: exiting ? -8 : started ? 5 : [18, 11, 4, 0],
+            rotateY: exiting ? 42 : started ? 14 : [-48, -30, -12, 0],
+            rotateZ: exiting ? 16 : started ? 7 : [20, 12, 4, 0],
+            filter: exiting ? "blur(18px)" : "blur(0px)",
           }}
-          transition={{ duration: reduceMotion ? 0.2 : exiting ? 0.88 : 1.65, ease }}
+          transition={{ duration: reduceMotion ? 0.2 : exiting ? 0.95 : started ? 1.2 : 4.85, ease }}
         >
           <motion.div
-            className="relative h-full w-full overflow-hidden rounded-full border border-white/18 shadow-[0_0_90px_rgba(150,190,255,.32),0_0_220px_rgba(30,105,255,.18)]"
-            style={{
-              transformStyle: "preserve-3d",
-              background:
-                "radial-gradient(circle at 30% 24%, rgba(255,255,255,.92) 0 1.4%, transparent 1.9%), radial-gradient(circle at 31% 31%, rgba(88,84,77,.28) 0 7.5%, transparent 8.4%), radial-gradient(circle at 63% 34%, rgba(88,86,82,.31) 0 6.6%, transparent 7.5%), radial-gradient(circle at 47% 53%, rgba(70,69,68,.24) 0 11.5%, transparent 12.7%), radial-gradient(circle at 70% 66%, rgba(64,66,70,.22) 0 8%, transparent 9.2%), radial-gradient(circle at 24% 69%, rgba(102,98,89,.18) 0 6%, transparent 7%), radial-gradient(circle at 43% 37%, #fff8e7 0%, #e8e0cf 32%, #b8b2a6 55%, #7f8490 76%, #39445b 100%)",
-            }}
+            className="relative h-full w-full overflow-hidden rounded-full border border-white/16 bg-[#07111f]/35 shadow-[0_0_88px_rgba(152,198,255,.34),0_0_210px_rgba(30,118,255,.18)]"
+            style={{ transformStyle: "preserve-3d" }}
             animate={
               reduceMotion || exiting
                 ? undefined
-                : { rotate: started ? [0, 1.5, -1, 0] : [0, -1.2, 1.4, 0] }
+                : { rotate: started ? [0, 0.8, -0.6, 0] : [0, -0.6, 0.4, 0] }
             }
-            transition={{ duration: started ? 7.5 : 6.2, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: started ? 10 : 8.5, repeat: Infinity, ease: "easeInOut" }}
           >
-            <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_23%,rgba(255,255,255,.45),transparent_21%),radial-gradient(circle_at_70%_52%,transparent_0_48%,rgba(2,5,14,.34)_67%,rgba(0,2,8,.58)_100%)] mix-blend-multiply" />
-            <span className="absolute left-[22%] top-[43%] h-7 w-7 rounded-full border border-[#4b4a48]/12 bg-[#4f5360]/16 blur-[0.7px] sm:h-9 sm:w-9" />
-            <span className="absolute bottom-[24%] right-[25%] h-8 w-8 rounded-full border border-[#4a4c56]/12 bg-[#3f4554]/15 blur-[1px] sm:h-11 sm:w-11" />
-            <span className="absolute right-[18%] top-[23%] h-5 w-5 rounded-full bg-white/16 blur-[1px] sm:h-6 sm:w-6" />
-            <span className="absolute left-[47%] top-[18%] h-3 w-8 -rotate-12 rounded-full bg-[#5c5b59]/12 blur-[1.4px]" />
-            <span className="absolute inset-0 rounded-full shadow-[inset_-34px_-22px_52px_rgba(3,7,18,.52),inset_18px_14px_30px_rgba(255,255,255,.26)]" />
+            <Image
+              src="/brand/cyllene-moon.png"
+              alt=""
+              fill
+              priority
+              sizes="(max-width: 640px) 13rem, 18rem"
+              className="scale-[1.018] object-cover [filter:contrast(1.05)_brightness(.86)]"
+            />
+            <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_22%,rgba(255,255,255,.22),transparent_24%),radial-gradient(circle_at_68%_52%,transparent_0_44%,rgba(3,7,18,.34)_65%,rgba(0,2,8,.62)_100%)] mix-blend-multiply" />
+            <span className="absolute inset-0 rounded-full shadow-[inset_-32px_-22px_50px_rgba(3,7,18,.52),inset_18px_14px_28px_rgba(255,255,255,.18)]" />
           </motion.div>
         </motion.div>
 
         <motion.div
-          className="absolute left-1/2 top-[16%] z-[1] h-64 w-[28rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(150,190,255,.18)_0%,rgba(78,132,255,.07)_42%,transparent_72%)] blur-2xl sm:top-[19%] sm:h-80 sm:w-[38rem]"
-          initial={{ opacity: 0, y: "-24vh", scale: 0.72 }}
+          className="absolute z-[1] h-64 w-[28rem] rounded-full bg-[radial-gradient(ellipse,rgba(150,190,255,.2)_0%,rgba(78,132,255,.075)_43%,transparent_73%)] blur-2xl sm:h-80 sm:w-[38rem]"
+          initial={{ left: "86%", top: "8%", x: "-50%", opacity: 0, scale: 0.58 }}
           animate={{
-            opacity: exiting ? 0 : started ? 0.34 : 0.48,
-            y: exiting ? "-12vh" : 0,
-            scale: exiting ? 0.9 : started ? 1.1 : 1,
+            left: exiting ? "64%" : started ? "50%" : ["86%", "77%", "62%", "50%"],
+            top: exiting ? "-7%" : started ? "16%" : ["8%", "10%", "14%", "16%"],
+            x: "-50%",
+            opacity: exiting ? 0 : started ? 0.34 : [0, 0.22, 0.5, 0.46],
+            scale: exiting ? 0.86 : started ? 1.08 : [0.58, 0.74, 0.96, 1],
           }}
-          transition={{ duration: reduceMotion ? 0.2 : exiting ? 0.85 : 1.55, ease }}
+          transition={{ duration: reduceMotion ? 0.2 : exiting ? 0.95 : started ? 1.2 : 4.9, ease }}
         />
 
         <div className="absolute inset-x-0 bottom-0 h-[28%] opacity-80">
