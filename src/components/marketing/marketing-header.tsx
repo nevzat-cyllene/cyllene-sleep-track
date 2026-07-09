@@ -31,12 +31,7 @@ export function MarketingHeader() {
 
         <div className="flex items-center gap-2">
           {ready && user ? (
-            <>
-              <Button size="sm" className="glow-purple" render={<Link href="/sleep" prefetch />}>
-                Uygulamaya git
-              </Button>
-              <UserMenu />
-            </>
+            <UserMenu />
           ) : (
             <>
               <Button

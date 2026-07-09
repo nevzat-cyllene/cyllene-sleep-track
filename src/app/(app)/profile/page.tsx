@@ -12,7 +12,7 @@ export default async function ProfilePage() {
     .from("profiles")
     .select("*")
     .eq("id", data.user.id)
-    .single();
+    .maybeSingle();
 
   return (
     <ProfileClient

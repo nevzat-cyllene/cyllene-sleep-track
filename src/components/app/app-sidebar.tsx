@@ -33,7 +33,7 @@ export function AppSidebar() {
   return (
     <Sidebar variant="inset" collapsible="icon" className="hidden md:flex">
       <SidebarHeader className="gap-2">
-        <Link href="/sleep" prefetch className="flex items-center gap-2 rounded-lg p-2">
+        <Link href="/" prefetch className="flex items-center gap-2 rounded-lg p-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-white/10">
             <Moon className="h-4 w-4 text-primary" />
           </div>
@@ -79,6 +79,13 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="gap-2">
+        <Button
+          variant="ghost"
+          className="group-data-[collapsible=icon]/sidebar-wrapper:hidden"
+          render={<Link href="/" prefetch />}
+        >
+          Ana sayfa
+        </Button>
         <Button
           variant="outline"
           className="group-data-[collapsible=icon]/sidebar-wrapper:hidden"

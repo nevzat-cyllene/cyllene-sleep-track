@@ -6,7 +6,7 @@ import { UserMenu } from "@/components/app/user-menu";
 import { useRecordingUI } from "@/components/app/recording-ui-context";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site-config";
-import { Plus } from "lucide-react";
+import { Moon, Plus } from "lucide-react";
 
 export function AppTopbar() {
   const { isRecording } = useRecordingUI();
@@ -19,11 +19,15 @@ export function AppTopbar() {
         <SidebarTrigger className="-ml-1 hidden md:flex" />
 
         <Link
-          href="/sleep"
+          href="/"
           prefetch
-          className="text-base font-semibold tracking-tight md:hidden"
+          className="flex items-center gap-2 text-base font-semibold tracking-tight"
         >
-          {siteConfig.shortName}
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-white/10 md:hidden">
+            <Moon className="h-4 w-4 text-primary" />
+          </span>
+          <span className="md:hidden">{siteConfig.shortName}</span>
+          <span className="hidden md:inline">{siteConfig.shortName}</span>
         </Link>
 
         <div className="hidden flex-1 md:block" />
