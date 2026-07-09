@@ -42,7 +42,24 @@ const features = [
   },
 ] as const;
 
-const bars = [28, 42, 35, 61, 49, 75, 58, 86, 64, 52, 71, 44, 57, 31, 48, 39, 68, 53];
+const sleepMetrics = [
+  { label: "Uyku skoru", value: "86", meta: "+%8 sakinlik" },
+  { label: "Toplam uyku", value: "7s 42dk", meta: "00:18—07:56" },
+  { label: "Ses izi", value: "14", meta: "işaretli an" },
+] as const;
+
+const sleepStages = [
+  { label: "Hafif", left: "2%", width: "18%", className: "from-[#4f7dff]/45 to-[#79b7ff]/65" },
+  { label: "Derin", left: "23%", width: "24%", className: "from-[#1769ff]/80 to-[#69d5ff]/85" },
+  { label: "REM", left: "51%", width: "18%", className: "from-[#8f7cff]/65 to-[#70d7ff]/75" },
+  { label: "Hafif", left: "72%", width: "24%", className: "from-[#2f6dff]/45 to-[#91c1ff]/65" },
+] as const;
+
+const acousticEvents = [
+  { time: "01:14", title: "Horlama kümelenmesi", meta: "36 sn · düşük yoğunluk", tone: "bg-[#79b7ff]" },
+  { time: "03:42", title: "Öksürük dizisi", meta: "12 sn · tekil olay", tone: "bg-[#75f2d6]" },
+  { time: "06:08", title: "Ani ses", meta: "8 sn · işaretlendi", tone: "bg-[#9c8cff]" },
+] as const;
 
 export default function LandingPage() {
   return (
@@ -68,13 +85,13 @@ export default function LandingPage() {
               </div>
 
               <h1 className="text-balance text-[clamp(3.35rem,8vw,6.8rem)] font-medium leading-[0.89] tracking-[-0.07em]">
-                Uyku ritmini gör.
-                <span className="mt-2 block text-gradient">Sabaha net uyan.</span>
+                Gecenin izini çöz.
+                <span className="mt-2 block text-gradient">Sabaha berrak uyan.</span>
               </h1>
 
               <p className="mt-7 max-w-xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-                Gece boyunca oluşan horlama, öksürük ve ani sesleri telefonunda analiz et.
-                Cyllene, uykunun ritmini sade ve sana ait bir sabah raporuna çevirir.
+                Cyllene, horlama, öksürük ve ani ses izlerini cihazında işler; ham sesi
+                taşımadan geceyi sakin, net ve kişisel bir sabah raporuna dönüştürür.
               </p>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -83,7 +100,7 @@ export default function LandingPage() {
                   className="glow-purple h-13 rounded-full bg-[#1769ff] px-6 hover:bg-[#2d79ff]"
                   render={<Link href="/signup" />}
                 >
-                  İlk geceyi başlat
+                  İlk raporu başlat
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
                 <Button
@@ -97,7 +114,7 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-xs text-muted-foreground">
-                {["Kredi kartı gerekmez", "Ham ses yüklenmez", "Uyku skoru ve zaman çizelgesi"].map(
+                {["Kredi kartı gerekmez", "Ham ses cihazda kalır", "Uyku skoru ve zaman çizelgesi"].map(
                   (item) => (
                     <span key={item} className="flex items-center gap-2">
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-400/10 text-emerald-300">
@@ -110,95 +127,162 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="relative mx-auto w-full max-w-[34rem] lg:mx-0 lg:ml-auto">
+            <div className="relative mx-auto w-full max-w-[35rem] lg:mx-0 lg:ml-auto">
               <div className="absolute -inset-10 rounded-full bg-[#185cff]/18 blur-[100px]" />
-              <div className="relative overflow-hidden rounded-[2rem] border border-[#8dbdff]/18 bg-[linear-gradient(145deg,rgba(31,68,128,.78),rgba(12,34,76,.88)_48%,rgba(8,18,42,.9)_100%)] p-4 shadow-[0_28px_110px_rgba(30,112,255,.28),inset_0_1px_0_rgba(255,255,255,.09)] backdrop-blur-2xl sm:p-5">
+              <div className="relative overflow-hidden rounded-[2.15rem] border border-[#8dbdff]/16 bg-[radial-gradient(circle_at_18%_0%,rgba(111,210,255,.18),transparent_34%),linear-gradient(145deg,rgba(22,49,96,.92),rgba(8,20,46,.94)_54%,rgba(4,10,24,.96)_100%)] p-4 shadow-[0_28px_120px_rgba(30,112,255,.26),inset_0_1px_0_rgba(255,255,255,.09)] backdrop-blur-2xl sm:p-5">
                 <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#6fd2ff]/16 blur-[70px]" />
                 <div className="pointer-events-none absolute -left-20 bottom-10 h-56 w-56 rounded-full bg-[#235dff]/18 blur-[80px]" />
-                <div className="flex items-center justify-between border-b border-white/[0.07] pb-4">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(145,193,255,.45),transparent)]" />
+
+                <div className="relative flex items-center justify-between border-b border-white/[0.07] pb-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#1769ff] shadow-[0_8px_30px_rgba(23,105,255,.35)]">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#1f7aff,#69d5ff)] shadow-[0_8px_30px_rgba(23,105,255,.35)]">
                       <MoonStar className="h-4.5 w-4.5" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold">Günaydın, Deniz</p>
-                      <p className="text-xs text-white/35">9 Temmuz gecesi</p>
+                      <p className="text-sm font-semibold tracking-[-0.02em]">Cyllene Night Report</p>
+                      <p className="text-xs text-white/35">09 Temmuz · 00:18—07:56</p>
                     </div>
                   </div>
                   <span className="rounded-full border border-emerald-400/15 bg-emerald-400/8 px-2.5 py-1 text-[10px] font-medium text-emerald-300">
-                    Senkronize
+                    Cihazda işlendi
                   </span>
                 </div>
 
-                <div className="grid gap-3 py-4 sm:grid-cols-[1.15fr_.85fr]">
-                  <div className="rounded-[1.45rem] border border-white/[0.08] bg-white/[0.055] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,.06)]">
-                    <p className="text-xs text-white/40">Uyku skoru</p>
-                    <div className="mt-4 flex items-end justify-between gap-4">
-                      <div>
-                        <span className="text-6xl font-medium tracking-[-0.07em]">86</span>
-                        <span className="ml-1 text-sm text-white/30">/100</span>
-                      </div>
-                      <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[conic-gradient(#6ea8ff_0deg,#1a6cff_309deg,rgba(255,255,255,.07)_309deg)]">
-                        <div className="h-[52px] w-[52px] rounded-full bg-[#10234a]" />
-                        <MoonStar className="absolute h-5 w-5 text-[#84b7ff]" />
-                      </div>
+                <div className="relative mt-4 grid gap-2.5 sm:grid-cols-3">
+                  {sleepMetrics.map((metric) => (
+                    <div
+                      key={metric.label}
+                      className="rounded-[1.15rem] border border-white/[0.07] bg-white/[0.045] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,.055)]"
+                    >
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-white/30">{metric.label}</p>
+                      <p className="mt-2 text-xl font-medium tracking-[-0.04em] text-white">{metric.value}</p>
+                      <p className="mt-1 text-[10px] text-[#8fc0ff]/70">{metric.meta}</p>
                     </div>
-                    <p className="mt-4 text-xs text-emerald-300">Önceki geceden %8 daha sakin</p>
-                  </div>
-
-                  <div className="rounded-[1.45rem] border border-[#8dbdff]/12 bg-[linear-gradient(145deg,rgba(33,105,255,.2),rgba(113,190,255,.08))] p-5">
-                    <p className="text-xs text-white/40">Toplam uyku</p>
-                    <p className="mt-3 text-3xl font-medium tracking-[-0.04em]">7s 42dk</p>
-                    <div className="mt-5 flex items-end gap-1">
-                      {[35, 54, 43, 69, 48, 76, 61].map((height, index) => (
-                        <span
-                          key={`${height}-${index}`}
-                          className="flex-1 rounded-full bg-gradient-to-t from-[#1a6cff]/40 to-[#79b5ff]"
-                          style={{ height }}
-                        />
-                      ))}
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
-                <div className="rounded-[1.45rem] border border-[#8dbdff]/12 bg-[linear-gradient(145deg,rgba(14,43,93,.86),rgba(7,20,47,.78))] p-5">
-                  <div className="flex items-center justify-between">
+                <div className="relative mt-3 rounded-[1.55rem] border border-[#8dbdff]/12 bg-[linear-gradient(145deg,rgba(10,31,72,.82),rgba(5,14,34,.78))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.055)]">
+                  <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-medium">Gece sesleri</p>
-                      <p className="mt-0.5 text-xs text-white/35">00:18 — 07:56</p>
+                      <p className="text-sm font-medium">Uyku imzası</p>
+                      <p className="mt-0.5 text-xs text-white/35">Sakinlik, ses izi ve evre akışı</p>
                     </div>
                     <div className="flex items-center gap-1.5 rounded-full bg-white/[0.05] px-2.5 py-1 text-[10px] text-white/45">
-                      <Waves className="h-3 w-3 text-[#6da9ff]" />
-                      14 olay
+                      <AudioWaveform className="h-3 w-3 text-[#6da9ff]" />
+                      canlı analiz
                     </div>
                   </div>
 
-                  <div className="mt-7 flex h-24 items-center gap-1">
-                    {bars.map((height, index) => (
-                      <span
-                        key={`${height}-${index}`}
-                        className="w-full rounded-full bg-gradient-to-t from-[#3152ff]/35 via-[#1875ff] to-[#76d6ff]"
-                        style={{ height: `${height}%`, opacity: 0.55 + (index % 4) * 0.12 }}
+                  <div className="relative mt-5 h-44 overflow-hidden rounded-[1.25rem] border border-white/[0.055] bg-[#06142f]/78">
+                    <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.035)_1px,transparent_1px)] bg-[size:100%_25%,20%_100%] opacity-50" />
+                    <div className="absolute inset-x-5 top-5 flex justify-between text-[10px] text-white/25">
+                      <span>00:00</span>
+                      <span>02:00</span>
+                      <span>04:00</span>
+                      <span>06:00</span>
+                      <span>08:00</span>
+                    </div>
+
+                    <svg
+                      className="absolute inset-x-4 bottom-7 top-9 h-[7.5rem] w-[calc(100%-2rem)]"
+                      viewBox="0 0 420 130"
+                      preserveAspectRatio="none"
+                      aria-hidden="true"
+                    >
+                      <defs>
+                        <linearGradient id="sleep-signal-gradient" x1="0" x2="1" y1="0" y2="0">
+                          <stop offset="0%" stopColor="#3152ff" stopOpacity="0.25" />
+                          <stop offset="48%" stopColor="#6fd2ff" stopOpacity="0.95" />
+                          <stop offset="100%" stopColor="#8f7cff" stopOpacity="0.55" />
+                        </linearGradient>
+                      </defs>
+                      <path
+                        d="M0 82 C42 58 68 78 98 56 C128 34 160 42 190 64 C226 90 254 98 286 70 C318 42 350 48 420 32"
+                        fill="none"
+                        stroke="url(#sleep-signal-gradient)"
+                        strokeLinecap="round"
+                        strokeWidth="5"
+                      />
+                      <path
+                        d="M0 96 C48 88 88 92 132 78 C182 62 218 94 262 88 C318 80 350 54 420 62"
+                        fill="none"
+                        stroke="#91c1ff"
+                        strokeLinecap="round"
+                        strokeOpacity=".18"
+                        strokeWidth="2"
+                      />
+                    </svg>
+
+                    <span className="absolute left-[19%] top-[58%] h-2.5 w-2.5 rounded-full border border-[#9dd7ff] bg-[#6fd2ff] shadow-[0_0_22px_rgba(111,210,255,.85)]" />
+                    <span className="absolute left-[57%] top-[43%] h-2.5 w-2.5 rounded-full border border-[#b8adff] bg-[#8f7cff] shadow-[0_0_22px_rgba(143,124,255,.75)]" />
+                    <span className="absolute left-[82%] top-[30%] h-2.5 w-2.5 rounded-full border border-[#9dd7ff] bg-[#6fd2ff] shadow-[0_0_22px_rgba(111,210,255,.85)]" />
+                  </div>
+
+                  <div className="relative mt-4 h-10 rounded-full border border-white/[0.06] bg-white/[0.035] p-1">
+                    {sleepStages.map((stage) => (
+                      <div
+                        key={`${stage.label}-${stage.left}`}
+                        className={`absolute inset-y-1 rounded-full bg-gradient-to-r ${stage.className}`}
+                        style={{ left: stage.left, width: stage.width }}
                       />
                     ))}
                   </div>
-                  <div className="mt-3 flex justify-between text-[10px] text-white/25">
-                    <span>00:00</span>
-                    <span>02:00</span>
-                    <span>04:00</span>
-                    <span>06:00</span>
-                    <span>08:00</span>
+                  <div className="mt-2 flex justify-between px-1 text-[10px] text-white/26">
+                    {sleepStages.map((stage) => (
+                      <span key={`${stage.label}-label-${stage.left}`}>{stage.label}</span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="relative mt-3 grid gap-3 sm:grid-cols-[1fr_.9fr]">
+                  <div className="rounded-[1.35rem] border border-[#8dbdff]/12 bg-white/[0.035] p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">Tespit edilen anlar</p>
+                      <span className="flex items-center gap-1 rounded-full bg-white/[0.05] px-2 py-0.5 text-[10px] text-white/38">
+                        <Waves className="h-3 w-3 text-[#6da9ff]" />
+                        14 olay
+                      </span>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      {acousticEvents.map((event) => (
+                        <div key={`${event.time}-${event.title}`} className="flex items-center gap-3 rounded-2xl bg-black/10 px-3 py-2">
+                          <span className={`h-2 w-2 shrink-0 rounded-full ${event.tone} shadow-[0_0_18px_currentColor]`} />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="truncate text-xs font-medium text-white/78">{event.title}</p>
+                              <span className="text-[10px] tabular-nums text-white/32">{event.time}</span>
+                            </div>
+                            <p className="mt-0.5 text-[10px] text-white/30">{event.meta}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[1.35rem] border border-emerald-300/12 bg-[linear-gradient(145deg,rgba(22,163,116,.12),rgba(21,94,255,.07))] p-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-400/10">
+                      <ShieldCheck className="h-4.5 w-4.5 text-emerald-300" />
+                    </div>
+                    <p className="mt-4 text-sm font-medium">Yerel ses koruması</p>
+                    <p className="mt-2 text-xs leading-5 text-white/36">
+                      Klipler cihazda kalır; hesabın yalnızca rapor ve özet metrikleri senkronize eder.
+                    </p>
+                    <div className="mt-4 flex items-center gap-2 text-[10px] text-emerald-300/75">
+                      <LockKeyhole className="h-3 w-3" />
+                      Ham dosya aktarımı yok
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="absolute -bottom-7 -left-3 flex items-center gap-3 rounded-2xl border border-[#8dbdff]/14 bg-[linear-gradient(135deg,rgba(26,68,128,.84),rgba(9,23,52,.9))] px-4 py-3 shadow-[0_18px_55px_rgba(17,88,210,.28),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-2xl sm:-left-10">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/10">
-                  <ShieldCheck className="h-4 w-4 text-emerald-300" />
+              <div className="absolute -bottom-7 -left-3 flex items-center gap-3 rounded-2xl border border-[#8dbdff]/14 bg-[linear-gradient(135deg,rgba(26,68,128,.84),rgba(9,23,52,.9))] px-4 py-3 shadow-[0_18px_55px_rgba(17,88,210,.28),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-2xl sm:-left-8">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#155eff]/14">
+                  <Sparkles className="h-4 w-4 text-[#8fc0ff]" />
                 </div>
                 <div>
-                  <p className="text-xs font-medium">Cihaz içi analiz</p>
-                  <p className="text-[10px] text-white/35">Ham ses yüklenmez</p>
+                  <p className="text-xs font-medium">Sabah özeti hazır</p>
+                  <p className="text-[10px] text-white/35">Net skor · zaman çizelgesi · olaylar</p>
                 </div>
               </div>
             </div>

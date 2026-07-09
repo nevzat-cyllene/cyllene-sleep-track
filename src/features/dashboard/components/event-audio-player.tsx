@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pause, Play } from "lucide-react";
+import { Pause, Play, Smartphone } from "lucide-react";
 import { getEventClip } from "@/features/recording/audio-clip-store";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,27 @@ interface EventAudioPlayerProps {
   compact?: boolean;
 }
 
+type MissingDeviceCopy = {
+  short: string;
+  detail: string;
+};
+
+function getLikelySourceDeviceCopy(): MissingDeviceCopy {
+  const isCurrentDeviceMobile =
+    typeof navigator !== "undefined" &&
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+  return isCurrentDeviceMobile
+    ? {
+        short: "Webde",
+        detail: "Kaydı başlattığın web tarayıcısında dinleyebilirsin.",
+      }
+    : {
+        short: "Mobilde",
+        detail: "Kaydı başlattığın mobil cihazında dinleyebilirsin.",
+      };
+}
+
 export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
@@ -20,6 +41,7 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState(false);
+  const [missingDevice, setMissingDevice] = useState<MissingDeviceCopy | null>(null);
 
   const cleanup = useCallback(() => {
     if (audioRef.current) {
@@ -45,12 +67,13 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
 
     setLoading(true);
     setError(false);
+    setMissingDevice(null);
 
     try {
       if (!audioRef.current) {
         const clip = await getEventClip(eventId);
         if (!clip) {
-          setError(true);
+          setMissingDevice(getLikelySourceDeviceCopy());
           return;
         }
 
@@ -86,10 +109,45 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
     return `${m}:${String(sec).padStart(2, "0")}`;
   };
 
+  if (missingDevice) {
+    if (compact) {
+      return (
+        <span
+          className={cn(
+            "inline-flex max-w-28 items-center gap-1.5 rounded-full border border-[#6da9ff]/12 bg-[#155eff]/8 px-2 py-1 text-[10px] font-medium text-[#8fc0ff]",
+            className
+          )}
+          role="status"
+        >
+          <Smartphone className="h-3 w-3 shrink-0" />
+          <span className="truncate">{missingDevice.short}</span>
+        </span>
+      );
+    }
+
+    return (
+      <div
+        className={cn(
+          "flex items-start gap-3 rounded-2xl border border-[#6da9ff]/12 bg-[#155eff]/8 p-3",
+          className
+        )}
+        role="status"
+      >
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#155eff]/14 text-[#8fc0ff]">
+          <Smartphone className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-foreground">Ses dosyası bu cihazda yok.</p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">{missingDevice.detail}</p>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <span className={cn("text-xs text-muted-foreground", className)}>
-        Ses klibi yok
+        Ses klibi açılamadı
       </span>
     );
   }
@@ -101,7 +159,10 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
         variant="ghost"
         size="icon-sm"
         className={cn("rounded-full", className)}
-        onClick={() => void togglePlay()}
+        onClick={(event) => {
+          event.stopPropagation();
+          void togglePlay();
+        }}
         disabled={loading}
         aria-label={playing ? "Duraklat" : "Dinle"}
       >
@@ -117,7 +178,10 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
         variant="outline"
         size="icon"
         className="shrink-0 rounded-full"
-        onClick={() => void togglePlay()}
+        onClick={(event) => {
+          event.stopPropagation();
+          void togglePlay();
+        }}
         disabled={loading}
         aria-label={playing ? "Duraklat" : "Dinle"}
       >
