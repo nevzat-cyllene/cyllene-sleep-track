@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Calendar } from "lucide-react";
+import { toast } from "sonner";
 import { SleepScoreRing } from "@/features/dashboard/components/sleep-score-ring";
 import { DetectedEventsList } from "@/features/dashboard/components/detected-events-list";
 import { NightSoundsChart } from "./components/night-sounds-chart";
 import {
+  deleteRemoteSleepEvent,
   fetchSessionById,
   fetchSessionEvents,
   fetchSessionNoiseSamples,
@@ -17,13 +19,23 @@ import {
   getWeekSessions,
 } from "@/lib/sleep-analytics";
 import { fetchUserSessions } from "@/features/recording/sync-session";
-import type { SleepEvent, SleepNoiseSample, SleepSession } from "@/types";
+import type { SleepEvent, SleepEventType, SleepNoiseSample, SleepSession } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface SessionDetailClientProps {
   sessionId: string;
   userId: string;
 }
+
+const countKeys: Record<
+  SleepEventType,
+  "snore_count" | "cough_count" | "talk_count" | "noise_count"
+> = {
+  snore: "snore_count",
+  cough: "cough_count",
+  talk: "talk_count",
+  noise: "noise_count",
+};
 
 export function SessionDetailClient({ sessionId, userId }: SessionDetailClientProps) {
   const [session, setSession] = useState<SleepSession | null>(null);
@@ -35,6 +47,7 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
     () => new Set(["snore", "cough", "talk", "noise"])
   );
   const [loading, setLoading] = useState(true);
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
 
   const toggleFilter = (type: string) => {
     setActiveFilters((prev) => {
@@ -49,7 +62,6 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
   };
 
   useEffect(() => {
-    setLoading(true);
     void Promise.all([
       fetchSessionById(sessionId),
       fetchSessionEvents(sessionId),
@@ -65,6 +77,32 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
       })
       .finally(() => setLoading(false));
   }, [sessionId, userId]);
+
+  const handleDeleteEvent = async (event: SleepEvent) => {
+    if (!window.confirm("Bu olay kaydı silinsin mi?")) return;
+
+    setDeletingEventId(event.id);
+    try {
+      await deleteRemoteSleepEvent(event.id, event.session_id, event.event_type);
+      setEvents((current) => {
+        const next = current.filter((item) => item.id !== event.id);
+        setSelectedEventId((selected) =>
+          selected === event.id ? next[0]?.id ?? null : selected
+        );
+        return next;
+      });
+      setSession((current) => {
+        if (!current) return current;
+        const key = countKeys[event.event_type];
+        return { ...current, [key]: Math.max(0, current[key] - 1) };
+      });
+      toast.success("Olay silindi.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Olay silinemedi.");
+    } finally {
+      setDeletingEventId(null);
+    }
+  };
 
   if (loading || !session) {
     return (
@@ -161,6 +199,8 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
           events={events}
           selectedEventId={selectedEventId}
           onSelectEvent={setSelectedEventId}
+          deletingEventId={deletingEventId}
+          onDeleteEvent={(event) => void handleDeleteEvent(event as SleepEvent)}
           emptyMessage="Bu gece olay tespit edilmedi."
         />
       </div>

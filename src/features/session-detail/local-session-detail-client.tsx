@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CloudOff } from "lucide-react";
-import { getSession } from "@/features/recording/session-store";
+import { getSession, saveSession } from "@/features/recording/session-store";
+import { deleteEventClip } from "@/features/recording/audio-clip-store";
 import { SleepScoreRing } from "@/features/dashboard/components/sleep-score-ring";
 import { DetectedEventsList } from "@/features/dashboard/components/detected-events-list";
 import { NightSoundsChart } from "@/features/session-detail/components/night-sounds-chart";
@@ -12,7 +13,6 @@ import { formatDate } from "@/lib/sleep-utils";
 import type { LocalSleepEvent, LocalSleepSession, SleepEvent, SleepNoiseSample, SleepSession } from "@/types";
 import { Button } from "@/components/ui/button";
 import { syncSessionToSupabase } from "@/features/recording/sync-session";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -87,6 +87,7 @@ export function LocalSessionDetailClient({
   const [syncing, setSyncing] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [activeFilters] = useState(() => new Set(["snore", "cough", "talk", "noise"]));
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
 
   useEffect(() => {
     void getSession(localSessionId).then((s) => {
@@ -105,6 +106,29 @@ export function LocalSessionDetailClient({
       router.push(`/journal/${result.id}`);
     } else {
       toast.error(result.error);
+    }
+  };
+
+  const handleDeleteLocalEvent = async (event: SleepEvent) => {
+    if (!local || !window.confirm("Bu olay kaydı silinsin mi?")) return;
+
+    setDeletingEventId(event.id);
+    try {
+      const updated = {
+        ...local,
+        events: local.events.filter((item) => item.id !== event.id),
+      };
+      await saveSession(updated);
+      await deleteEventClip(event.id);
+      setLocal(updated);
+      setSelectedEventId((selected) =>
+        selected === event.id ? updated.events[0]?.id ?? null : selected
+      );
+      toast.success("Olay silindi.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Olay silinemedi.");
+    } finally {
+      setDeletingEventId(null);
     }
   };
 
@@ -201,6 +225,8 @@ export function LocalSessionDetailClient({
           events={events}
           selectedEventId={selectedEventId}
           onSelectEvent={setSelectedEventId}
+          deletingEventId={deletingEventId}
+          onDeleteEvent={(event) => void handleDeleteLocalEvent(event as SleepEvent)}
           emptyMessage="Bu gece olay tespit edilmedi."
         />
       </div>

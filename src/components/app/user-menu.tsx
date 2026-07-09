@@ -51,6 +51,11 @@ export function UserMenu() {
           <span className="truncate">{email ?? "Hesap"}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => router.push("/profile")}>
+          <User />
+          Profil ve ayarlar
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={handleSignOut}>
           <LogOut />
           Çıkış yap
