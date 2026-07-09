@@ -198,7 +198,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <p className="text-xs font-medium">Cihaz içi analiz</p>
-                  <p className="text-[10px] text-white/35">Seslerin sende kalır</p>
+                  <p className="text-[10px] text-white/35">Ham ses yüklenmez</p>
                 </div>
               </div>
             </div>

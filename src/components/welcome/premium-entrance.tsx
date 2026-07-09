@@ -15,19 +15,19 @@ const ease = [0.22, 1, 0.36, 1] as const;
 
 const MOMENTS = [
   {
-    eyebrow: "Gece başlıyor",
-    title: "Bir an dur.",
-    body: "Omuzlarını bırak ve derin bir nefes al.",
+    eyebrow: "Işık azalır",
+    title: "Karanlık boş değildir.",
+    body: "Telefon yanında durur; gece, izlerini sessizce bırakır.",
   },
   {
     eyebrow: siteConfig.shortName,
-    title: "Geceni dinler.",
-    body: "Sabah, uykuna dair anlaşılır bir hikâyeye uyanırsın.",
+    title: "Sessizliğin haritasını çıkarır.",
+    body: "Horlama, öksürük ve ani sesler sabaha net bir zaman çizelgesi olur.",
   },
   {
-    eyebrow: "Gizlilik önce",
-    title: "Sesin sende kalır.",
-    body: "Analiz cihazında gerçekleşir; ham ses kayıtların buluta gönderilmez.",
+    eyebrow: "Mahremiyet",
+    title: "Kayıt değil, anlam kalır.",
+    body: "Analiz cihazında yapılır; ham ses buluta taşınmaz.",
   },
 ] as const;
 
@@ -48,8 +48,8 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
   useEffect(() => {
     if (!started) return;
 
-    const second = window.setTimeout(() => setMoment(1), reduceMotion ? 450 : 1250);
-    const third = window.setTimeout(() => setMoment(2), reduceMotion ? 900 : 2650);
+    const second = window.setTimeout(() => setMoment(1), reduceMotion ? 550 : 2200);
+    const third = window.setTimeout(() => setMoment(2), reduceMotion ? 1100 : 4600);
 
     return () => {
       window.clearTimeout(second);
@@ -107,18 +107,18 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
           animate={
             reduceMotion
               ? undefined
-              : { x: [0, 75, -20, 0], y: [0, 48, 8, 0], scale: [1, 1.12, 0.96, 1] }
+              : { x: [0, 54, -16, 0], y: [0, 32, 6, 0], scale: [1, 1.08, 0.98, 1] }
           }
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
           className="absolute -bottom-[30%] right-[-10%] h-[70vw] min-h-[460px] w-[70vw] min-w-[460px] rounded-full bg-[#17b4e8]/15 blur-[130px]"
           animate={
             reduceMotion
               ? undefined
-              : { x: [0, -70, 18, 0], y: [0, -45, 12, 0], scale: [1, 1.08, 0.98, 1] }
+              : { x: [0, -48, 14, 0], y: [0, -30, 10, 0], scale: [1, 1.06, 0.98, 1] }
           }
-          transition={{ duration: 6.2, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 12.5, repeat: Infinity, ease: "easeInOut" }}
         />
 
         <motion.div
@@ -127,18 +127,18 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
           transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
         />
         {!reduceMotion &&
-          [0, 1, 2, 3].map((line) => (
+          [0, 1].map((line) => (
             <motion.span
               key={line}
-              className="absolute left-0 h-px w-48 bg-gradient-to-r from-transparent via-[#8cc4ff]/70 to-transparent blur-[0.5px]"
-              style={{ top: `${17 + line * 19}%`, rotate: -12 }}
+              className="absolute left-0 h-px w-56 bg-gradient-to-r from-transparent via-[#8cc4ff]/35 to-transparent blur-[0.5px]"
+              style={{ top: `${19 + line * 24}%`, rotate: -10 }}
               initial={{ x: "-35vw", opacity: 0 }}
-              animate={{ x: "125vw", opacity: [0, 0.8, 0] }}
+              animate={{ x: "125vw", opacity: [0, 0.38, 0] }}
               transition={{
-                duration: 1.35 + line * 0.16,
+                duration: 3.1 + line * 0.35,
                 repeat: Infinity,
-                repeatDelay: 0.55 + line * 0.22,
-                delay: line * 0.3,
+                repeatDelay: 2.2 + line * 0.6,
+                delay: line * 0.45,
                 ease: "easeInOut",
               }}
             />
@@ -146,39 +146,53 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
         <motion.div
           className="absolute inset-x-0 top-0 h-[2px] origin-left bg-gradient-to-r from-transparent via-[#71aaff] to-transparent"
           initial={{ scaleX: 0, opacity: 0 }}
-          animate={{ scaleX: [0, 1, 1], opacity: [0, 0.8, 0] }}
-          transition={{ duration: 1.4, repeat: Infinity, repeatDelay: 1.2, ease }}
+          animate={{ scaleX: [0, 1, 1], opacity: [0, 0.35, 0] }}
+          transition={{ duration: 3.2, repeat: Infinity, repeatDelay: 2.4, ease }}
         />
         <div className="absolute inset-x-0 bottom-0 h-[44%] bg-[linear-gradient(180deg,transparent_0%,#02050d_82%)]" />
 
         <motion.div
-          className="absolute left-1/2 top-[24%] h-56 w-56 -translate-x-1/2 rounded-full border border-[#82b6ff]/20 sm:h-72 sm:w-72"
+          className="absolute left-1/2 top-[22%] z-[2] h-64 w-64 -translate-x-1/2 rounded-full border border-[#82b6ff]/16 bg-[radial-gradient(circle,rgba(120,183,255,.08)_0%,transparent_58%)] sm:h-80 sm:w-80"
           initial={{ opacity: 0, scale: 0.55, rotate: -25 }}
           animate={{
-            opacity: started ? 0.1 : [0.08, 0.35, 0.12],
-            scale: started ? 1.35 : [0.72, 1.08, 0.96],
-            rotate: started ? 42 : 18,
+            opacity: started ? 0.13 : [0.08, 0.26, 0.12],
+            scale: started ? 1.26 : [0.76, 1.05, 0.96],
+            rotate: started ? 24 : 10,
           }}
           transition={{
-            duration: started ? 0.65 : 2.2,
+            duration: started ? 0.9 : 3.8,
             repeat: started ? 0 : Infinity,
             ease,
           }}
         />
         <motion.div
-          className="absolute left-1/2 top-[24%] h-40 w-40 -translate-x-1/2 rounded-full border border-white/10 bg-[radial-gradient(circle_at_34%_30%,#ffffff_0%,#d8e7ff_26%,#5a79ca_68%,#183276_100%)] shadow-[0_0_90px_rgba(96,145,255,0.28)] sm:h-52 sm:w-52"
-          initial={{ opacity: 0, y: 45, scale: 0.62, filter: "blur(10px)" }}
+          className="absolute left-1/2 top-[22%] z-[3] h-44 w-44 -translate-x-1/2 overflow-hidden rounded-full border border-white/15 shadow-[0_0_120px_rgba(96,145,255,0.24),0_0_260px_rgba(28,105,255,0.16)] sm:h-56 sm:w-56"
+          style={{
+            background:
+              "radial-gradient(circle at 30% 24%, rgba(255,255,255,.98) 0 2.2%, transparent 2.7%), radial-gradient(circle at 62% 34%, rgba(76,88,122,.34) 0 7.5%, transparent 8.2%), radial-gradient(circle at 39% 59%, rgba(70,82,116,.24) 0 12%, transparent 13%), radial-gradient(circle at 72% 68%, rgba(66,78,108,.22) 0 8%, transparent 8.8%), radial-gradient(circle at 44% 36%, #fffaf1 0%, #edf2ff 31%, #bac4da 57%, #7482a6 82%, #394865 100%)",
+          }}
+          initial={{ opacity: 0, y: 38, scale: 0.7, filter: "blur(14px)" }}
           animate={{
-            opacity: started ? 0.42 : 0.72,
-            y: started ? -22 : 0,
-            scale: started ? 1.2 : 1,
+            opacity: started ? 0.62 : 0.86,
+            y: started ? -18 : 0,
+            scale: started ? 1.08 : 1,
             filter: "blur(0px)",
           }}
-          transition={{ duration: reduceMotion ? 0.2 : started ? 0.65 : 0.78, ease }}
+          transition={{ duration: reduceMotion ? 0.2 : started ? 0.95 : 1.15, ease }}
         >
-          <span className="absolute left-[24%] top-[30%] h-7 w-7 rounded-full bg-[#6f8bd1]/20 blur-[1px]" />
-          <span className="absolute bottom-[27%] right-[19%] h-10 w-10 rounded-full bg-[#6f8bd1]/15 blur-[1px]" />
+          <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_68%_42%,transparent_0_48%,rgba(3,7,18,.18)_68%,rgba(1,3,8,.38)_100%)] mix-blend-multiply" />
+          <span className="absolute left-[18%] top-[42%] h-6 w-6 rounded-full bg-[#46536f]/18 blur-[1px]" />
+          <span className="absolute bottom-[24%] right-[25%] h-8 w-8 rounded-full bg-[#43506b]/16 blur-[1.5px]" />
+          <span className="absolute right-[18%] top-[24%] h-4 w-4 rounded-full bg-white/18 blur-[1px]" />
+          <span className="absolute inset-0 rounded-full shadow-[inset_-28px_-18px_42px_rgba(4,8,22,.42),inset_18px_12px_28px_rgba(255,255,255,.22)]" />
         </motion.div>
+
+        <motion.div
+          className="absolute left-1/2 top-[22%] z-[1] h-56 w-[26rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(120,183,255,.16)_0%,rgba(120,183,255,.05)_42%,transparent_72%)] blur-2xl sm:h-72 sm:w-[36rem]"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: started ? 0.32 : 0.42, scale: started ? 1.08 : 1 }}
+          transition={{ duration: reduceMotion ? 0.2 : 1.3, ease }}
+        />
 
         <div className="absolute inset-x-0 bottom-0 h-[28%] opacity-80">
           <div className="night-horizon absolute inset-x-0 bottom-0 h-full" />
@@ -225,28 +239,47 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
               <motion.div
                 key="invitation"
                 className="max-w-xl"
-                initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -28, scale: 1.025, filter: "blur(10px)" }}
-                transition={{ duration: reduceMotion ? 0.2 : 0.58, delay: 0.04, ease }}
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, y: -24, scale: 1.015, filter: "blur(10px)" }}
+                transition={{ duration: reduceMotion ? 0.2 : 0.65, ease }}
               >
-                <p className="mb-4 text-xs font-medium uppercase tracking-[0.32em] text-[#78b7ff]">
-                  İlk gecene hoş geldin
-                </p>
-                <h1 className="max-w-lg text-balance text-[clamp(3rem,10vw,6.5rem)] font-medium leading-[0.92] tracking-[-0.065em]">
-                  Geceyi
+                <motion.p
+                  className="mb-4 text-xs font-medium uppercase tracking-[0.32em] text-[#78b7ff]"
+                  initial={{ opacity: 0, y: 12, filter: "blur(8px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  transition={{ duration: reduceMotion ? 0.2 : 0.55, delay: 0.12, ease }}
+                >
+                  Ay yükselirken
+                </motion.p>
+                <motion.h1
+                  className="max-w-lg text-balance text-[clamp(3rem,10vw,6.5rem)] font-medium leading-[0.92] tracking-[-0.065em]"
+                  initial={{ opacity: 0, y: 22, filter: "blur(12px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  transition={{ duration: reduceMotion ? 0.2 : 0.82, delay: 0.28, ease }}
+                >
+                  Gece susar.
                   <span className="block bg-gradient-to-r from-white via-[#bcd8ff] to-[#5e9eff] bg-clip-text text-transparent">
-                    yakala.
+                    İzleri kalır.
                   </span>
-                </h1>
-                <p className="mt-6 max-w-sm text-pretty text-base font-light leading-7 text-white/52 sm:text-lg">
-                  Kısa bir nefes alanıyla başla. Ambiyans dokunuşunla anında açılır.
-                </p>
+                </motion.h1>
+                <motion.p
+                  className="mt-6 max-w-sm text-pretty text-base font-light leading-7 text-white/52 sm:text-lg"
+                  initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  transition={{ duration: reduceMotion ? 0.2 : 0.68, delay: 0.68, ease }}
+                >
+                  Cyllene, karanlıkta oluşan ses izlerini sabaha sade bir uyku haritası olarak
+                  taşır.
+                </motion.p>
 
-                <button
+                <motion.button
                   type="button"
                   onClick={() => void begin()}
                   className="group relative mt-9 flex items-center gap-4 overflow-hidden rounded-full border border-white/12 bg-white/[0.07] py-2.5 pl-5 pr-2.5 shadow-[0_16px_60px_rgba(0,50,160,.25),inset_0_1px_0_rgba(255,255,255,.12)] backdrop-blur-2xl transition duration-300 hover:scale-[1.03] hover:border-[#78b7ff]/35 hover:bg-white/[0.11] active:scale-[0.99]"
+                  initial={{ opacity: 0, y: 14, filter: "blur(8px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  transition={{ duration: reduceMotion ? 0.2 : 0.5, delay: 0.98, ease }}
                 >
                   {!reduceMotion && (
                     <motion.span
@@ -256,12 +289,12 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                       transition={{ duration: 0.85, repeat: Infinity, repeatDelay: 1.1, ease }}
                     />
                   )}
-                  <span className="relative text-sm font-medium">Dokun ve nefes al</span>
+                  <span className="relative text-sm font-medium">Gece modunu başlat</span>
                   <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-[#1769ff] text-white shadow-[0_0_32px_rgba(23,105,255,.55)]">
                     <span className="absolute inset-0 animate-ping rounded-full border border-[#78b7ff]/40 [animation-duration:1.35s]" />
                     <Volume2 className="h-4 w-4" />
                   </span>
-                </button>
+                </motion.button>
               </motion.div>
             ) : (
               <motion.div
@@ -274,10 +307,10 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={moment}
-                    initial={{ opacity: 0, y: 32, scale: 0.985, filter: "blur(12px)" }}
+                    initial={{ opacity: 0, y: 26, scale: 0.99, filter: "blur(14px)" }}
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, y: -24, scale: 1.015, filter: "blur(10px)" }}
-                    transition={{ duration: reduceMotion ? 0.2 : 0.52, ease }}
+                    exit={{ opacity: 0, y: -18, scale: 1.01, filter: "blur(12px)" }}
+                    transition={{ duration: reduceMotion ? 0.2 : 0.72, ease }}
                     className="max-w-2xl"
                   >
                     <p className="mb-4 text-xs font-medium uppercase tracking-[0.3em] text-[#78b7ff]">
@@ -311,7 +344,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                     }}
                     className="ml-auto flex h-13 items-center gap-3 rounded-full bg-white px-5 text-sm font-semibold text-[#06112a] shadow-[0_12px_42px_rgba(48,112,255,.3)] transition hover:scale-[1.02] sm:ml-0"
                   >
-                    {moment === MOMENTS.length - 1 ? "Cyllene’i keşfet" : "Devam"}
+                    {moment === MOMENTS.length - 1 ? "Sabaha geç" : "Devam"}
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -321,7 +354,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
         </main>
 
         <p className="text-[10px] uppercase tracking-[0.24em] text-white/25">
-          {started && soundOn ? "Meditasyon ambiyansı açık" : "Ses senin kontrolünde"}
+          {started && soundOn ? "Ay ambiyansı açık" : "Ses dokunuşla başlar"}
         </p>
       </div>
     </motion.div>
