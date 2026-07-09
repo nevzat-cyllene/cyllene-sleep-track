@@ -111,11 +111,11 @@ export function SleepPageClient() {
         <div>
           <div className="mb-3 flex items-center gap-2 text-xs text-[#78b7ff]">
             <Sparkles className="h-3.5 w-3.5" />
-            Gece rutinin hazır
+            Uyku ritmin hazır
           </div>
           <h1 className="text-4xl font-medium tracking-[-0.055em] sm:text-5xl">İyi geceler.</h1>
           <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">
-            Uykunu anlamak için yapman gereken tek şey, geceyi başlatmak.
+            Telefonunu yakınına koy; Cyllene gece sinyallerini sabah raporuna dönüştürsün.
           </p>
         </div>
         <div className="flex w-fit items-center gap-2 rounded-full border border-emerald-400/12 bg-emerald-400/6 px-3 py-2 text-[10px] text-emerald-300">

@@ -39,9 +39,10 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
   if (compact) {
     return (
       <div className="space-y-4">
-        <div className="relative overflow-hidden rounded-[1.8rem] border border-[#6da9ff]/14 bg-[linear-gradient(145deg,#102a60_0%,#0b1938_48%,#071126_100%)] p-6 shadow-[0_30px_90px_rgba(0,26,90,.28),inset_0_1px_0_rgba(255,255,255,.07)] sm:p-8">
-          <div className="night-stars pointer-events-none absolute inset-0 opacity-20" />
-          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#1769ff]/24 blur-[80px]" />
+        <div className="relative overflow-hidden rounded-[1.8rem] border border-[#8dbdff]/20 bg-[linear-gradient(135deg,rgba(35,92,168,.42)_0%,rgba(21,96,255,.25)_38%,rgba(12,31,73,.88)_100%)] p-6 shadow-[0_30px_100px_rgba(28,105,255,.24),inset_0_1px_0_rgba(255,255,255,.09)] sm:p-8">
+          <div className="night-stars pointer-events-none absolute inset-0 opacity-[0.16]" />
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#6fd2ff]/22 blur-[78px]" />
+          <div className="absolute -left-24 bottom-[-7rem] h-72 w-72 rounded-full bg-[#1769ff]/24 blur-[90px]" />
 
           <div className="relative grid gap-7 sm:grid-cols-[1fr_auto] sm:items-center">
             <div>
@@ -50,10 +51,10 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
                   <span className="absolute inset-0 animate-ping rounded-full bg-[#6da9ff] opacity-50" />
                   <span className="relative h-2 w-2 rounded-full bg-[#6da9ff]" />
                 </span>
-                Analiz motoru hazır
+                Cyllene analizi hazır
               </div>
               <h2 className="max-w-md text-balance text-3xl font-medium tracking-[-0.045em] sm:text-4xl">
-                Geceni kaydetmeye hazır mısın?
+                Uyku ritmini kaydetmeye hazır mısın?
               </h2>
               <p className="mt-3 max-w-md text-sm leading-6 text-white/45">
                 Telefonunu yakınına koy. Sesler cihazında analiz edilir ve ham kayıtların
@@ -76,7 +77,7 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
               size="lg"
               onClick={onStart}
               disabled={isLoading}
-              className="glow-purple h-14 w-full rounded-2xl bg-white px-7 text-base font-semibold text-[#07122b] hover:bg-[#dceaff] sm:w-auto"
+              className="h-14 w-full rounded-2xl bg-[linear-gradient(135deg,#8fd1ff_0%,#2d79ff_42%,#165dff_100%)] px-7 text-base font-semibold text-white shadow-[0_18px_50px_rgba(24,105,255,.38),inset_0_1px_0_rgba(255,255,255,.18)] transition duration-150 hover:brightness-110 active:scale-[0.98] sm:w-auto"
             >
               <MoonStar className="mr-1 h-4.5 w-4.5" />
               {isLoading ? "Hazırlanıyor..." : startLabel ?? "Uyku modunu başlat"}
@@ -126,7 +127,7 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
           size="lg"
           onClick={onStart}
           disabled={isLoading}
-          className="glow-purple h-14 w-full max-w-sm rounded-2xl text-lg sm:w-auto sm:px-12"
+          className="h-14 w-full max-w-sm rounded-2xl bg-[linear-gradient(135deg,#8fd1ff_0%,#2d79ff_45%,#165dff_100%)] text-lg text-white shadow-[0_18px_50px_rgba(24,105,255,.35)] transition duration-150 hover:brightness-110 active:scale-[0.98] sm:w-auto sm:px-12"
         >
           {isLoading ? "Hazırlanıyor..." : startLabel ?? "Uyku modunu başlat"}
         </Button>

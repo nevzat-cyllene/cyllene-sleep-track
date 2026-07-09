@@ -22,21 +22,21 @@ const features = [
   {
     icon: AudioWaveform,
     number: "01",
-    title: "Geceyi cihazında dinler",
+    title: "Uyku sinyalini cihazında çözer",
     description:
-      "Horlama, öksürük, konuşma ve ani sesleri telefonunda analiz eder. Ham kayıtlar cihazından çıkmaz.",
+      "Horlama, öksürük, konuşma ve ani sesleri telefonunda yakalar. Ham kayıtlar cihazından çıkmaz.",
   },
   {
     icon: Sparkles,
     number: "02",
-    title: "Sinyali sadeleştirir",
+    title: "Gece ritmini sadeleştirir",
     description:
-      "Karmaşık gece verisini; süre, yoğunluk ve önemli anlardan oluşan anlaşılır bir özete dönüştürür.",
+      "Karmaşık gece verisini; süre, yoğunluk ve önemli anlardan oluşan anlaşılır bir uyku özetine dönüştürür.",
   },
   {
     icon: Headphones,
     number: "03",
-    title: "Sabah hikâyeni gösterir",
+    title: "Sabah raporunu netleştirir",
     description:
       "Uyku skorunu, ses zaman çizelgeni ve dinlemek istediğin olayları tek akışta sunar.",
   },
@@ -54,6 +54,7 @@ export default function LandingPage() {
           <div className="pointer-events-none absolute inset-0" aria-hidden="true">
             <div className="night-stars absolute inset-0 opacity-25" />
             <div className="absolute left-1/2 top-8 h-[34rem] w-[52rem] -translate-x-1/2 rounded-full bg-[#185cff]/12 blur-[140px]" />
+            <div className="absolute right-[-12rem] top-36 h-[30rem] w-[30rem] rounded-full bg-[#6fd2ff]/10 blur-[130px]" />
           </div>
 
           <Container className="relative grid min-h-[calc(100svh-4rem)] items-center gap-14 py-16 lg:grid-cols-[1.02fr_.98fr] lg:py-24">
@@ -63,17 +64,17 @@ export default function LandingPage() {
                   <span className="absolute inset-0 animate-ping rounded-full bg-[#6da9ff] opacity-60" />
                   <span className="relative h-2 w-2 rounded-full bg-[#6da9ff]" />
                 </span>
-                Yeni nesil cihaz içi uyku analizi
+                Cihaz içi premium uyku analizi
               </div>
 
               <h1 className="text-balance text-[clamp(3.35rem,8vw,6.8rem)] font-medium leading-[0.89] tracking-[-0.07em]">
-                Gecen konuşur.
-                <span className="mt-2 block text-gradient">Cyllene dinler.</span>
+                Uyku ritmini gör.
+                <span className="mt-2 block text-gradient">Sabaha net uyan.</span>
               </h1>
 
               <p className="mt-7 max-w-xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-                Uykundaki sesleri telefonunda güvenle analiz et. Sabah ne olduğunu tahmin etme;
-                sade, ölçülebilir ve sana ait bir raporla uyan.
+                Gece boyunca oluşan horlama, öksürük ve ani sesleri telefonunda analiz et.
+                Cyllene, uykunun ritmini sade ve sana ait bir sabah raporuna çevirir.
               </p>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -82,7 +83,7 @@ export default function LandingPage() {
                   className="glow-purple h-13 rounded-full bg-[#1769ff] px-6 hover:bg-[#2d79ff]"
                   render={<Link href="/signup" />}
                 >
-                  Ücretsiz başla
+                  İlk geceyi başlat
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
                 <Button
@@ -96,7 +97,7 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-xs text-muted-foreground">
-                {["Kredi kartı gerekmez", "Ham ses yüklenmez", "Mobil uyumlu PWA"].map(
+                {["Kredi kartı gerekmez", "Ham ses yüklenmez", "Uyku skoru ve zaman çizelgesi"].map(
                   (item) => (
                     <span key={item} className="flex items-center gap-2">
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-400/10 text-emerald-300">
@@ -111,7 +112,9 @@ export default function LandingPage() {
 
             <div className="relative mx-auto w-full max-w-[34rem] lg:mx-0 lg:ml-auto">
               <div className="absolute -inset-10 rounded-full bg-[#185cff]/18 blur-[100px]" />
-              <div className="surface-panel relative overflow-hidden rounded-[2rem] p-4 sm:p-5">
+              <div className="relative overflow-hidden rounded-[2rem] border border-[#8dbdff]/18 bg-[linear-gradient(145deg,rgba(31,68,128,.78),rgba(12,34,76,.88)_48%,rgba(8,18,42,.9)_100%)] p-4 shadow-[0_28px_110px_rgba(30,112,255,.28),inset_0_1px_0_rgba(255,255,255,.09)] backdrop-blur-2xl sm:p-5">
+                <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#6fd2ff]/16 blur-[70px]" />
+                <div className="pointer-events-none absolute -left-20 bottom-10 h-56 w-56 rounded-full bg-[#235dff]/18 blur-[80px]" />
                 <div className="flex items-center justify-between border-b border-white/[0.07] pb-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#1769ff] shadow-[0_8px_30px_rgba(23,105,255,.35)]">
@@ -128,7 +131,7 @@ export default function LandingPage() {
                 </div>
 
                 <div className="grid gap-3 py-4 sm:grid-cols-[1.15fr_.85fr]">
-                  <div className="rounded-[1.45rem] border border-white/[0.07] bg-white/[0.035] p-5">
+                  <div className="rounded-[1.45rem] border border-white/[0.08] bg-white/[0.055] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,.06)]">
                     <p className="text-xs text-white/40">Uyku skoru</p>
                     <div className="mt-4 flex items-end justify-between gap-4">
                       <div>
@@ -136,14 +139,14 @@ export default function LandingPage() {
                         <span className="ml-1 text-sm text-white/30">/100</span>
                       </div>
                       <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[conic-gradient(#6ea8ff_0deg,#1a6cff_309deg,rgba(255,255,255,.07)_309deg)]">
-                        <div className="h-[52px] w-[52px] rounded-full bg-[#0d1830]" />
+                        <div className="h-[52px] w-[52px] rounded-full bg-[#10234a]" />
                         <MoonStar className="absolute h-5 w-5 text-[#84b7ff]" />
                       </div>
                     </div>
                     <p className="mt-4 text-xs text-emerald-300">Önceki geceden %8 daha sakin</p>
                   </div>
 
-                  <div className="rounded-[1.45rem] border border-white/[0.07] bg-[#155eff]/10 p-5">
+                  <div className="rounded-[1.45rem] border border-[#8dbdff]/12 bg-[linear-gradient(145deg,rgba(33,105,255,.2),rgba(113,190,255,.08))] p-5">
                     <p className="text-xs text-white/40">Toplam uyku</p>
                     <p className="mt-3 text-3xl font-medium tracking-[-0.04em]">7s 42dk</p>
                     <div className="mt-5 flex items-end gap-1">
@@ -158,7 +161,7 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[1.45rem] border border-white/[0.07] bg-[#071126]/70 p-5">
+                <div className="rounded-[1.45rem] border border-[#8dbdff]/12 bg-[linear-gradient(145deg,rgba(14,43,93,.86),rgba(7,20,47,.78))] p-5">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium">Gece sesleri</p>
@@ -189,7 +192,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="surface-panel absolute -bottom-7 -left-3 flex items-center gap-3 rounded-2xl px-4 py-3 sm:-left-10">
+              <div className="absolute -bottom-7 -left-3 flex items-center gap-3 rounded-2xl border border-[#8dbdff]/14 bg-[linear-gradient(135deg,rgba(26,68,128,.84),rgba(9,23,52,.9))] px-4 py-3 shadow-[0_18px_55px_rgba(17,88,210,.28),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-2xl sm:-left-10">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/10">
                   <ShieldCheck className="h-4 w-4 text-emerald-300" />
                 </div>
@@ -205,7 +208,7 @@ export default function LandingPage() {
         <section className="border-y border-white/[0.055] bg-white/[0.018] py-7">
           <Container className="flex flex-wrap items-center justify-center gap-x-10 gap-y-5 text-xs text-white/35 sm:justify-between">
             <span className="text-[10px] font-medium uppercase tracking-[0.28em] text-white/22">
-              Mahremiyet varsayılandır
+              Mahremiyet tasarımın merkezinde
             </span>
             <span className="flex items-center gap-2">
               <CloudOff className="h-4 w-4 text-[#72aaff]" />
@@ -227,15 +230,15 @@ export default function LandingPage() {
             <div className="mb-14 grid gap-5 lg:grid-cols-2 lg:items-end">
               <div>
                 <p className="mb-4 text-xs font-medium uppercase tracking-[0.28em] text-[#78b7ff]">
-                  Gürültüden içgörüye
+                  Uyku sinyalinden içgörüye
                 </p>
                 <h2 className="max-w-xl text-balance text-4xl font-medium tracking-[-0.045em] sm:text-5xl">
-                  Sabahına daha iyi veriyle başla.
+                  Sabahına daha net bir uyku resmiyle başla.
                 </h2>
               </div>
               <p className="max-w-lg text-pretty leading-7 text-muted-foreground lg:justify-self-end">
-                Cyllene, gece boyunca oluşan sinyalleri sade bir sabah raporuna dönüştürür.
-                Karmaşa yok; önemli olan neyse o.
+                Cyllene, gece boyunca oluşan ses sinyallerini sade bir sabah raporuna dönüştürür.
+                Karmaşa yok; yalnızca uykunu anlamana yarayan net detaylar var.
               </p>
             </div>
 
@@ -271,11 +274,11 @@ export default function LandingPage() {
                     Bu gece hazır
                   </p>
                   <h2 className="text-balance text-4xl font-medium tracking-[-0.05em] sm:text-5xl">
-                    İlk sabah raporun bir uyku uzağında.
+                    İlk sabah raporun bu gece hazır olabilir.
                   </h2>
                   <p className="mt-5 max-w-lg leading-7 text-white/48">
-                    Ücretsiz hesabını oluştur, telefonu yakınına koy ve gecenin görünmeyen
-                    ayrıntılarını sabah keşfet.
+                    Ücretsiz hesabını oluştur, telefonu yakınına koy ve uykunun görünmeyen
+                    ritmini sabah net bir raporla keşfet.
                   </p>
                 </div>
                 <Button
