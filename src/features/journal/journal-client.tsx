@@ -1,16 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { formatDate } from "@/lib/sleep-utils";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import type { SleepSession } from "@/types";
-import { BookOpen, Moon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { BookOpen } from "lucide-react";
+import { JournalSessionRow } from "./components/journal-session-row";
+import { deleteSleepSession } from "./delete-sleep-session";
 
 interface JournalClientProps {
   sessions: SleepSession[];
+  userId: string;
 }
 
 function groupByMonth(sessions: SleepSession[]) {
@@ -26,7 +28,33 @@ function groupByMonth(sessions: SleepSession[]) {
   return groups;
 }
 
-export function JournalClient({ sessions }: JournalClientProps) {
+export function JournalClient({ sessions: initialSessions, userId }: JournalClientProps) {
+  const [sessions, setSessions] = useState(initialSessions);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (session: SleepSession) => {
+    const label = new Intl.DateTimeFormat("tr-TR", {
+      day: "numeric",
+      month: "long",
+    }).format(new Date(session.started_at));
+
+    if (!window.confirm(`${label} gece kaydı silinsin mi? Ses klipleri de cihazınızdan kaldırılır.`)) {
+      return;
+    }
+
+    setDeletingId(session.id);
+    const result = await deleteSleepSession(session.id, userId);
+    setDeletingId(null);
+
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    setSessions((prev) => prev.filter((s) => s.id !== session.id));
+    toast.success("Gece kaydı silindi.");
+  };
+
   if (sessions.length === 0) {
     return (
       <div className="space-y-6 pb-4">
@@ -48,7 +76,9 @@ export function JournalClient({ sessions }: JournalClientProps) {
     <div className="space-y-6 pb-4">
       <div>
         <h1 className="text-2xl font-semibold">Günlük</h1>
-        <p className="text-sm text-muted-foreground">Geçmiş geceleriniz ve ses kayıtları</p>
+        <p className="text-sm text-muted-foreground">
+          Sola kaydırarak silebilirsiniz
+        </p>
       </div>
 
       {[...groups.entries()].map(([month, monthSessions]) => (
@@ -58,35 +88,12 @@ export function JournalClient({ sessions }: JournalClientProps) {
           </h2>
           <div className="space-y-2">
             {monthSessions.map((session) => (
-              <Link key={session.id} href={`/journal/${session.id}`}>
-                <Card className="glass border-white/10 shadow-soft transition hover:border-cyllene-cyan/30">
-                  <CardContent className="flex items-center justify-between py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                        <Moon className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{formatDate(session.started_at)}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {session.duration_minutes ?? "—"} dk · {session.snore_count} horlama
-                        </p>
-                      </div>
-                    </div>
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        (session.sleep_score ?? 0) >= 70
-                          ? "bg-emerald-500/10 text-emerald-400"
-                          : (session.sleep_score ?? 0) >= 50
-                            ? "bg-amber-500/10 text-amber-400"
-                            : "bg-red-500/10 text-red-400"
-                      )}
-                    >
-                      {session.sleep_score ?? "—"}
-                    </Badge>
-                  </CardContent>
-                </Card>
-              </Link>
+              <JournalSessionRow
+                key={session.id}
+                session={session}
+                onDelete={handleDelete}
+                deleting={deletingId === session.id}
+              />
             ))}
           </div>
         </div>
