@@ -49,6 +49,8 @@
   --color-cyllene-purple: oklch(0.62 0.22 285);
   --color-cyllene-cyan: oklch(0.78 0.14 195);
   --color-cyllene-glow: oklch(0.55 0.2 285);
+  --color-sleep-quality: oklch(0.75 0.18 55);
+  --color-sleep-card: oklch(0.14 0.04 240);
 }
 
 :root {

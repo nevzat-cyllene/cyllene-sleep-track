@@ -87,12 +87,16 @@ interface DetectedEventsListProps {
   events: (LocalSleepEvent | SleepEvent)[];
   variant?: "dark" | "light";
   emptyMessage?: string;
+  selectedEventId?: string | null;
+  onSelectEvent?: (id: string) => void;
 }
 
 export function DetectedEventsList({
   events,
   variant = "light",
   emptyMessage = "Henüz olay tespit edilmedi.",
+  selectedEventId,
+  onSelectEvent,
 }: DetectedEventsListProps) {
   if (events.length === 0) {
     return (
@@ -109,7 +113,23 @@ export function DetectedEventsList({
   return (
     <div className="space-y-2">
       {sorted.map((event) => (
-        <DetectedEventItem key={event.id} event={event} variant={variant} />
+        <div
+          key={event.id}
+          role={onSelectEvent ? "button" : undefined}
+          tabIndex={onSelectEvent ? 0 : undefined}
+          onClick={() => onSelectEvent?.(event.id)}
+          onKeyDown={(e) => {
+            if (onSelectEvent && (e.key === "Enter" || e.key === " ")) {
+              onSelectEvent(event.id);
+            }
+          }}
+          className={cn(
+            onSelectEvent && "cursor-pointer",
+            selectedEventId === event.id && "ring-1 ring-cyllene-cyan/50 rounded-xl"
+          )}
+        >
+          <DetectedEventItem event={event} variant={variant} />
+        </div>
       ))}
     </div>
   );

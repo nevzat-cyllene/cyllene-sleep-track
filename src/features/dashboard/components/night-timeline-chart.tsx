@@ -19,16 +19,15 @@ interface NightTimelineChartProps {
 }
 
 const EVENT_COLORS: Record<string, string> = {
-  snore: "oklch(0.65 0.22 25)",
-  cough: "oklch(0.75 0.18 85)",
-  talk: "oklch(0.68 0.2 285)",
-  noise: "oklch(0.6 0.12 265)",
+  snore: "var(--chart-4)",
+  cough: "var(--chart-3)",
+  talk: "var(--chart-1)",
+  noise: "var(--chart-5)",
 };
 
 export function NightTimelineChart({
   sessionStart,
   events,
-  avgDb = 35,
 }: NightTimelineChartProps) {
   const startMs = new Date(sessionStart).getTime();
 
@@ -40,39 +39,9 @@ export function NightTimelineChart({
   }));
 
   if (chartData.length === 0) {
-    const hours = Array.from({ length: 8 }, (_, i) => ({
-      time: formatTime(startMs + i * 3600000),
-      db: avgDb ?? 30 + Math.random() * 10,
-    }));
     return (
-      <div className="h-64 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={hours}>
-            <defs>
-              <linearGradient id="dbGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="oklch(0.68 0.2 285)" stopOpacity={0.4} />
-                <stop offset="100%" stopColor="oklch(0.68 0.2 285)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="oklch(1 0 0 / 6%)" />
-            <XAxis dataKey="time" stroke="oklch(0.7 0.04 265)" fontSize={12} />
-            <YAxis stroke="oklch(0.7 0.04 265)" fontSize={12} domain={[20, 80]} />
-            <Tooltip
-              contentStyle={{
-                background: "oklch(0.16 0.04 265 / 95%)",
-                border: "1px solid oklch(1 0 0 / 10%)",
-                borderRadius: "12px",
-              }}
-            />
-            <Area
-              type="monotone"
-              dataKey="db"
-              stroke="oklch(0.68 0.2 285)"
-              fill="url(#dbGradient)"
-              strokeWidth={2}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+      <div className="flex h-64 w-full items-center justify-center text-sm text-muted-foreground">
+        Bu gece için grafik verisi yok
       </div>
     );
   }
@@ -83,8 +52,8 @@ export function NightTimelineChart({
         <AreaChart data={chartData}>
           <defs>
             <linearGradient id="dbGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="oklch(0.68 0.2 285)" stopOpacity={0.4} />
-              <stop offset="100%" stopColor="oklch(0.68 0.2 285)" stopOpacity={0} />
+              <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="oklch(1 0 0 / 6%)" />
@@ -104,7 +73,7 @@ export function NightTimelineChart({
           <Area
             type="monotone"
             dataKey="db"
-            stroke="oklch(0.68 0.2 285)"
+            stroke="var(--chart-2)"
             fill="url(#dbGradient)"
             strokeWidth={2}
             dot={(props) => {

@@ -3,7 +3,7 @@
 import { siteConfig } from "@/lib/site-config";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Mic, Moon } from "lucide-react";
+import { BarChart3, BookOpen, Moon, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Sidebar,
@@ -22,17 +22,19 @@ import { Button } from "@/components/ui/button";
 import { InstallPWA } from "@/components/install-pwa";
 
 const nav = [
-  { href: "/dashboard", label: "Sabah Raporu", icon: BarChart3 },
-  { href: "/record", label: "Kayıt", icon: Mic },
+  { href: "/sleep", label: "Uyku", icon: Moon },
+  { href: "/journal", label: "Günlük", icon: BookOpen },
+  { href: "/statistics", label: "İstatistik", icon: BarChart3 },
+  { href: "/profile", label: "Profil", icon: User },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <Sidebar variant="inset" collapsible="icon">
+    <Sidebar variant="inset" collapsible="icon" className="hidden md:flex">
       <SidebarHeader className="gap-2">
-        <Link href="/dashboard" className="flex items-center gap-2 rounded-lg p-2">
+        <Link href="/sleep" className="flex items-center gap-2 rounded-lg p-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-white/10">
             <Moon className="h-4 w-4 text-primary" />
           </div>
@@ -83,9 +85,9 @@ export function AppSidebar() {
         <Button
           variant="outline"
           className="group-data-[collapsible=icon]/sidebar-wrapper:hidden"
-          render={<Link href="/record" />}
+          render={<Link href="/sleep" />}
         >
-          Bu gece kayda başla
+          Uykuya başla
         </Button>
       </SidebarFooter>
     </Sidebar>

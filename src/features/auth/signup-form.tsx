@@ -43,7 +43,7 @@ export function SignupForm() {
 
     setSuccess(true);
     setLoading(false);
-    router.push("/dashboard");
+    router.push("/sleep");
     router.refresh();
   };
 

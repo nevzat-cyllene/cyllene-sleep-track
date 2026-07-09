@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: siteConfig.name,
     short_name: siteConfig.shortName,
     description: siteConfig.description,
-    start_url: "/dashboard",
+    start_url: "/sleep",
     display: "standalone",
     background_color: "#0f0a1a",
     theme_color: "#0f0a1a",

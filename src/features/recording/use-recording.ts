@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { EventDetector } from "./event-detector";
 import { WakeLockManager, type WakeLockMethod } from "./wake-lock";
 import {
   createSession,
@@ -26,9 +25,34 @@ interface PendingEventPayload {
   pendingEvent: LocalSleepEvent;
 }
 
+interface WorkletEventMessage {
+  type: "event";
+  startElapsedMs: number;
+  durationMs: number;
+  peakDb: number;
+  audioData: ArrayBuffer;
+  sampleRate: number;
+}
+
+const LIVE_WAVE_SAMPLES = 120;
+
+function bucketNoiseSamples(session: LocalSleepSession) {
+  const minuteBuckets = new Map<number, number[]>();
+  for (const s of session.noiseSamples) {
+    const minute = Math.floor((s.timestamp - session.startedAt) / 60000);
+    if (!minuteBuckets.has(minute)) minuteBuckets.set(minute, []);
+    minuteBuckets.get(minute)!.push(s.db);
+  }
+  session.noiseSamples = Array.from(minuteBuckets.entries()).map(([minute, dbs]) => ({
+    timestamp: session.startedAt + minute * 60000,
+    db: dbs.reduce((a, b) => a + b, 0) / dbs.length,
+  }));
+}
+
 export function useRecording({ userId, onSessionComplete }: UseRecordingOptions = {}) {
   const [status, setStatus] = useState<RecordingStatus>("idle");
   const [currentDb, setCurrentDb] = useState(0);
+  const [recentDbSamples, setRecentDbSamples] = useState<number[]>([]);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [eventCount, setEventCount] = useState(0);
   const [detectedEvents, setDetectedEvents] = useState<LocalSleepEvent[]>([]);
@@ -39,12 +63,13 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
   const sessionRef = useRef<LocalSleepSession | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const detectorRef = useRef(new EventDetector());
+  const workletRef = useRef<AudioWorkletNode | null>(null);
   const wakeLockRef = useRef(new WakeLockManager());
   const saveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const elapsedIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const wasHiddenRef = useRef(false);
-  const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
+  const eventQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const stoppingRef = useRef(false);
 
   const persistSession = useCallback(async () => {
     if (sessionRef.current) {
@@ -52,37 +77,46 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
     }
   }, []);
 
-  const handlePendingEvent = useCallback(
-    async (payload: PendingEventPayload) => {
-      if (!sessionRef.current) return;
+  const enqueueEvent = useCallback(
+    (payload: PendingEventPayload) => {
+      eventQueueRef.current = eventQueueRef.current.then(async () => {
+        if (!sessionRef.current || stoppingRef.current) return;
 
-      const sampleRate = audioContextRef.current?.sampleRate ?? 44100;
-      const { type, confidence } = await classifyAudio(payload.audioData, sampleRate);
+        const sampleRate = payload.pendingEvent.durationMs > 0
+          ? audioContextRef.current?.sampleRate ?? 44100
+          : 44100;
 
-      const classifiedEvent: LocalSleepEvent = {
-        ...payload.pendingEvent,
-        type,
-        confidence,
-      };
+        const { type, confidence } = await classifyAudio(payload.audioData, sampleRate);
 
-      const wavBlob = float32ToWav(payload.audioData, sampleRate);
+        const classifiedEvent: LocalSleepEvent = {
+          ...payload.pendingEvent,
+          type,
+          confidence,
+        };
 
-      await saveEventClip({
-        eventId: classifiedEvent.id,
-        sessionId: sessionRef.current.id,
-        occurredAt: classifiedEvent.timestamp,
-        sampleRate,
-        wavBlob,
-        durationMs: classifiedEvent.durationMs,
+        const wavBlob = float32ToWav(payload.audioData, sampleRate);
+
+        await saveEventClip({
+          eventId: classifiedEvent.id,
+          sessionId: sessionRef.current.id,
+          occurredAt: classifiedEvent.timestamp,
+          sampleRate,
+          wavBlob,
+          durationMs: classifiedEvent.durationMs,
+        });
+
+        sessionRef.current.events.push(classifiedEvent);
+        setEventCount(sessionRef.current.events.length);
+        setDetectedEvents([...sessionRef.current.events]);
+        await persistSession();
       });
-
-      sessionRef.current.events.push(classifiedEvent);
-      setEventCount(sessionRef.current.events.length);
-      setDetectedEvents([...sessionRef.current.events]);
-      await persistSession();
     },
     [persistSession]
   );
+
+  const drainEventQueue = useCallback(async () => {
+    await eventQueueRef.current;
+  }, []);
 
   const cleanupAudio = useCallback(async () => {
     if (saveIntervalRef.current) {
@@ -94,8 +128,8 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
       elapsedIntervalRef.current = null;
     }
 
-    scriptProcessorRef.current?.disconnect();
-    scriptProcessorRef.current = null;
+    workletRef.current?.disconnect();
+    workletRef.current = null;
 
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
@@ -113,6 +147,8 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
   const startRecording = useCallback(async () => {
     setError(null);
     setStatus("preparing");
+    stoppingRef.current = false;
+    eventQueueRef.current = Promise.resolve();
 
     try {
       await preloadYamnet();
@@ -120,6 +156,8 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
       const existing = await getActiveSession();
       const session = existing ?? createSession(userId);
       sessionRef.current = session;
+
+      const sessionOffsetMs = Date.now() - session.startedAt;
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -132,60 +170,57 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
 
       const audioContext = new AudioContext();
       audioContextRef.current = audioContext;
-      detectorRef.current.setSampleRate(audioContext.sampleRate);
 
       await audioContext.audioWorklet.addModule("/audio-processor.js");
       const source = audioContext.createMediaStreamSource(stream);
-      const worklet = new AudioWorkletNode(audioContext, "audio-level-processor");
+      const worklet = new AudioWorkletNode(audioContext, "audio-level-processor", {
+        processorOptions: { sessionOffsetMs },
+      });
+      workletRef.current = worklet;
+
+      const silentGain = audioContext.createGain();
+      silentGain.gain.value = 0;
 
       worklet.port.onmessage = (event) => {
-        const { db, timestamp } = event.data as { db: number; timestamp: number };
-        setCurrentDb(db);
+        const data = event.data as
+          | { type: "level"; db: number; elapsedMs: number }
+          | WorkletEventMessage;
 
         if (!sessionRef.current) return;
 
-        const sample: NoiseSample = { timestamp: sessionRef.current.startedAt + timestamp, db };
-        sessionRef.current.noiseSamples.push(sample);
+        if (data.type === "level") {
+          setCurrentDb(data.db);
+          setRecentDbSamples((prev) => [...prev.slice(-(LIVE_WAVE_SAMPLES - 1)), data.db]);
 
-        if (sessionRef.current.noiseSamples.length % 6 === 0) {
-          const minuteBuckets = new Map<number, number[]>();
-          for (const s of sessionRef.current.noiseSamples) {
-            const minute = Math.floor((s.timestamp - sessionRef.current!.startedAt) / 60000);
-            if (!minuteBuckets.has(minute)) minuteBuckets.set(minute, []);
-            minuteBuckets.get(minute)!.push(s.db);
+          const sample: NoiseSample = {
+            timestamp: sessionRef.current.startedAt + data.elapsedMs,
+            db: data.db,
+          };
+          sessionRef.current.noiseSamples.push(sample);
+
+          if (sessionRef.current.noiseSamples.length % 6 === 0) {
+            bucketNoiseSamples(sessionRef.current);
           }
-          sessionRef.current.noiseSamples = Array.from(minuteBuckets.entries()).flatMap(
-            ([minute, dbs]) => {
-              const avg = dbs.reduce((a, b) => a + b, 0) / dbs.length;
-              return [{ timestamp: sessionRef.current!.startedAt + minute * 60000, db: avg }];
-            }
-          );
+          return;
         }
-      };
 
-      const processor = audioContext.createScriptProcessor(4096, 1, 1);
-      scriptProcessorRef.current = processor;
-      processor.onaudioprocess = (e) => {
-        const input = e.inputBuffer.getChannelData(0);
-        const chunk = new Float32Array(input);
-        const now = Date.now();
-        const rms = Math.sqrt(chunk.reduce((s, v) => s + v * v, 0) / chunk.length);
-        const db = rms > 0 ? 20 * Math.log10(rms) + 90 : 0;
-
-        const result = detectorRef.current.pushLevel(db, now, chunk) as NoiseSample &
-          Partial<PendingEventPayload>;
-
-        if (result.pendingEvent && result.audioData) {
-          void handlePendingEvent({
-            audioData: result.audioData,
-            pendingEvent: result.pendingEvent,
-          });
+        if (data.type === "event") {
+          const audioData = new Float32Array(data.audioData);
+          const pendingEvent: LocalSleepEvent = {
+            id: crypto.randomUUID(),
+            timestamp: sessionRef.current.startedAt + data.startElapsedMs,
+            durationMs: data.durationMs,
+            peakDb: data.peakDb,
+            type: "noise",
+            confidence: 0,
+          };
+          enqueueEvent({ audioData, pendingEvent });
         }
       };
 
       source.connect(worklet);
-      source.connect(processor);
-      processor.connect(audioContext.destination);
+      worklet.connect(silentGain);
+      silentGain.connect(audioContext.destination);
 
       const wakeState = await wakeLockRef.current.acquire();
       setWakeLockActive(wakeState.active);
@@ -204,7 +239,8 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
       setStatus("recording");
       setEventCount(session.events.length);
       setDetectedEvents([...session.events]);
-      setElapsedMs(0);
+      setElapsedMs(sessionOffsetMs > 0 ? sessionOffsetMs : 0);
+      setRecentDbSamples([]);
     } catch (err) {
       await cleanupAudio();
       setStatus("idle");
@@ -214,12 +250,17 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
           : "Mikrofon erişimi reddedildi. Lütfen izin verin."
       );
     }
-  }, [cleanupAudio, handlePendingEvent, persistSession, userId]);
+  }, [cleanupAudio, enqueueEvent, persistSession, userId]);
 
   const stopRecording = useCallback(async () => {
     setStatus("stopping");
+    stoppingRef.current = true;
+
+    await cleanupAudio();
+    await drainEventQueue();
 
     if (sessionRef.current) {
+      bucketNoiseSamples(sessionRef.current);
       sessionRef.current.endedAt = Date.now();
       sessionRef.current.sleepScore = calculateSleepScore(sessionRef.current);
       sessionRef.current.avgDb =
@@ -233,14 +274,16 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
           : undefined;
 
       await saveSession(sessionRef.current);
-      await onSessionComplete?.(sessionRef.current);
+      const completed = sessionRef.current;
+      await onSessionComplete?.(completed);
     }
 
-    await cleanupAudio();
     setStatus("idle");
     setCurrentDb(0);
+    setRecentDbSamples([]);
     setElapsedMs(0);
-  }, [cleanupAudio, onSessionComplete]);
+    stoppingRef.current = false;
+  }, [cleanupAudio, drainEventQueue, onSessionComplete]);
 
   useEffect(() => {
     const onVisibility = () => {
@@ -256,6 +299,9 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
           setWakeLockActive(state.active);
           setWakeLockMethod(state.method);
         });
+        if (audioContextRef.current?.state === "suspended") {
+          void audioContextRef.current.resume();
+        }
       }
     };
 
@@ -272,6 +318,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
   return {
     status,
     currentDb,
+    recentDbSamples,
     elapsedMs,
     eventCount,
     detectedEvents,

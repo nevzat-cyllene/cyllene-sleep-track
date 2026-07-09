@@ -1,5 +1,5 @@
-import { RecordPageClient } from "@/features/recording/record-page-client";
+import { redirect } from "next/navigation";
 
-export default function RecordPage() {
-  return <RecordPageClient />;
+export default function RecordRedirect() {
+  redirect("/sleep");
 }

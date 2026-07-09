@@ -58,6 +58,14 @@ export interface SleepEvent {
   created_at: string;
 }
 
+export interface SleepNoiseSample {
+  id: string;
+  session_id: string;
+  minute_offset: number;
+  avg_db: number;
+  created_at: string;
+}
+
 export interface Profile {
   id: string;
   email: string | null;

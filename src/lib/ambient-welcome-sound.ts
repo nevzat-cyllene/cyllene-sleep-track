@@ -1,8 +1,9 @@
-/** Procedural meditative drone — harici dosya gerekmez, PWA offline uyumlu */
+/** Derin uyku / meditasyon ambient drone — Om hissi, harici dosya gerekmez */
 export class AmbientWelcomeSound {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private oscillators: OscillatorNode[] = [];
+  private lfo: OscillatorNode | null = null;
   private running = false;
 
   async start(): Promise<void> {
@@ -15,14 +16,15 @@ export class AmbientWelcomeSound {
     this.masterGain.gain.value = 0;
     this.masterGain.connect(this.ctx.destination);
 
-    const layers: { freq: number; gain: number; type: OscillatorType }[] = [
-      { freq: 55, gain: 0.07, type: "sine" },
-      { freq: 82.41, gain: 0.045, type: "sine" },
-      { freq: 110, gain: 0.035, type: "triangle" },
-      { freq: 164.81, gain: 0.02, type: "sine" },
-    ];
-
     const now = this.ctx.currentTime;
+
+    const layers: { freq: number; gain: number; type: OscillatorType }[] = [
+      { freq: 65.41, gain: 0.09, type: "sine" },
+      { freq: 98.0, gain: 0.055, type: "sine" },
+      { freq: 130.81, gain: 0.04, type: "triangle" },
+      { freq: 196.0, gain: 0.025, type: "sine" },
+      { freq: 261.63, gain: 0.012, type: "sine" },
+    ];
 
     for (const layer of layers) {
       const osc = this.ctx.createOscillator();
@@ -36,7 +38,19 @@ export class AmbientWelcomeSound {
       this.oscillators.push(osc);
     }
 
-    this.masterGain.gain.linearRampToValueAtTime(0.42, now + 4);
+    const lfo = this.ctx.createOscillator();
+    const lfoGain = this.ctx.createGain();
+    lfo.type = "sine";
+    lfo.frequency.value = 0.08;
+    lfoGain.gain.value = 3;
+    lfo.connect(lfoGain);
+    if (this.oscillators[0]) {
+      lfoGain.connect(this.oscillators[0].frequency);
+    }
+    lfo.start(now);
+    this.lfo = lfo;
+
+    this.masterGain.gain.linearRampToValueAtTime(0.5, now + 5);
     this.running = true;
   }
 
@@ -53,6 +67,14 @@ export class AmbientWelcomeSound {
   }
 
   dispose(): void {
+    try {
+      this.lfo?.stop();
+      this.lfo?.disconnect();
+    } catch {
+      // ignore
+    }
+    this.lfo = null;
+
     for (const osc of this.oscillators) {
       try {
         osc.stop();

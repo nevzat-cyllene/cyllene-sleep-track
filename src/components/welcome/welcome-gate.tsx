@@ -1,24 +1,43 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { shouldShowWelcome } from "@/lib/welcome-storage";
-import { WelcomeExperience } from "./welcome-experience";
+import { createClient } from "@/lib/supabase/client";
+import { shouldShowOnboarding } from "@/lib/onboarding-storage";
+import { shouldShowGuestSplash } from "@/lib/guest-splash-storage";
+import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
+import { PremiumEntrance } from "./premium-entrance";
+
+type GateMode = "none" | "guest" | "onboarding";
 
 export function WelcomeGate({ children }: { children: React.ReactNode }) {
-  const [showWelcome, setShowWelcome] = useState(false);
+  const [mode, setMode] = useState<GateMode>("none");
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const show = shouldShowWelcome();
-    setShowWelcome(show);
-    setReady(true);
-    if (show) {
+    const supabase = createClient();
+
+    void supabase.auth.getUser().then(({ data }) => {
+      const isLoggedIn = !!data.user;
+
+      if (!isLoggedIn && shouldShowGuestSplash()) {
+        setMode("guest");
+      } else if (isLoggedIn && shouldShowOnboarding()) {
+        setMode("onboarding");
+      } else {
+        setMode("none");
+      }
+      setReady(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (mode !== "none") {
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = "";
       };
     }
-  }, []);
+  }, [mode]);
 
   if (!ready) {
     return <>{children}</>;
@@ -27,8 +46,11 @@ export function WelcomeGate({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      {showWelcome && (
-        <WelcomeExperience onComplete={() => setShowWelcome(false)} />
+      {mode === "guest" && (
+        <PremiumEntrance onComplete={() => setMode("none")} />
+      )}
+      {mode === "onboarding" && (
+        <OnboardingFlow onComplete={() => setMode("none")} />
       )}
     </>
   );

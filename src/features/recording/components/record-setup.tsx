@@ -8,6 +8,8 @@ import { RecordingGuidanceBanner } from "./recording-guidance-banner";
 interface RecordSetupProps {
   onStart: () => void;
   isLoading?: boolean;
+  startLabel?: string;
+  compact?: boolean;
 }
 
 const tips = [
@@ -34,44 +36,48 @@ const tips = [
   },
 ];
 
-export function RecordSetup({ onStart, isLoading }: RecordSetupProps) {
+export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordSetupProps) {
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Gece Kaydını Başlat</h1>
-        <p className="mt-2 text-muted-foreground">
-          Ses analizi telefonunuzda yapılır. Hiçbir ses kaydı sunucuya gönderilmez.
-        </p>
-      </div>
+    <div className={compact ? "space-y-4" : "mx-auto max-w-2xl space-y-6"}>
+      {!compact && (
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight">Gece Kaydını Başlat</h1>
+          <p className="mt-2 text-muted-foreground">
+            Ses analizi telefonunuzda yapılır. Hiçbir ses kaydı sunucuya gönderilmez.
+          </p>
+        </div>
+      )}
 
       <RecordingGuidanceBanner mode="setup" />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {tips.map((tip) => (
-          <Card key={tip.title} className="glass border-white/10 shadow-soft">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                  <tip.icon className="h-5 w-5 text-primary" />
+      {!compact && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {tips.map((tip) => (
+            <Card key={tip.title} className="glass border-white/10 shadow-soft">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                    <tip.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <CardTitle className="text-base">{tip.title}</CardTitle>
                 </div>
-                <CardTitle className="text-base">{tip.title}</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CardDescription>{tip.description}</CardDescription>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardHeader>
+              <CardContent>
+                <CardDescription>{tip.description}</CardDescription>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-      <div className="flex justify-center pt-4">
+      <div className="flex justify-center pt-2">
         <Button
           size="lg"
           onClick={onStart}
           disabled={isLoading}
-          className="glow-purple h-14 rounded-2xl px-12 text-lg shadow-soft"
+          className="glow-purple h-14 w-full max-w-sm rounded-2xl text-lg shadow-soft sm:w-auto sm:px-12"
         >
-          {isLoading ? "Hazırlanıyor..." : "Uyku Modunu Başlat"}
+          {isLoading ? "Hazırlanıyor..." : startLabel ?? "Uyku Modunu Başlat"}
         </Button>
       </div>
     </div>

@@ -6,19 +6,27 @@ interface SleepScoreRingProps {
   score: number;
   size?: number;
   className?: string;
+  label?: string;
+  showPercent?: boolean;
 }
 
-export function SleepScoreRing({ score, size = 160, className }: SleepScoreRingProps) {
+export function SleepScoreRing({
+  score,
+  size = 160,
+  className,
+  label = "Uyku Skoru",
+  showPercent = false,
+}: SleepScoreRingProps) {
   const stroke = 10;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
 
   const getColor = (s: number) => {
-    if (s >= 80) return "oklch(0.72 0.18 155)";
-    if (s >= 60) return "oklch(0.78 0.14 195)";
-    if (s >= 40) return "oklch(0.75 0.18 85)";
-    return "oklch(0.65 0.22 25)";
+    if (s >= 80) return "var(--chart-2)";
+    if (s >= 60) return "var(--color-sleep-quality)";
+    if (s >= 40) return "var(--chart-3)";
+    return "var(--chart-4)";
   };
 
   return (
@@ -46,9 +54,12 @@ export function SleepScoreRing({ score, size = 160, className }: SleepScoreRingP
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-5xl font-semibold tracking-tight tabular-nums">{score}</span>
+        <span className="text-5xl font-semibold tracking-tight tabular-nums">
+          {score}
+          {showPercent && <span className="text-2xl">%</span>}
+        </span>
         <span className="text-xs uppercase tracking-widest text-muted-foreground">
-          Uyku Skoru
+          {label}
         </span>
       </div>
     </div>
