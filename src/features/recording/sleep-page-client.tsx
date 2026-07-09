@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Moon } from "lucide-react";
+import { toast } from "sonner";
 import { RecordSetup } from "./components/record-setup";
 import { SleepModeScreen } from "./components/sleep-mode-screen";
 import { useRecording } from "./use-recording";
@@ -33,10 +34,16 @@ export function SleepPageClient() {
         const uid = userId ?? data.user?.id;
 
         if (uid) {
-          const remoteId = await syncSessionToSupabase(session, uid);
-          router.push(remoteId ? `/journal/${remoteId}` : "/journal");
+          const result = await syncSessionToSupabase(session, uid);
+          if ("id" in result) {
+            router.push(`/journal/${result.id}`);
+          } else {
+            toast.error(result.error);
+            router.push(`/journal/local/${session.id}`);
+          }
         } else {
-          router.push("/journal");
+          toast.message("Giriş yapmadan kayıt cihazınızda saklandı.");
+          router.push(`/journal/local/${session.id}`);
         }
       } finally {
         setSyncing(false);

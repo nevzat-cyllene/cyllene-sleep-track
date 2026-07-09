@@ -13,15 +13,86 @@ function toMinuteBuckets(session: LocalSleepSession) {
   }
   return Array.from(buckets.entries()).map(([minute_offset, dbs]) => ({
     minute_offset,
-    avg_db: dbs.reduce((a, b) => a + b, 0) / dbs.length,
+    avg_db: Math.round((dbs.reduce((a, b) => a + b, 0) / dbs.length) * 100) / 100,
   }));
+}
+
+function clampDb(value: number) {
+  return Math.min(999.99, Math.max(0, value));
+}
+
+function clampConfidence(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(1, Math.max(0, value));
+}
+
+function formatSyncError(context: string, error: { message?: string; code?: string }) {
+  const msg = error.message ?? "Bilinmeyen hata";
+  if (error.code === "42P01" || msg.includes("sleep_noise_samples")) {
+    return `${context}: sleep_noise_samples tablosu eksik. Supabase'de 002_noise_samples.sql migration'ını çalıştırın.`;
+  }
+  if (msg.includes("profiles") || error.code === "23503") {
+    return `${context}: Kullanıcı profili bulunamadı. Çıkış yapıp tekrar giriş yapın.`;
+  }
+  return `${context}: ${msg}`;
+}
+
+async function findExistingSessionId(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  startedAt: number
+) {
+  const startedAtIso = new Date(startedAt).toISOString();
+  const { data } = await supabase
+    .from("sleep_sessions")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("started_at", startedAtIso)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
+async function syncNoiseSamples(
+  supabase: ReturnType<typeof createClient>,
+  sessionId: string,
+  session: LocalSleepSession
+) {
+  const noiseBuckets = toMinuteBuckets(session);
+  if (noiseBuckets.length === 0) return;
+
+  await supabase.from("sleep_noise_samples").delete().eq("session_id", sessionId);
+
+  const noiseRows = noiseBuckets.map((row) => ({
+    session_id: sessionId,
+    minute_offset: row.minute_offset,
+    avg_db: row.avg_db,
+  }));
+
+  const { error } = await supabase.from("sleep_noise_samples").insert(noiseRows);
+  if (error) {
+    // Tablo yoksa veya migration uygulanmadıysa oturumu düşürme
+    console.warn("Noise samples sync skipped:", error.message);
+  }
 }
 
 export async function syncSessionToSupabase(
   session: LocalSleepSession,
   userId: string
-): Promise<string | null> {
+): Promise<{ id: string } | { error: string }> {
   const supabase = createClient();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (!profile) {
+    return {
+      error:
+        "Kullanıcı profili bulunamadı. Çıkış yapıp tekrar giriş yapın veya hesabınızı yeniden oluşturun.",
+    };
+  }
 
   const endedAt = session.endedAt ?? Date.now();
   const durationMinutes = Math.round((endedAt - session.startedAt) / 60000);
@@ -37,67 +108,73 @@ export async function syncSessionToSupabase(
       ? Math.max(...session.noiseSamples.map((n) => n.db))
       : null;
 
-  const { data: insertedSession, error: sessionError } = await supabase
-    .from("sleep_sessions")
-    .insert({
-      user_id: userId,
-      started_at: new Date(session.startedAt).toISOString(),
-      ended_at: new Date(endedAt).toISOString(),
-      duration_minutes: durationMinutes,
-      sleep_score: sleepScore,
-      avg_db: avgDb,
-      peak_db: peakDb,
-      snore_count: counts.snore,
-      cough_count: counts.cough,
-      talk_count: counts.talk,
-      noise_count: counts.noise,
-      interruption_count: session.interruptionCount,
-    })
-    .select("id")
-    .single();
+  const sessionPayload = {
+    user_id: userId,
+    started_at: new Date(session.startedAt).toISOString(),
+    ended_at: new Date(endedAt).toISOString(),
+    duration_minutes: durationMinutes,
+    sleep_score: sleepScore,
+    avg_db: avgDb !== null ? clampDb(avgDb) : null,
+    peak_db: peakDb !== null ? clampDb(peakDb) : null,
+    snore_count: counts.snore,
+    cough_count: counts.cough,
+    talk_count: counts.talk,
+    noise_count: counts.noise,
+    interruption_count: session.interruptionCount,
+  };
 
-  if (sessionError || !insertedSession) {
-    console.error("Session sync error:", sessionError);
-    return null;
+  let remoteSessionId = await findExistingSessionId(supabase, userId, session.startedAt);
+
+  if (remoteSessionId) {
+    const { error: updateError } = await supabase
+      .from("sleep_sessions")
+      .update(sessionPayload)
+      .eq("id", remoteSessionId);
+
+    if (updateError) {
+      console.error("Session update error:", updateError);
+      return { error: formatSyncError("Oturum güncellenemedi", updateError) };
+    }
+  } else {
+    const { data: insertedSession, error: sessionError } = await supabase
+      .from("sleep_sessions")
+      .insert(sessionPayload)
+      .select("id")
+      .single();
+
+    if (sessionError || !insertedSession) {
+      console.error("Session sync error:", sessionError);
+      return { error: formatSyncError("Oturum kaydedilemedi", sessionError ?? {}) };
+    }
+    remoteSessionId = insertedSession.id;
   }
+
+  await supabase.from("sleep_events").delete().eq("session_id", remoteSessionId);
 
   if (session.events.length > 0) {
     const events = session.events.map((event) => ({
       id: event.id,
-      session_id: insertedSession.id,
+      session_id: remoteSessionId,
       occurred_at: new Date(event.timestamp).toISOString(),
-      duration_ms: event.durationMs,
+      duration_ms: Math.max(0, Math.round(event.durationMs)),
       event_type: event.type,
-      peak_db: event.peakDb,
-      confidence: event.confidence,
+      peak_db: clampDb(event.peakDb),
+      confidence: clampConfidence(event.confidence),
     }));
 
     const { error: eventsError } = await supabase.from("sleep_events").insert(events);
     if (eventsError) {
       console.error("Events sync error:", eventsError);
-      return null;
+      return { error: formatSyncError("Olaylar kaydedilemedi", eventsError) };
     }
   }
 
-  const noiseBuckets = toMinuteBuckets(session);
-  if (noiseBuckets.length > 0) {
-    const noiseRows = noiseBuckets.map((row) => ({
-      session_id: insertedSession.id,
-      minute_offset: row.minute_offset,
-      avg_db: row.avg_db,
-    }));
-
-    const { error: noiseError } = await supabase.from("sleep_noise_samples").insert(noiseRows);
-    if (noiseError) {
-      console.error("Noise samples sync error:", noiseError);
-      return null;
-    }
-  }
+  await syncNoiseSamples(supabase, remoteSessionId, session);
 
   session.synced = true;
   await saveSession(session);
 
-  return insertedSession.id;
+  return { id: remoteSessionId };
 }
 
 export async function retryUnsyncedSessions(userId: string) {
@@ -105,12 +182,12 @@ export async function retryUnsyncedSessions(userId: string) {
   let failed = 0;
   for (const session of unsynced) {
     if (session.userId === userId && session.endedAt) {
-      const id = await syncSessionToSupabase(session, userId);
-      if (!id) failed += 1;
+      const result = await syncSessionToSupabase(session, userId);
+      if ("error" in result) failed += 1;
     }
   }
   if (failed > 0) {
-    toast.error(`${failed} gece kaydı senkronize edilemedi. Tekrar denenecek.`);
+    toast.error(`${failed} gece kaydı senkronize edilemedi.`);
   }
 }
 
@@ -147,7 +224,10 @@ export async function fetchSessionNoiseSamples(sessionId: string) {
     .eq("session_id", sessionId)
     .order("minute_offset", { ascending: true });
 
-  if (error) throw error;
+  if (error) {
+    console.warn("Noise samples fetch skipped:", error.message);
+    return [];
+  }
   return data ?? [];
 }
 

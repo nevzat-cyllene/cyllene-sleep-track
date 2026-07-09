@@ -155,6 +155,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
 
       const existing = await getActiveSession();
       const session = existing ?? createSession(userId);
+      if (userId) session.userId = userId;
       sessionRef.current = session;
 
       const sessionOffsetMs = Date.now() - session.startedAt;
