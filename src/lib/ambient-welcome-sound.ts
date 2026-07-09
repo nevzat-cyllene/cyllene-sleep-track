@@ -90,7 +90,8 @@ export class AmbientWelcomeSound {
     breathLfo.start(now);
     this.breathLfo = breathLfo;
 
-    this.masterGain.gain.linearRampToValueAtTime(0.55, now + 8);
+    this.masterGain.gain.setValueAtTime(0.001, now);
+    this.masterGain.gain.exponentialRampToValueAtTime(0.42, now + 1.6);
     this.running = true;
   }
 

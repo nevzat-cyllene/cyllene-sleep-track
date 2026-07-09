@@ -48,8 +48,8 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
   useEffect(() => {
     if (!started) return;
 
-    const second = window.setTimeout(() => setMoment(1), reduceMotion ? 900 : 3600);
-    const third = window.setTimeout(() => setMoment(2), reduceMotion ? 1800 : 7000);
+    const second = window.setTimeout(() => setMoment(1), reduceMotion ? 450 : 1250);
+    const third = window.setTimeout(() => setMoment(2), reduceMotion ? 900 : 2650);
 
     return () => {
       window.clearTimeout(second);
@@ -74,7 +74,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
     doneRef.current = true;
     setExiting(true);
     markGuestSplashSeen();
-    await soundRef.current?.fadeOut(reduceMotion ? 0.2 : 1.3);
+    await soundRef.current?.fadeOut(reduceMotion ? 0.2 : 0.65);
     onComplete();
   }, [onComplete, reduceMotion]);
 
@@ -99,32 +99,82 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
       className="fixed inset-0 z-[250] isolate overflow-hidden bg-[#02050d] text-white"
       initial={{ opacity: 1 }}
       animate={{ opacity: exiting ? 0 : 1, scale: exiting ? 1.015 : 1 }}
-      transition={{ duration: reduceMotion ? 0.2 : 1.2, ease }}
+      transition={{ duration: reduceMotion ? 0.2 : 0.55, ease }}
     >
       <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
         <motion.div
           className="absolute -left-[15%] top-[-18%] h-[65vw] min-h-[420px] w-[65vw] min-w-[420px] rounded-full bg-[#194eff]/20 blur-[110px]"
-          animate={reduceMotion ? undefined : { x: [0, 40, -10, 0], y: [0, 30, 10, 0] }}
-          transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+          animate={
+            reduceMotion
+              ? undefined
+              : { x: [0, 75, -20, 0], y: [0, 48, 8, 0], scale: [1, 1.12, 0.96, 1] }
+          }
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
           className="absolute -bottom-[30%] right-[-10%] h-[70vw] min-h-[460px] w-[70vw] min-w-[460px] rounded-full bg-[#17b4e8]/15 blur-[130px]"
-          animate={reduceMotion ? undefined : { x: [0, -35, 0], y: [0, -25, 0] }}
-          transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
+          animate={
+            reduceMotion
+              ? undefined
+              : { x: [0, -70, 18, 0], y: [0, -45, 12, 0], scale: [1, 1.08, 0.98, 1] }
+          }
+          transition={{ duration: 6.2, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        <div className="night-stars absolute inset-0 opacity-75" />
+        <motion.div
+          className="night-stars absolute -inset-10 opacity-75"
+          animate={reduceMotion ? undefined : { x: [0, 14, 0], y: [0, -10, 0] }}
+          transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+        />
+        {!reduceMotion &&
+          [0, 1, 2, 3].map((line) => (
+            <motion.span
+              key={line}
+              className="absolute left-0 h-px w-48 bg-gradient-to-r from-transparent via-[#8cc4ff]/70 to-transparent blur-[0.5px]"
+              style={{ top: `${17 + line * 19}%`, rotate: -12 }}
+              initial={{ x: "-35vw", opacity: 0 }}
+              animate={{ x: "125vw", opacity: [0, 0.8, 0] }}
+              transition={{
+                duration: 1.35 + line * 0.16,
+                repeat: Infinity,
+                repeatDelay: 0.55 + line * 0.22,
+                delay: line * 0.3,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        <motion.div
+          className="absolute inset-x-0 top-0 h-[2px] origin-left bg-gradient-to-r from-transparent via-[#71aaff] to-transparent"
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: [0, 1, 1], opacity: [0, 0.8, 0] }}
+          transition={{ duration: 1.4, repeat: Infinity, repeatDelay: 1.2, ease }}
+        />
         <div className="absolute inset-x-0 bottom-0 h-[44%] bg-[linear-gradient(180deg,transparent_0%,#02050d_82%)]" />
 
         <motion.div
+          className="absolute left-1/2 top-[24%] h-56 w-56 -translate-x-1/2 rounded-full border border-[#82b6ff]/20 sm:h-72 sm:w-72"
+          initial={{ opacity: 0, scale: 0.55, rotate: -25 }}
+          animate={{
+            opacity: started ? 0.1 : [0.08, 0.35, 0.12],
+            scale: started ? 1.35 : [0.72, 1.08, 0.96],
+            rotate: started ? 42 : 18,
+          }}
+          transition={{
+            duration: started ? 0.65 : 2.2,
+            repeat: started ? 0 : Infinity,
+            ease,
+          }}
+        />
+        <motion.div
           className="absolute left-1/2 top-[24%] h-40 w-40 -translate-x-1/2 rounded-full border border-white/10 bg-[radial-gradient(circle_at_34%_30%,#ffffff_0%,#d8e7ff_26%,#5a79ca_68%,#183276_100%)] shadow-[0_0_90px_rgba(96,145,255,0.28)] sm:h-52 sm:w-52"
-          initial={{ opacity: 0, y: 30, scale: 0.86 }}
+          initial={{ opacity: 0, y: 45, scale: 0.62, filter: "blur(10px)" }}
           animate={{
             opacity: started ? 0.42 : 0.72,
             y: started ? -22 : 0,
             scale: started ? 1.2 : 1,
+            filter: "blur(0px)",
           }}
-          transition={{ duration: reduceMotion ? 0.2 : 2.6, ease }}
+          transition={{ duration: reduceMotion ? 0.2 : started ? 0.65 : 0.78, ease }}
         >
           <span className="absolute left-[24%] top-[30%] h-7 w-7 rounded-full bg-[#6f8bd1]/20 blur-[1px]" />
           <span className="absolute bottom-[27%] right-[19%] h-10 w-10 rounded-full bg-[#6f8bd1]/15 blur-[1px]" />
@@ -137,7 +187,12 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-10">
-        <header className="flex items-center justify-between">
+        <motion.header
+          className="flex items-center justify-between"
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reduceMotion ? 0.2 : 0.45, ease }}
+        >
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-xl">
               <MoonStar className="h-4.5 w-4.5 text-[#78b7ff]" />
@@ -162,7 +217,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
               {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
             </motion.button>
           )}
-        </header>
+        </motion.header>
 
         <main className="flex flex-1 items-end pb-[12vh] sm:items-center sm:pb-0">
           <AnimatePresence mode="wait">
@@ -170,10 +225,10 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
               <motion.div
                 key="invitation"
                 className="max-w-xl"
-                initial={{ opacity: 0, y: 22 }}
+                initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -18, filter: "blur(8px)" }}
-                transition={{ duration: reduceMotion ? 0.2 : 1.2, delay: 0.25, ease }}
+                exit={{ opacity: 0, y: -28, scale: 1.025, filter: "blur(10px)" }}
+                transition={{ duration: reduceMotion ? 0.2 : 0.58, delay: 0.04, ease }}
               >
                 <p className="mb-4 text-xs font-medium uppercase tracking-[0.32em] text-[#78b7ff]">
                   İlk gecene hoş geldin
@@ -181,21 +236,29 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                 <h1 className="max-w-lg text-balance text-[clamp(3rem,10vw,6.5rem)] font-medium leading-[0.92] tracking-[-0.065em]">
                   Geceyi
                   <span className="block bg-gradient-to-r from-white via-[#bcd8ff] to-[#5e9eff] bg-clip-text text-transparent">
-                    yavaşlat.
+                    yakala.
                   </span>
                 </h1>
                 <p className="mt-6 max-w-sm text-pretty text-base font-light leading-7 text-white/52 sm:text-lg">
-                  Kısa bir nefes alanıyla başla. Ambiyans yalnızca sen dokunduğunda açılır.
+                  Kısa bir nefes alanıyla başla. Ambiyans dokunuşunla anında açılır.
                 </p>
 
                 <button
                   type="button"
                   onClick={() => void begin()}
-                  className="group mt-9 flex items-center gap-4 rounded-full border border-white/12 bg-white/[0.07] py-2.5 pl-5 pr-2.5 shadow-[0_16px_60px_rgba(0,50,160,.25),inset_0_1px_0_rgba(255,255,255,.12)] backdrop-blur-2xl transition hover:border-[#78b7ff]/35 hover:bg-white/[0.1]"
+                  className="group relative mt-9 flex items-center gap-4 overflow-hidden rounded-full border border-white/12 bg-white/[0.07] py-2.5 pl-5 pr-2.5 shadow-[0_16px_60px_rgba(0,50,160,.25),inset_0_1px_0_rgba(255,255,255,.12)] backdrop-blur-2xl transition duration-300 hover:scale-[1.03] hover:border-[#78b7ff]/35 hover:bg-white/[0.11] active:scale-[0.99]"
                 >
-                  <span className="text-sm font-medium">Dokun ve nefes al</span>
+                  {!reduceMotion && (
+                    <motion.span
+                      className="pointer-events-none absolute inset-y-0 w-16 skew-x-[-20deg] bg-gradient-to-r from-transparent via-white/18 to-transparent"
+                      initial={{ x: -100 }}
+                      animate={{ x: 320 }}
+                      transition={{ duration: 0.85, repeat: Infinity, repeatDelay: 1.1, ease }}
+                    />
+                  )}
+                  <span className="relative text-sm font-medium">Dokun ve nefes al</span>
                   <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-[#1769ff] text-white shadow-[0_0_32px_rgba(23,105,255,.55)]">
-                    <span className="absolute inset-0 animate-ping rounded-full border border-[#78b7ff]/40 [animation-duration:2.8s]" />
+                    <span className="absolute inset-0 animate-ping rounded-full border border-[#78b7ff]/40 [animation-duration:1.35s]" />
                     <Volume2 className="h-4 w-4" />
                   </span>
                 </button>
@@ -206,15 +269,15 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                 className="flex w-full flex-col gap-8 sm:grid sm:grid-cols-[1fr_auto] sm:items-end"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: reduceMotion ? 0.2 : 1 }}
+                transition={{ duration: reduceMotion ? 0.2 : 0.38 }}
               >
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={moment}
-                    initial={{ opacity: 0, y: 28, filter: "blur(10px)" }}
+                    initial={{ opacity: 0, y: 32, scale: 0.985, filter: "blur(12px)" }}
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, y: -18, filter: "blur(8px)" }}
-                    transition={{ duration: reduceMotion ? 0.2 : 1.1, ease }}
+                    exit={{ opacity: 0, y: -24, scale: 1.015, filter: "blur(10px)" }}
+                    transition={{ duration: reduceMotion ? 0.2 : 0.52, ease }}
                     className="max-w-2xl"
                   >
                     <p className="mb-4 text-xs font-medium uppercase tracking-[0.3em] text-[#78b7ff]">
@@ -234,7 +297,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                     {MOMENTS.map((item, index) => (
                       <span
                         key={item.title}
-                        className={`h-1 rounded-full transition-all duration-700 ${
+                        className={`h-1 rounded-full transition-all duration-300 ${
                           index === moment ? "w-9 bg-[#6da9ff]" : "w-3 bg-white/15"
                         }`}
                       />
