@@ -10,9 +10,11 @@ interface EventAudioPlayerProps {
   eventId: string;
   className?: string;
   compact?: boolean;
+  /** local = cihazda kayıt; cloud = senkronize oturum (klip genelde yok) */
+  audioContext?: "local" | "cloud";
 }
 
-export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlayerProps) {
+export function EventAudioPlayer({ eventId, className, compact, audioContext = "local" }: EventAudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -87,9 +89,13 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
   };
 
   if (error) {
+    const message =
+      audioContext === "cloud"
+        ? "Kayıt telefonunuzda"
+        : "Ses klibi yok";
     return (
-      <span className={cn("text-xs text-muted-foreground", className)}>
-        Ses klibi yok
+      <span className={cn("text-xs text-muted-foreground", className)} title="Ses klipleri yalnızca kaydı yaptığınız cihazda dinlenebilir">
+        {message}
       </span>
     );
   }

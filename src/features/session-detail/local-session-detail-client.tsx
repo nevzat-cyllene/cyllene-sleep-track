@@ -7,7 +7,7 @@ import { getSession } from "@/features/recording/session-store";
 import { SleepScoreRing } from "@/features/dashboard/components/sleep-score-ring";
 import { DetectedEventsList } from "@/features/dashboard/components/detected-events-list";
 import { NightSoundsChart } from "@/features/session-detail/components/night-sounds-chart";
-import { formatDurationHours, formatWeekdayRange } from "@/lib/sleep-analytics";
+import { formatDurationHours, formatSessionTimeRange, formatWeekdayRange } from "@/lib/sleep-analytics";
 import { formatDate } from "@/lib/sleep-utils";
 import type { LocalSleepEvent, LocalSleepSession, SleepEvent, SleepNoiseSample, SleepSession } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -86,7 +86,21 @@ export function LocalSessionDetailClient({
   const [local, setLocal] = useState<LocalSleepSession | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [activeFilters] = useState(() => new Set(["snore", "cough", "talk", "noise"]));
+  const [activeFilters, setActiveFilters] = useState(
+    () => new Set(["snore", "cough", "talk", "noise"])
+  );
+
+  const toggleFilter = (type: string) => {
+    setActiveFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(type)) {
+        if (next.size > 1) next.delete(type);
+      } else {
+        next.add(type);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     void getSession(localSessionId).then((s) => {
@@ -153,12 +167,17 @@ export function LocalSessionDetailClient({
         </div>
       )}
 
-      <div className="rounded-3xl border border-white/10 bg-[#0A1621]/90 p-5 shadow-soft">
-        <p className="mb-4 capitalize text-lg font-medium">
+      <div className="rounded-[22px] border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent p-5">
+        <p className="capitalize text-lg font-medium tracking-tight">
           {formatWeekdayRange(session.started_at, session.ended_at)}
         </p>
+        <p className="mt-1 text-[13px] text-white/45">
+          {formatSessionTimeRange(session.started_at, session.ended_at)}
+          <span className="mx-2 text-white/20">·</span>
+          {formatDurationHours(session.duration_minutes)}
+        </p>
 
-        <div className="grid gap-6 sm:grid-cols-[auto_1fr]">
+        <div className="mt-6 grid gap-6 sm:grid-cols-[auto_1fr]">
           <SleepScoreRing
             score={session.sleep_score ?? 0}
             size={140}
@@ -180,21 +199,20 @@ export function LocalSessionDetailClient({
             </div>
           </div>
         </div>
-
-        <div className="mt-6">
-          <NightSoundsChart
-            session={session}
-            events={events}
-            noiseSamples={noiseSamples}
-            selectedEventId={selectedEventId}
-            onSelectEvent={setSelectedEventId}
-            activeFilters={activeFilters}
-          />
-        </div>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-card/40 p-4">
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+      <NightSoundsChart
+        session={session}
+        events={events}
+        noiseSamples={noiseSamples}
+        selectedEventId={selectedEventId}
+        onSelectEvent={setSelectedEventId}
+        activeFilters={activeFilters}
+        onToggleFilter={toggleFilter}
+      />
+
+      <div className="rounded-[22px] border border-white/[0.08] bg-white/[0.02] p-4">
+        <h2 className="mb-3 text-sm font-medium">
           Tespit edilen olaylar ({events.length})
         </h2>
         <DetectedEventsList
@@ -202,6 +220,7 @@ export function LocalSessionDetailClient({
           selectedEventId={selectedEventId}
           onSelectEvent={setSelectedEventId}
           emptyMessage="Bu gece olay tespit edilmedi."
+          audioContext="local"
         />
       </div>
     </div>

@@ -43,6 +43,13 @@ export function formatWeekdayRange(startedAt: string, endedAt: string | null): s
   return `${weekday} ${startDay}–${endDay} ${month}`;
 }
 
+export function formatSessionTimeRange(startedAt: string, endedAt: string | null): string {
+  const start = new Date(startedAt);
+  const end = endedAt ? new Date(endedAt) : start;
+  const fmt = new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-digit" });
+  return `${fmt.format(start)} – ${fmt.format(end)}`;
+}
+
 export type StatsPeriod = "days" | "weeks" | "months" | "all";
 
 export interface TrendPoint {

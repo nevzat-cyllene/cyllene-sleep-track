@@ -23,13 +23,14 @@ const EVENT_COLORS: Record<SleepEventType, string> = {
 interface DetectedEventItemProps {
   event: LocalSleepEvent | SleepEvent;
   variant?: "dark" | "light";
+  audioContext?: "local" | "cloud";
 }
 
 function isSleepEvent(event: LocalSleepEvent | SleepEvent): event is SleepEvent {
   return "occurred_at" in event;
 }
 
-export function DetectedEventItem({ event, variant = "light" }: DetectedEventItemProps) {
+export function DetectedEventItem({ event, variant = "light", audioContext = "local" }: DetectedEventItemProps) {
   const type = isSleepEvent(event) ? event.event_type : event.type;
   const timestamp = isSleepEvent(event)
     ? new Date(event.occurred_at).getTime()
@@ -78,7 +79,7 @@ export function DetectedEventItem({ event, variant = "light" }: DetectedEventIte
         </p>
       </div>
 
-      <EventAudioPlayer eventId={eventId} compact />
+      <EventAudioPlayer eventId={eventId} compact audioContext={audioContext} />
     </div>
   );
 }
@@ -89,6 +90,7 @@ interface DetectedEventsListProps {
   emptyMessage?: string;
   selectedEventId?: string | null;
   onSelectEvent?: (id: string) => void;
+  audioContext?: "local" | "cloud";
 }
 
 export function DetectedEventsList({
@@ -97,6 +99,7 @@ export function DetectedEventsList({
   emptyMessage = "Henüz olay tespit edilmedi.",
   selectedEventId,
   onSelectEvent,
+  audioContext = "local",
 }: DetectedEventsListProps) {
   if (events.length === 0) {
     return (
@@ -128,7 +131,7 @@ export function DetectedEventsList({
             selectedEventId === event.id && "ring-1 ring-cyllene-cyan/50 rounded-xl"
           )}
         >
-          <DetectedEventItem event={event} variant={variant} />
+          <DetectedEventItem event={event} variant={variant} audioContext={audioContext} />
         </div>
       ))}
     </div>
