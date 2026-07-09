@@ -8,11 +8,12 @@ interface SwipeToStopProps {
   disabled?: boolean;
 }
 
-const THRESHOLD = 88;
-const TRACK_H = 72;
+const THRESHOLD = 72;
+const TRACK_H = 80;
 
 export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
   const [dragY, setDragY] = useState(0);
+  const dragYRef = useRef(0);
   const startYRef = useRef(0);
   const draggingRef = useRef(false);
 
@@ -28,16 +29,19 @@ export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
   const onPointerMove = (e: React.PointerEvent) => {
     if (!draggingRef.current || disabled) return;
     const delta = startYRef.current - e.clientY;
-    setDragY(Math.max(0, Math.min(delta, THRESHOLD + 16)));
+    const next = Math.max(0, Math.min(delta, THRESHOLD + 12));
+    dragYRef.current = next;
+    setDragY(next);
   };
 
   const finishDrag = () => {
     if (!draggingRef.current) return;
     draggingRef.current = false;
-    if (dragY >= THRESHOLD) {
+    if (dragYRef.current >= THRESHOLD) {
       navigator.vibrate?.(12);
       onStop();
     }
+    dragYRef.current = 0;
     setDragY(0);
   };
 
@@ -62,29 +66,42 @@ export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
       >
         <div
           className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-cyllene-purple/20 via-cyllene-cyan/15 to-transparent transition-[height] duration-75"
-          style={{ height: `${28 + progress * (TRACK_H - 28)}px` }}
+          style={{ height: `${32 + progress * (TRACK_H - 32)}px` }}
         />
 
-        <button
-          type="button"
-          disabled={disabled}
-          aria-label={disabled ? "Kayıt kaydediliyor" : "Kaydı bitir"}
-          className={cn(
-            "absolute left-1/2 bottom-3 z-10 flex h-[48px] w-[72px] -translate-x-1/2 flex-col items-center justify-center gap-1.5 rounded-full",
-            "border border-white/[0.14] bg-white/[0.1] backdrop-blur-md",
-            "shadow-[0_4px_24px_rgba(0,0,0,0.35)] transition-transform duration-75 ease-out active:scale-[0.97]",
-            progress > 0.55 && "border-cyllene-cyan/45 bg-cyllene-cyan/10"
-          )}
-          style={{ transform: `translate(-50%, calc(-1 * ${dragY}px))` }}
+        <div
+          className="absolute inset-x-0 flex justify-center"
+          style={{
+            bottom: 12,
+            transform: `translateY(-${dragY}px)`,
+          }}
         >
-          <span className="h-0.5 w-7 rounded-full bg-white/70" />
-          <span
+          <div
+            role="button"
+            tabIndex={disabled ? -1 : 0}
+            aria-label={disabled ? "Kayıt kaydediliyor" : "Kaydı bitir"}
             className={cn(
-              "h-0.5 w-5 rounded-full transition-colors",
-              progress > 0.55 ? "bg-cyllene-cyan" : "bg-white/45"
+              "flex h-12 w-12 flex-col items-center justify-center gap-[5px] rounded-full",
+              "border border-white/[0.14] bg-white/[0.1] backdrop-blur-md",
+              "shadow-[0_4px_24px_rgba(0,0,0,0.35)]",
+              "transition-[border-color,background-color,box-shadow] duration-75",
+              progress > 0.5 && "border-cyllene-cyan/45 bg-cyllene-cyan/10 shadow-[0_0_20px_oklch(0.78_0.14_195/25%)]"
             )}
-          />
-        </button>
+          >
+            <span
+              className={cn(
+                "block h-[2px] w-6 rounded-full",
+                progress > 0.5 ? "bg-cyllene-cyan" : "bg-white/70"
+              )}
+            />
+            <span
+              className={cn(
+                "block h-[2px] w-6 rounded-full",
+                progress > 0.5 ? "bg-cyllene-cyan/80" : "bg-white/50"
+              )}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
