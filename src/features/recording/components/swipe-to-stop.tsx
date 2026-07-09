@@ -43,7 +43,7 @@ export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
   return (
     <div className="flex w-full max-w-sm flex-col items-center gap-3 pb-4">
       <p className="text-xs uppercase tracking-[0.25em] text-white/40">
-        Uyanmak için yukarı kaydır
+        {disabled ? "Gece kaydediliyor…" : "Uyanmak için yukarı kaydır"}
       </p>
       <div
         className={cn(
@@ -67,7 +67,7 @@ export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
         >
           <ChevronUp className={cn("h-5 w-5", progress > 0.6 && "text-cyllene-cyan")} />
           <span className="text-[10px] uppercase tracking-widest">
-            {disabled ? "Kaydediliyor..." : "Kaydı bitir"}
+            {disabled ? "Biraz bekleyin" : "Kaydı bitir"}
           </span>
         </button>
       </div>

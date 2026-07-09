@@ -44,12 +44,27 @@ export function formatDuration(ms: number): string {
   return `${minutes}dk`;
 }
 
+export function formatElapsedClock(ms: number): string {
+  const hours = Math.floor(ms / 3600000);
+  const minutes = Math.floor((ms % 3600000) / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
 export function formatTime(date: Date | number | string): string {
   const d = typeof date === "string" ? new Date(date) : typeof date === "number" ? new Date(date) : date;
   return new Intl.DateTimeFormat("tr-TR", {
     hour: "2-digit",
     minute: "2-digit",
   }).format(d);
+}
+
+export function formatWallClock(date: Date): string {
+  return new Intl.DateTimeFormat("tr-TR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(date);
 }
 
 export function formatDate(date: Date | string): string {

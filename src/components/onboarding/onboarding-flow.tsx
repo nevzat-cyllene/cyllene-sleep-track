@@ -138,17 +138,54 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             className="flex flex-1 flex-col"
           >
             {step.id === "intro" && (
-              <div className="flex flex-1 flex-col items-center justify-center text-center">
+              <div className="relative flex flex-1 flex-col items-center justify-center text-center">
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  {[0, 1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute rounded-full border border-cyllene-cyan/15"
+                      style={{ width: 100 + i * 70, height: 100 + i * 70 }}
+                      animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.35, 0.1] }}
+                      transition={{
+                        duration: 5 + i,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: i * 0.6,
+                      }}
+                    />
+                  ))}
+                </div>
                 <button
                   type="button"
-                  className="flex flex-col items-center gap-6"
+                  className="relative z-10 flex flex-col items-center gap-8"
                   onClick={() => void startSound().then(goNext)}
                 >
-                  <h1 className="text-3xl font-semibold">{siteConfig.shortName}</h1>
-                  <p className="max-w-xs text-sm text-white/50">{step.subtitle}</p>
-                  <span className="rounded-full border border-white/15 px-8 py-3 text-xs uppercase tracking-widest text-white/60">
-                    Başla
-                  </span>
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                    className="flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]"
+                  >
+                    <Moon className="h-7 w-7 text-cyllene-cyan" />
+                  </motion.div>
+                  <div className="space-y-3">
+                    <h1 className="text-3xl font-semibold tracking-tight">{siteConfig.shortName}</h1>
+                    <motion.p
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6, duration: 1 }}
+                      className="max-w-xs text-sm font-light leading-relaxed text-white/55"
+                    >
+                      {step.subtitle}
+                    </motion.p>
+                  </div>
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.2, duration: 0.8 }}
+                    className="rounded-full border border-white/15 px-8 py-3 text-[10px] uppercase tracking-[0.35em] text-white/50"
+                  >
+                    Derin bir nefes — başla
+                  </motion.span>
                 </button>
               </div>
             )}

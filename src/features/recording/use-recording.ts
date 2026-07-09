@@ -234,7 +234,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
       const startTime = session.startedAt;
       elapsedIntervalRef.current = setInterval(() => {
         setElapsedMs(Date.now() - startTime);
-      }, 1000);
+      }, 250);
 
       await saveSession(session);
       setStatus("recording");
