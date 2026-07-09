@@ -63,7 +63,7 @@ const acousticEvents = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen overflow-hidden">
+    <div className="min-h-screen overflow-x-hidden">
       <MarketingHeader />
 
       <main>

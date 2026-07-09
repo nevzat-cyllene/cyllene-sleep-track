@@ -12,6 +12,7 @@ interface PremiumEntranceProps {
 }
 
 const ease = [0.22, 1, 0.36, 1] as const;
+const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 const MOMENTS = [
   {
@@ -74,7 +75,10 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
     doneRef.current = true;
     setExiting(true);
     markGuestSplashSeen();
-    await soundRef.current?.fadeOut(reduceMotion ? 0.2 : 0.65);
+    await Promise.all([
+      soundRef.current?.fadeOut(reduceMotion ? 0.2 : 0.95) ?? Promise.resolve(),
+      wait(reduceMotion ? 220 : 1120),
+    ]);
     onComplete();
   }, [onComplete, reduceMotion]);
 
@@ -98,8 +102,12 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
     <motion.div
       className="fixed inset-0 z-[250] isolate overflow-hidden bg-[#02050d] text-white"
       initial={{ opacity: 1 }}
-      animate={{ opacity: exiting ? 0 : 1, scale: exiting ? 1.015 : 1 }}
-      transition={{ duration: reduceMotion ? 0.2 : 0.55, ease }}
+      animate={{
+        opacity: exiting ? 0 : 1,
+        scale: exiting ? 1.018 : 1,
+        filter: exiting ? "blur(14px)" : "blur(0px)",
+      }}
+      transition={{ duration: reduceMotion ? 0.2 : 0.95, ease }}
     >
       <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
         <motion.div
@@ -152,46 +160,78 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
         <div className="absolute inset-x-0 bottom-0 h-[44%] bg-[linear-gradient(180deg,transparent_0%,#02050d_82%)]" />
 
         <motion.div
-          className="absolute left-1/2 top-[22%] z-[2] h-64 w-64 -translate-x-1/2 rounded-full border border-[#82b6ff]/16 bg-[radial-gradient(circle,rgba(120,183,255,.08)_0%,transparent_58%)] sm:h-80 sm:w-80"
-          initial={{ opacity: 0, scale: 0.55, rotate: -25 }}
+          className="absolute left-1/2 top-[14%] z-[2] h-72 w-72 -translate-x-1/2 rounded-full border border-[#9cc8ff]/18 bg-[radial-gradient(circle,rgba(178,211,255,.12)_0%,rgba(94,143,255,.06)_42%,transparent_70%)] blur-[0.2px] sm:top-[17%] sm:h-96 sm:w-96"
+          initial={{ opacity: 0, y: "-36vh", scale: 0.55, rotate: -30 }}
           animate={{
-            opacity: started ? 0.13 : [0.08, 0.26, 0.12],
-            scale: started ? 1.26 : [0.76, 1.05, 0.96],
-            rotate: started ? 24 : 10,
+            opacity: exiting ? 0 : started ? 0.18 : [0.16, 0.34, 0.22],
+            y: exiting ? "-18vh" : started ? "-1.2rem" : 0,
+            scale: exiting ? 0.9 : started ? 1.24 : [0.86, 1.04, 0.98],
+            rotate: started ? 18 : 4,
           }}
           transition={{
-            duration: started ? 0.9 : 3.8,
-            repeat: started ? 0 : Infinity,
+            duration: reduceMotion ? 0.2 : exiting ? 0.85 : started ? 0.9 : 2.15,
+            repeat: !reduceMotion && !started && !exiting ? Infinity : 0,
+            repeatDelay: 1.15,
             ease,
           }}
         />
         <motion.div
-          className="absolute left-1/2 top-[22%] z-[3] h-44 w-44 -translate-x-1/2 overflow-hidden rounded-full border border-white/15 shadow-[0_0_120px_rgba(96,145,255,0.24),0_0_260px_rgba(28,105,255,0.16)] sm:h-56 sm:w-56"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 24%, rgba(255,255,255,.98) 0 2.2%, transparent 2.7%), radial-gradient(circle at 62% 34%, rgba(76,88,122,.34) 0 7.5%, transparent 8.2%), radial-gradient(circle at 39% 59%, rgba(70,82,116,.24) 0 12%, transparent 13%), radial-gradient(circle at 72% 68%, rgba(66,78,108,.22) 0 8%, transparent 8.8%), radial-gradient(circle at 44% 36%, #fffaf1 0%, #edf2ff 31%, #bac4da 57%, #7482a6 82%, #394865 100%)",
+          className="absolute left-1/2 top-[14%] z-[3] h-48 w-48 sm:top-[17%] sm:h-64 sm:w-64"
+          style={{ perspective: 1100 }}
+          initial={{
+            x: "-50%",
+            y: "-46vh",
+            opacity: 0,
+            scale: 0.56,
+            rotateX: 20,
+            rotateY: -58,
+            rotateZ: -18,
+            filter: "blur(18px)",
           }}
-          initial={{ opacity: 0, y: 38, scale: 0.7, filter: "blur(14px)" }}
           animate={{
-            opacity: started ? 0.62 : 0.86,
-            y: started ? -18 : 0,
-            scale: started ? 1.08 : 1,
-            filter: "blur(0px)",
+            x: "-50%",
+            y: exiting ? "-24vh" : started ? "-1rem" : 0,
+            opacity: exiting ? 0 : started ? 0.72 : 0.96,
+            scale: exiting ? 0.88 : started ? 1.07 : 1,
+            rotateX: exiting ? -8 : started ? 6 : 0,
+            rotateY: exiting ? 42 : started ? 18 : 0,
+            rotateZ: exiting ? 14 : started ? 8 : 0,
+            filter: exiting ? "blur(20px)" : "blur(0px)",
           }}
-          transition={{ duration: reduceMotion ? 0.2 : started ? 0.95 : 1.15, ease }}
+          transition={{ duration: reduceMotion ? 0.2 : exiting ? 0.88 : 1.65, ease }}
         >
-          <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_68%_42%,transparent_0_48%,rgba(3,7,18,.18)_68%,rgba(1,3,8,.38)_100%)] mix-blend-multiply" />
-          <span className="absolute left-[18%] top-[42%] h-6 w-6 rounded-full bg-[#46536f]/18 blur-[1px]" />
-          <span className="absolute bottom-[24%] right-[25%] h-8 w-8 rounded-full bg-[#43506b]/16 blur-[1.5px]" />
-          <span className="absolute right-[18%] top-[24%] h-4 w-4 rounded-full bg-white/18 blur-[1px]" />
-          <span className="absolute inset-0 rounded-full shadow-[inset_-28px_-18px_42px_rgba(4,8,22,.42),inset_18px_12px_28px_rgba(255,255,255,.22)]" />
+          <motion.div
+            className="relative h-full w-full overflow-hidden rounded-full border border-white/18 shadow-[0_0_90px_rgba(150,190,255,.32),0_0_220px_rgba(30,105,255,.18)]"
+            style={{
+              transformStyle: "preserve-3d",
+              background:
+                "radial-gradient(circle at 30% 24%, rgba(255,255,255,.92) 0 1.4%, transparent 1.9%), radial-gradient(circle at 31% 31%, rgba(88,84,77,.28) 0 7.5%, transparent 8.4%), radial-gradient(circle at 63% 34%, rgba(88,86,82,.31) 0 6.6%, transparent 7.5%), radial-gradient(circle at 47% 53%, rgba(70,69,68,.24) 0 11.5%, transparent 12.7%), radial-gradient(circle at 70% 66%, rgba(64,66,70,.22) 0 8%, transparent 9.2%), radial-gradient(circle at 24% 69%, rgba(102,98,89,.18) 0 6%, transparent 7%), radial-gradient(circle at 43% 37%, #fff8e7 0%, #e8e0cf 32%, #b8b2a6 55%, #7f8490 76%, #39445b 100%)",
+            }}
+            animate={
+              reduceMotion || exiting
+                ? undefined
+                : { rotate: started ? [0, 1.5, -1, 0] : [0, -1.2, 1.4, 0] }
+            }
+            transition={{ duration: started ? 7.5 : 6.2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_23%,rgba(255,255,255,.45),transparent_21%),radial-gradient(circle_at_70%_52%,transparent_0_48%,rgba(2,5,14,.34)_67%,rgba(0,2,8,.58)_100%)] mix-blend-multiply" />
+            <span className="absolute left-[22%] top-[43%] h-7 w-7 rounded-full border border-[#4b4a48]/12 bg-[#4f5360]/16 blur-[0.7px] sm:h-9 sm:w-9" />
+            <span className="absolute bottom-[24%] right-[25%] h-8 w-8 rounded-full border border-[#4a4c56]/12 bg-[#3f4554]/15 blur-[1px] sm:h-11 sm:w-11" />
+            <span className="absolute right-[18%] top-[23%] h-5 w-5 rounded-full bg-white/16 blur-[1px] sm:h-6 sm:w-6" />
+            <span className="absolute left-[47%] top-[18%] h-3 w-8 -rotate-12 rounded-full bg-[#5c5b59]/12 blur-[1.4px]" />
+            <span className="absolute inset-0 rounded-full shadow-[inset_-34px_-22px_52px_rgba(3,7,18,.52),inset_18px_14px_30px_rgba(255,255,255,.26)]" />
+          </motion.div>
         </motion.div>
 
         <motion.div
-          className="absolute left-1/2 top-[22%] z-[1] h-56 w-[26rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(120,183,255,.16)_0%,rgba(120,183,255,.05)_42%,transparent_72%)] blur-2xl sm:h-72 sm:w-[36rem]"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: started ? 0.32 : 0.42, scale: started ? 1.08 : 1 }}
-          transition={{ duration: reduceMotion ? 0.2 : 1.3, ease }}
+          className="absolute left-1/2 top-[16%] z-[1] h-64 w-[28rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(150,190,255,.18)_0%,rgba(78,132,255,.07)_42%,transparent_72%)] blur-2xl sm:top-[19%] sm:h-80 sm:w-[38rem]"
+          initial={{ opacity: 0, y: "-24vh", scale: 0.72 }}
+          animate={{
+            opacity: exiting ? 0 : started ? 0.34 : 0.48,
+            y: exiting ? "-12vh" : 0,
+            scale: exiting ? 0.9 : started ? 1.1 : 1,
+          }}
+          transition={{ duration: reduceMotion ? 0.2 : exiting ? 0.85 : 1.55, ease }}
         />
 
         <div className="absolute inset-x-0 bottom-0 h-[28%] opacity-80">

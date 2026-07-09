@@ -52,6 +52,12 @@ const trustNav = [
   { label: "Hesap kilidi", description: "Güvenli oturum", icon: LockKeyhole },
 ] as const;
 
+const commandTiles = [
+  { label: "Cihaz", value: "Eşleşti", icon: Smartphone },
+  { label: "Klipler", value: "Yerel", icon: AudioWaveform },
+  { label: "Ritim", value: "Planlı", icon: CalendarDays },
+] as const;
+
 export function AppSidebar() {
   const pathname = usePathname();
 
@@ -113,6 +119,32 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        <div className="mx-2 mb-2 rounded-[1.45rem] border border-[#8dbdff]/12 bg-[radial-gradient(circle_at_24%_0%,rgba(111,210,255,.16),transparent_36%),linear-gradient(145deg,rgba(21,94,255,.12),rgba(255,255,255,.025))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,.06)] group-data-[collapsible=icon]/sidebar-wrapper:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[9px] font-medium uppercase tracking-[0.2em] text-[#8fc0ff]/70">
+                Komuta paneli
+              </p>
+              <p className="mt-1 text-sm font-medium tracking-[-0.02em]">Gece akışı hazır</p>
+            </div>
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#1769ff]/18 text-[#8fc0ff]">
+              <Sparkles className="h-3.5 w-3.5" />
+            </span>
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-1.5">
+            {commandTiles.map((tile) => (
+              <div
+                key={tile.label}
+                className="rounded-2xl border border-white/[0.055] bg-black/10 px-2 py-2"
+              >
+                <tile.icon className="h-3.5 w-3.5 text-[#78b7ff]/70" />
+                <p className="mt-2 truncate text-[9px] text-white/24">{tile.label}</p>
+                <p className="truncate text-[10px] font-medium text-white/62">{tile.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <SidebarGroup className="py-1">
           <SidebarGroupLabel className="px-3 text-[9px] uppercase tracking-[0.2em] text-white/22">
             Yakında
@@ -123,15 +155,15 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton
                     tooltip={item.label}
-                    disabled
-                    className="h-auto min-h-11 rounded-xl border border-white/[0.045] bg-white/[0.018] px-3 opacity-100 disabled:opacity-100"
+                    type="button"
+                    className="h-auto min-h-11 cursor-default rounded-xl border border-[#6da9ff]/10 bg-white/[0.03] px-3 opacity-100 hover:bg-[#155eff]/9 hover:text-white"
                   >
-                    <item.icon className="text-white/28" />
+                    <item.icon className="text-[#8fc0ff]/50" />
                     <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5 group-data-[collapsible=icon]/sidebar-wrapper:hidden">
-                      <span className="text-sm font-medium text-white/55">{item.label}</span>
-                      <span className="text-[10px] font-normal text-white/24">{item.description}</span>
+                      <span className="text-sm font-medium text-white/70">{item.label}</span>
+                      <span className="text-[10px] font-normal text-white/34">{item.description}</span>
                     </span>
-                    <span className="rounded-full border border-[#6da9ff]/12 bg-[#155eff]/8 px-2 py-0.5 text-[9px] font-medium text-[#89bdff]/55 group-data-[collapsible=icon]/sidebar-wrapper:hidden">
+                    <span className="rounded-full border border-[#6da9ff]/16 bg-[#155eff]/12 px-2 py-0.5 text-[9px] font-medium text-[#9dccff]/72 group-data-[collapsible=icon]/sidebar-wrapper:hidden">
                       {item.badge}
                     </span>
                   </SidebarMenuButton>
@@ -151,13 +183,13 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton
                     tooltip={item.label}
-                    disabled
-                    className="h-auto min-h-10 rounded-xl px-3 opacity-100 disabled:opacity-100"
+                    type="button"
+                    className="h-auto min-h-10 cursor-default rounded-xl px-3 opacity-100 hover:bg-white/[0.025] hover:text-white"
                   >
-                    <item.icon className="text-[#79b7ff]/45" />
+                    <item.icon className="text-[#79b7ff]/58" />
                     <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5 group-data-[collapsible=icon]/sidebar-wrapper:hidden">
-                      <span className="text-xs font-medium text-white/46">{item.label}</span>
-                      <span className="text-[10px] font-normal text-white/22">{item.description}</span>
+                      <span className="text-xs font-medium text-white/58">{item.label}</span>
+                      <span className="text-[10px] font-normal text-white/30">{item.description}</span>
                     </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

@@ -10,7 +10,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider defaultOpen className="bg-[#050a16]">
       <AppSidebar />
       <SidebarRail className="hidden md:flex" />
-      <SidebarInset className="relative overflow-hidden bg-transparent">
+      <SidebarInset className="relative overflow-x-hidden bg-transparent">
         <RecordingUIProvider>
           <AppTopbar />
           <div

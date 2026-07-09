@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -51,7 +52,7 @@ export function UserMenu() {
           <span className="truncate">{email ?? "Hesap"}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push("/profile")}>
+        <DropdownMenuItem render={<Link href="/profile" />}>
           <User />
           Profil ve ayarlar
         </DropdownMenuItem>
