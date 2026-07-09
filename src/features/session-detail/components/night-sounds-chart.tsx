@@ -51,6 +51,7 @@ interface NightSoundsChartProps {
   onSelectEvent?: (id: string | null) => void;
   activeFilters: Set<string>;
   onToggleFilter?: (type: string) => void;
+  compact?: boolean;
 }
 
 function formatMinuteTick(startMs: number, minute: number) {
@@ -122,6 +123,7 @@ export function NightSoundsChart({
   onSelectEvent,
   activeFilters,
   onToggleFilter,
+  compact = false,
 }: NightSoundsChartProps) {
   const startMs = new Date(session.started_at).getTime();
   const durationMinutes = session.duration_minutes ?? 0;
@@ -130,7 +132,7 @@ export function NightSoundsChart({
     () => aggregateStageBand(stages, durationMinutes),
     [stages, durationMinutes]
   );
-  const showStages = durationMinutes >= MIN_STAGE_MINUTES && stageBlocks.length > 0;
+  const showStages = !compact && durationMinutes >= MIN_STAGE_MINUTES && stageBlocks.length > 0;
 
   const filteredEvents = events.filter((e) => activeFilters.has(e.event_type));
   const selected =
@@ -179,6 +181,19 @@ export function NightSoundsChart({
     ? Math.floor((new Date(selected.occurred_at).getTime() - startMs) / 60000)
     : null;
 
+  const eventCounts = useMemo(() => {
+    const counts = { snore: 0, cough: 0, talk: 0, noise: 0 };
+    for (const e of events) {
+      if (e.event_type in counts) counts[e.event_type as keyof typeof counts]++;
+    }
+    return counts;
+  }, [events]);
+
+  const chartGradientId = useMemo(
+    () => `cylleneNoise-${session.id.replace(/[^a-z0-9]/gi, "")}`,
+    [session.id]
+  );
+
   const filterIcons = {
     snore: Wind,
     cough: Activity,
@@ -187,32 +202,60 @@ export function NightSoundsChart({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {(["snore", "cough", "talk", "noise"] as const).map((type) => {
-          const Icon = filterIcons[type];
-          const active = activeFilters.has(type);
-          return (
-            <button
-              key={type}
-              type="button"
-              onClick={() => onToggleFilter?.(type)}
-              className={cn(
-                "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition",
-                active
-                  ? "border-cyllene-cyan/35 bg-cyllene-cyan/10 text-cyllene-cyan"
-                  : "border-white/[0.08] bg-white/[0.03] text-white/40"
-              )}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {EVENT_LABELS[type]}
-            </button>
-          );
-        })}
+    <div className="space-y-3">
+      <div>
+        <h2 className="text-sm font-medium">Ses seviyesi</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {compact
+            ? "Gece boyunca ortam sesinin değişimi. Olayları aşağıdaki listeden dinleyebilirsiniz."
+            : "Mavi eğri ortam sesini gösterir. Filtreler grafikteki olay noktalarını seçer."}
+        </p>
       </div>
 
+      {compact ? (
+        <div className="flex flex-wrap gap-2">
+          {(["snore", "cough", "talk", "noise"] as const).map((type) => {
+            const count = eventCounts[type];
+            if (count === 0) return null;
+            const Icon = filterIcons[type];
+            return (
+              <span
+                key={type}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[11px] text-white/55"
+              >
+                <Icon className="h-3 w-3" />
+                {EVENT_LABELS[type]} · {count}
+              </span>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {(["snore", "cough", "talk", "noise"] as const).map((type) => {
+            const Icon = filterIcons[type];
+            const active = activeFilters.has(type);
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => onToggleFilter?.(type)}
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                  active
+                    ? "border-cyllene-cyan/35 bg-cyllene-cyan/10 text-cyllene-cyan"
+                    : "border-white/[0.08] bg-white/[0.03] text-white/40"
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {EVENT_LABELS[type]}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-[22px] border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4 backdrop-blur-sm">
-        {selected && (
+        {selected && !compact && (
           <p className="mb-3 text-[13px] font-medium text-white/70">
             <span className="text-cyllene-cyan">{formatTime(selected.occurred_at)}</span>
             <span className="mx-2 text-white/20">·</span>
@@ -241,10 +284,13 @@ export function NightSoundsChart({
               Bu uyku için grafik verisi yok
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <ComposedChart
+                data={noiseData}
+                margin={{ top: 8, right: 12, left: 0, bottom: 0 }}
+              >
                 <defs>
-                  <linearGradient id="cylleneNoiseGradient" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id={chartGradientId} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="oklch(0.78 0.14 195)" stopOpacity={0.35} />
                     <stop offset="100%" stopColor="oklch(0.62 0.22 285)" stopOpacity={0} />
                   </linearGradient>
@@ -260,24 +306,23 @@ export function NightSoundsChart({
                   fontSize={10}
                   tickLine={false}
                 />
-                <YAxis hide domain={[20, 75]} />
+                <YAxis hide domain={[20, 75]} width={0} />
                 <Tooltip
                   content={<ChartTooltip startMs={startMs} />}
                   cursor={{ stroke: "oklch(0.78 0.14 195 / 25%)", strokeWidth: 1 }}
                 />
                 {noiseData.length > 0 && (
                   <Area
-                    data={noiseData}
                     type="basis"
                     dataKey="db"
                     stroke="oklch(0.78 0.14 195)"
-                    fill="url(#cylleneNoiseGradient)"
+                    fill={`url(#${chartGradientId})`}
                     strokeWidth={2}
                     dot={false}
                     isAnimationActive={false}
                   />
                 )}
-                {eventData.length > 0 && (
+                {!compact && eventData.length > 0 && (
                   <Scatter
                     data={eventData}
                     dataKey="db"
@@ -303,7 +348,7 @@ export function NightSoundsChart({
                     }}
                   />
                 )}
-                {selectedMinute != null && (
+                {!compact && selectedMinute != null && (
                   <ReferenceLine
                     x={selectedMinute}
                     stroke="oklch(1 0 0 / 20%)"
@@ -316,7 +361,9 @@ export function NightSoundsChart({
         </div>
 
         <p className="mt-3 text-center text-[10px] text-white/30">
-          Noktalara dokunarak olayı seçin · Alan eğrisi ortam ses seviyesini gösterir
+          {compact
+            ? "Eğri boyunca ses seviyesinin gece içindeki değişimi"
+            : "Noktalara dokunarak olayı seçin · Alan eğrisi ortam ses seviyesini gösterir"}
         </p>
       </div>
     </div>

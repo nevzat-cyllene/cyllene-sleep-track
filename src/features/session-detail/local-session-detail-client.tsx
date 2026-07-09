@@ -89,6 +89,11 @@ export function LocalSessionDetailClient({
   const [activeFilters, setActiveFilters] = useState(
     () => new Set(["snore", "cough", "talk", "noise"])
   );
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.matchMedia("(max-width: 767px)").matches);
+  }, []);
 
   const toggleFilter = (type: string) => {
     setActiveFilters((prev) => {
@@ -209,6 +214,7 @@ export function LocalSessionDetailClient({
         onSelectEvent={setSelectedEventId}
         activeFilters={activeFilters}
         onToggleFilter={toggleFilter}
+        compact={isMobile}
       />
 
       <div className="rounded-[22px] border border-white/[0.08] bg-white/[0.02] p-4">
