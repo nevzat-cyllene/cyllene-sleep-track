@@ -1,18 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { useMemo } from "react";
 import { formatTime } from "@/lib/sleep-utils";
-import { estimateSleepStages } from "@/lib/sleep-analytics";
+import { estimateSleepStages, type SleepStage } from "@/lib/sleep-analytics";
 import type { SleepEvent, SleepNoiseSample, SleepSession } from "@/types";
 import { cn } from "@/lib/utils";
 import { Wind, MessageCircle, Activity, Volume2 } from "lucide-react";
@@ -32,7 +22,16 @@ const EVENT_COLORS: Record<string, string> = {
 };
 
 const STAGE_LABELS = { awake: "Uyanık", light: "Uyku", deep: "Derin uyku" };
-const STAGE_Y = { awake: 3, light: 2, deep: 1 };
+const STAGE_STYLES: Record<SleepStage, string> = {
+  awake: "top-[12%] h-[22%] bg-[#7dd3fc]/75 shadow-[0_0_22px_rgba(125,211,252,.28)]",
+  light: "top-[40%] h-[24%] bg-[#3b82f6]/80 shadow-[0_0_22px_rgba(59,130,246,.25)]",
+  deep: "top-[68%] h-[20%] bg-[#1e40af]/90 shadow-[0_0_18px_rgba(30,64,175,.24)]",
+};
+
+function clampPercent(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(100, Math.max(0, value));
+}
 
 interface NightSoundsChartProps {
   session: SleepSession;
@@ -55,6 +54,14 @@ export function NightSoundsChart({
 }: NightSoundsChartProps) {
   const startMs = new Date(session.started_at).getTime();
   const stages = estimateSleepStages(session, noiseSamples);
+  const durationMinutes = Math.max(
+    1,
+    session.duration_minutes ?? 0,
+    ...noiseSamples.map((sample) => sample.minute_offset + 1),
+    ...events.map((event) =>
+      Math.ceil((new Date(event.occurred_at).getTime() - startMs) / 60000) + 1
+    )
+  );
 
   const chartData = useMemo(() => {
     if (noiseSamples.length > 0) {
@@ -75,11 +82,49 @@ export function NightSoundsChart({
   const filteredEvents = events.filter((e) => activeFilters.has(e.event_type));
   const selected = filteredEvents.find((e) => e.id === selectedEventId) ?? filteredEvents[0];
 
-  const stageData = stages.map((s) => ({
-    time: formatTime(startMs + s.minute * 60000),
-    stageY: STAGE_Y[s.stage],
-    stage: s.stage,
-  }));
+  const stageSegments = useMemo(() => {
+    const ordered = [...stages].sort((a, b) => a.minute - b.minute);
+    return ordered.map((point, index) => {
+      const nextMinute = ordered[index + 1]?.minute ?? durationMinutes;
+      const left = clampPercent((point.minute / durationMinutes) * 100);
+      const right = clampPercent((nextMinute / durationMinutes) * 100);
+
+      return {
+        key: `${point.minute}-${point.stage}-${index}`,
+        stage: point.stage,
+        left,
+        width: Math.max(1.8, right - left),
+      };
+    });
+  }, [durationMinutes, stages]);
+
+  const soundBars = useMemo(() => {
+    const ordered = [...chartData]
+      .filter((point) => Number.isFinite(point.db))
+      .sort((a, b) => a.minute - b.minute);
+    const bucketSize = Math.max(1, Math.ceil(ordered.length / 52));
+    const bars = [];
+
+    for (let index = 0; index < ordered.length; index += bucketSize) {
+      const bucket = ordered.slice(index, index + bucketSize);
+      const peak = Math.max(...bucket.map((point) => point.db));
+      const minute = bucket[0]?.minute ?? 0;
+      bars.push({
+        key: `${minute}-${index}`,
+        height: clampPercent(((peak - 20) / 50) * 100),
+        minute,
+      });
+    }
+
+    return bars;
+  }, [chartData]);
+
+  const selectedPosition =
+    selected !== undefined
+      ? clampPercent(
+          (((new Date(selected.occurred_at).getTime() - startMs) / 60000) / durationMinutes) * 100
+        )
+      : null;
 
   return (
     <div className="space-y-4">
@@ -107,34 +152,34 @@ export function NightSoundsChart({
         })}
       </div>
 
-      {stageData.length > 0 && (
-        <div className="rounded-2xl border border-white/10 bg-[#0A1621]/80 p-4">
-          <p className="mb-2 text-xs text-muted-foreground">Tahmini uyku evreleri</p>
-          <div className="h-20 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={stageData}>
-                <YAxis hide domain={[0.5, 3.5]} />
-                <XAxis dataKey="time" hide />
-                <Area
-                  type="stepAfter"
-                  dataKey="stageY"
-                  stroke="var(--chart-2)"
-                  fill="var(--chart-2)"
-                  fillOpacity={0.15}
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+      {stageSegments.length > 0 && (
+        <div className="rounded-2xl border border-white/10 bg-[#071222] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.04)]">
+          <p className="mb-3 text-xs text-muted-foreground">Tahmini uyku evreleri</p>
+          <div className="relative h-24 overflow-hidden rounded-2xl border border-white/[0.06] bg-[#06101f]">
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,.035)_1px,transparent_1px)] bg-[size:25%_100%,100%_33.333%]" />
+            {stageSegments.map((segment) => (
+              <span
+                key={segment.key}
+                className={cn(
+                  "absolute rounded-full transition-colors",
+                  STAGE_STYLES[segment.stage]
+                )}
+                style={{
+                  left: `${segment.left}%`,
+                  width: `${segment.width}%`,
+                }}
+              />
+            ))}
           </div>
           <div className="mt-2 flex gap-4 text-[10px] text-muted-foreground">
-            {Object.entries(STAGE_LABELS).map(([k, v]) => (
-              <span key={k}>{v}</span>
+            {Object.entries(STAGE_LABELS).map(([key, label]) => (
+              <span key={key}>{label}</span>
             ))}
           </div>
         </div>
       )}
 
-      <div className="relative rounded-2xl border border-white/10 bg-[#0A1621]/80 p-4">
+      <div className="relative rounded-2xl border border-white/10 bg-[#071222] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.04)]">
         {selected && (
           <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 text-sm text-cyllene-cyan">
             <Wind className="h-4 w-4" />
@@ -142,47 +187,36 @@ export function NightSoundsChart({
           </div>
         )}
 
-        <div className="h-56 w-full">
-          {chartData.length === 0 ? (
+        <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-white/[0.06] bg-[#06101f] px-3 pb-8 pt-4">
+          {soundBars.length === 0 ? (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
               Bu gece için ses verisi yok
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="nightGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.45} />
-                    <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="oklch(1 0 0 / 6%)" vertical={false} />
-                <XAxis dataKey="time" stroke="oklch(0.7 0.04 265)" fontSize={11} />
-                <YAxis stroke="oklch(0.7 0.04 265)" fontSize={11} domain={[20, 70]} hide />
-                <Tooltip
-                  contentStyle={{
-                    background: "oklch(0.12 0.03 265 / 95%)",
-                    border: "1px solid oklch(1 0 0 / 10%)",
-                    borderRadius: "12px",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="db"
-                  stroke="var(--chart-2)"
-                  fill="url(#nightGradient)"
-                  strokeWidth={2.5}
-                  dot={false}
-                />
-                {selected && (
-                  <ReferenceLine
-                    x={formatTime(selected.occurred_at)}
-                    stroke="oklch(1 0 0 / 30%)"
-                    strokeWidth={1}
+            <>
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,.035)_1px,transparent_1px)] bg-[size:25%_100%,100%_25%]" />
+              <div className="relative z-10 flex h-full items-end gap-1">
+                {soundBars.map((bar) => (
+                  <span
+                    key={bar.key}
+                    className="min-w-0 flex-1 rounded-t-full bg-[linear-gradient(to_top,rgba(23,105,255,.18),rgba(111,210,255,.82))] shadow-[0_0_18px_rgba(111,210,255,.16)]"
+                    style={{ height: `${Math.max(8, bar.height)}%` }}
                   />
-                )}
-              </AreaChart>
-            </ResponsiveContainer>
+                ))}
+              </div>
+              {selectedPosition !== null && (
+                <span
+                  className="absolute bottom-7 top-4 z-20 w-px bg-white/35"
+                  style={{ left: `${selectedPosition}%` }}
+                >
+                  <span className="absolute -bottom-1 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-cyllene-cyan shadow-[0_0_18px_rgba(111,210,255,.65)]" />
+                </span>
+              )}
+              <div className="absolute inset-x-3 bottom-2 z-10 flex justify-between text-[10px] text-white/28">
+                <span>{formatTime(startMs)}</span>
+                <span>{formatTime(startMs + durationMinutes * 60000)}</span>
+              </div>
+            </>
           )}
         </div>
 

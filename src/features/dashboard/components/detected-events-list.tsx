@@ -46,10 +46,10 @@ export function DetectedEventItem({ event, variant = "light" }: DetectedEventIte
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-xl border p-2.5",
+        "flex items-center gap-3 rounded-xl border p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,.035)]",
         isDark
-          ? "border-white/10 bg-white/5"
-          : "border-white/10 bg-card/50"
+          ? "border-white/10 bg-[#071222]"
+          : "border-white/10 bg-[#071222]"
       )}
     >
       <div

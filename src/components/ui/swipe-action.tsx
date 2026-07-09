@@ -36,8 +36,14 @@ export function SwipeAction({
   };
 
   return (
-    <div className={cn("relative overflow-hidden rounded-[1.45rem]", className)}>
-      <div className="absolute inset-y-0 right-0 flex w-[88px] items-stretch justify-end">
+    <div className={cn("relative overflow-hidden rounded-[1.45rem] bg-[#071222]", className)}>
+      <div
+        className="absolute inset-y-0 right-0 flex w-[88px] items-stretch justify-end transition-opacity duration-100"
+        style={{
+          opacity: Math.min(1, Math.abs(offset) / 26),
+          pointerEvents: offset === 0 ? "none" : "auto",
+        }}
+      >
         <button
           type="button"
           disabled={actionDisabled}
@@ -57,7 +63,7 @@ export function SwipeAction({
 
       <div
         className={cn(
-          "relative z-10 touch-pan-y",
+          "relative z-10 touch-pan-y rounded-[inherit] bg-[#071222]",
           dragging ? "transition-none" : "transition-transform duration-150 ease-out"
         )}
         style={{ transform: `translateX(${offset}px)` }}

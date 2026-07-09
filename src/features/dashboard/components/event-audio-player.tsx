@@ -12,6 +12,8 @@ interface EventAudioPlayerProps {
   compact?: boolean;
 }
 
+const EVENT_AUDIO_PLAY_EVENT = "cyllene:event-audio-play";
+
 type MissingDeviceCopy = {
   short: string;
   detail: string;
@@ -58,6 +60,16 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
 
   useEffect(() => () => cleanup(), [cleanup]);
 
+  useEffect(() => {
+    const handleOtherPlayback = (event: Event) => {
+      const nextEventId = (event as CustomEvent<string>).detail;
+      if (nextEventId !== eventId) cleanup();
+    };
+
+    window.addEventListener(EVENT_AUDIO_PLAY_EVENT, handleOtherPlayback);
+    return () => window.removeEventListener(EVENT_AUDIO_PLAY_EVENT, handleOtherPlayback);
+  }, [cleanup, eventId]);
+
   const togglePlay = async () => {
     if (playing && audioRef.current) {
       audioRef.current.pause();
@@ -94,6 +106,7 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
         });
       }
 
+      window.dispatchEvent(new CustomEvent(EVENT_AUDIO_PLAY_EVENT, { detail: eventId }));
       await audioRef.current.play();
       setPlaying(true);
     } catch {
