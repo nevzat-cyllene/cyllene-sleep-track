@@ -4,7 +4,6 @@ import { siteConfig } from "@/lib/site-config";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Moon } from "lucide-react";
-import { UserMenu } from "@/components/app/user-menu";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/shell/container";
 import { useAuthUser } from "@/hooks/use-auth-user";
@@ -41,7 +40,13 @@ export function MarketingHeader() {
               >
                 Panel
               </Button>
-              <UserMenu />
+              <Button
+                variant="ghost"
+                size="sm"
+                render={<Link href="/profile" prefetch />}
+              >
+                Profil
+              </Button>
             </>
           ) : (
             <>
