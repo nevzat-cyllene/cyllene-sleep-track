@@ -45,7 +45,7 @@ function getPlatformSteps(platform: DevicePlatform, isPwa: boolean): string[] {
 
     if (!isPwa) {
       steps.unshift(
-        `Safari'de paylaş → Ana Ekrana Ekle ile ${siteConfig.name}'i PWA olarak kurun`
+        `Safari'de paylaş → Ana Ekrana Ekle ile ${siteConfig.name}'i kurun`
       );
     }
 
@@ -62,7 +62,7 @@ function getPlatformSteps(platform: DevicePlatform, isPwa: boolean): string[] {
   }
 
   return [
-    "Tarayıcı sekmesini veya PWA penceresini açık bırakın",
+    "Tarayıcı sekmesini veya uygulama penceresini açık bırakın",
     "Bilgisayarın uyku moduna geçmesini engelleyin",
   ];
 }
@@ -109,7 +109,7 @@ export function getPreRecordingGuidance(
     if (platform === "ios") {
       return {
         status: "warning",
-        title: "PWA kurulu — iyi başlangıç",
+        title: "Uygulama kurulu — iyi başlangıç",
         message:
           "Kayda başladığınızda bu ekran açık kalır ve ekran kilidi devreye girer. iPhone'da ekran yine de kapanabilir; kayıt kesilmesin diye otomatik kilit süresini uzatın:",
         steps: getPlatformSteps(platform, isPwa),
@@ -118,7 +118,7 @@ export function getPreRecordingGuidance(
 
     return {
       status: "ok",
-      title: "PWA kurulu — hazırsınız",
+      title: "Uygulama kurulu — hazırsınız",
       message:
         "Kayda bastığınızda bu ekran açık kalır ve mikrofon gece boyunca çalışır. Telefonu yatağınıza yakın, şarjda ve bu ekran görünür şekilde bırakın.",
     };
@@ -138,7 +138,7 @@ export function getPreRecordingGuidance(
     status: "warning",
     title: "Ana ekrana eklemenizi öneririz",
     message:
-      "Tarayıcı sekmesinden kayıt yapabilirsiniz; ancak PWA olarak kurduğunuzda ekran uyanık kalma ve mikrofon daha güvenilir çalışır.",
+      "Tarayıcı sekmesinden kayıt yapabilirsiniz; ancak ana ekrana eklediğinizde ekran uyanık kalma ve mikrofon daha güvenilir çalışır.",
     steps: ["Tarayıcı menüsünden Ana Ekrana Ekle / Uygulamayı yükle"],
   };
 }

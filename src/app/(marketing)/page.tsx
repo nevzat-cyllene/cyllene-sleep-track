@@ -1,6 +1,6 @@
 import { siteConfig } from "@/lib/site-config";
 import Link from "next/link";
-import { ArrowRight, Lock, Mic, Moon, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Headphones, Lock, Mic, Moon, ShieldCheck, Smartphone } from "lucide-react";
 import { MarketingHeader } from "@/components/marketing/marketing-header";
 import { Container } from "@/components/shell/container";
 import { Button } from "@/components/ui/button";
@@ -15,27 +15,27 @@ import {
 const features = [
   {
     icon: Mic,
-    title: "On-device ses analizi",
+    title: "Ses analizi telefonunda",
     description:
-      "Horlama/öksürük/gürültü tespiti cihazınızda çalışır. Ses dosyası yüklenmez.",
+      "Horlama, öksürük ve ani gürültüler gece boyunca cihazında tespit edilir. Ses kaydı sunucuya gönderilmez.",
   },
   {
-    icon: ShieldCheck,
-    title: "Sabah raporu ve grafikler",
+    icon: Moon,
+    title: "Sabah raporu",
     description:
-      "Gece zaman çizelgesi, uyku skoru ve olay sayıları tek ekranda toplanır.",
+      "Uyku skoru, gece zaman çizelgesi ve olay sayıları tek bakışta. Her sabah net bir özet.",
+  },
+  {
+    icon: Headphones,
+    title: "Olayları dinle",
+    description:
+      "Tespit edilen horlama ve sesleri saat bilgisiyle gör, istersen klibi dinle.",
   },
   {
     icon: Lock,
-    title: "Gizlilik odaklı mimari",
+    title: "Gizliliğin korunur",
     description:
-      "Buluta yalnızca küçük metadata gider. Ses kaydı varsayılan olarak cihazda kalır.",
-  },
-  {
-    icon: Sparkles,
-    title: "SaaS'a hazır iskelet",
-    description:
-      "Auth, dashboard ve premium modülü hazır. Faz 2'de paketleri eklemek kolay.",
+      "Analiz telefonunda kalır. Buluta yalnızca olayın saati, türü ve süresi gibi özet bilgiler gider.",
   },
 ];
 
@@ -51,7 +51,7 @@ export default function LandingPage() {
               <div className="space-y-6">
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-muted-foreground">
                   <Moon className="h-3.5 w-3.5 text-primary" />
-                  <span>Zero-cost başlangıç · On-device analiz</span>
+                  <span>Ücretsiz başlangıç · Telefonda analiz</span>
                 </div>
 
                 <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
@@ -62,8 +62,8 @@ export default function LandingPage() {
                 </h1>
 
                 <p className="text-pretty text-lg text-muted-foreground">
-                  {siteConfig.name}, gece uykunuzdaki sesleri cihazınızda analiz eder. Horlama,
-                  öksürük ve gürültü olaylarını sabah modern bir dashboard ile gösterir.
+                  {siteConfig.name}, gece uykunuzdaki sesleri telefonunuzda analiz eder. Horlama,
+                  öksürük ve gürültü olaylarını sabah raporunda gösterir.
                 </p>
 
                 <div className="flex flex-col gap-3 sm:flex-row">
@@ -90,12 +90,12 @@ export default function LandingPage() {
                     Ses dosyası yüklenmez
                   </div>
                   <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-primary/80" />
-                    Şık grafikler
+                    <Smartphone className="h-4 w-4 text-primary/80" />
+                    Ana ekrana eklenebilir
                   </div>
                   <div className="flex items-center gap-2">
                     <Mic className="h-4 w-4 text-primary/80" />
-                    PWA kurulabilir
+                    Gece boyunca kayıt
                   </div>
                 </div>
               </div>
@@ -106,21 +106,28 @@ export default function LandingPage() {
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base">
                       <Moon className="h-4 w-4 text-primary" />
-                      Sabah Raporu (Örnek)
+                      Sabah Raporu
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid gap-3 sm:grid-cols-3">
-                      {["Skor", "Horlama", "En yüksek dB"].map((label) => (
-                        <div key={label} className="rounded-xl border border-white/10 bg-white/5 p-3">
-                          <div className="text-xs text-muted-foreground">{label}</div>
-                          <div className="mt-1 text-2xl font-semibold tabular-nums">—</div>
+                      {[
+                        { label: "Skor", value: "78" },
+                        { label: "Horlama", value: "12" },
+                        { label: "En yüksek ses", value: "54 dB" },
+                      ].map((item) => (
+                        <div
+                          key={item.label}
+                          className="rounded-xl border border-white/10 bg-white/5 p-3"
+                        >
+                          <div className="text-xs text-muted-foreground">{item.label}</div>
+                          <div className="mt-1 text-2xl font-semibold tabular-nums">{item.value}</div>
                         </div>
                       ))}
                     </div>
                     <div className="h-40 rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent" />
                     <div className="text-xs text-muted-foreground">
-                      Bu ekran gerçek verilerle dashboard&apos;ta otomatik dolacak.
+                      Dün gece — örnek görünüm
                     </div>
                   </CardContent>
                 </Card>
@@ -133,11 +140,10 @@ export default function LandingPage() {
           <Container>
             <div className="mb-10 space-y-3">
               <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                Modern SaaS UX, gerçekçi MVP
+                Gece boyunca ne olur?
               </h2>
               <p className="max-w-2xl text-muted-foreground">
-                Klişe “card grid” yerine; net hiyerarşi, boşluk, tipografi ve premium
-                hissi veren yüzeyler.
+                Telefonu yatağının yakınına koy, uyku. Sabah kalktığında geceye dair net bir özet seni beklesin.
               </p>
             </div>
 
@@ -170,22 +176,22 @@ export default function LandingPage() {
                   <AccordionItem value="q1">
                     <AccordionTrigger>Sesim buluta gidiyor mu?</AccordionTrigger>
                     <AccordionContent>
-                      Hayır. Varsayılan olarak analiz cihaz içinde yapılır. Supabase&apos;e yalnızca küçük
-                      olay metadata&apos;sı (zaman, tip, süre, dB) gider.
+                      Hayır. Ses kayıtları telefonunuzda kalır. Buluta yalnızca olayın saati, türü
+                      ve süresi gibi özet bilgiler gider — horlama sesinin kendisi değil.
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="q2">
                     <AccordionTrigger>iPhone ekranı kilitlenince kayıt devam eder mi?</AccordionTrigger>
                     <AccordionContent>
-                      Web/PWA tarafında ekran kilitliyken mikrofon erişimi kısıtlanır. Bu yüzden
-                      Uyku Modu ekranı düşük parlaklıkta açık kalacak şekilde tasarlandı.
+                      Ekran kilitlenirse mikrofon durabilir. Kayıt sırasında uyku modu ekranını açık
+                      bırakın; uygulama ekranı uyanık tutmaya çalışır.
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="q3">
-                    <AccordionTrigger>Premium paket nasıl eklenecek?</AccordionTrigger>
+                    <AccordionTrigger>Premium plan ne sunacak?</AccordionTrigger>
                     <AccordionContent>
-                      DB&apos;de `subscriptions` tablosu ve uygulamada billing modülü hazır. Faz 2&apos;de Stripe
-                      webhook entegrasyonu ekleyip plan bazlı özellikleri açacağız.
+                      Detaylı gece analizi, sınırsız geçmiş kayıtları ve gelişmiş raporlar premium
+                      planda olacak. Çok yakında.
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
@@ -201,7 +207,7 @@ export default function LandingPage() {
                 <div>
                   <h3 className="text-xl font-semibold">Bu gece ilk kaydını başlat</h3>
                   <p className="mt-1 text-muted-foreground">
-                    2 dakikada kur, sabah dashboard&apos;u gör.
+                    Birkaç dakikada kur, sabah raporunu gör.
                   </p>
                 </div>
                 <Button

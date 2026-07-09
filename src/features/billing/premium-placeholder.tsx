@@ -1,9 +1,9 @@
 export function PremiumPlaceholder() {
   return (
     <div className="glass rounded-3xl border border-white/10 p-6 text-center shadow-soft">
-      <p className="text-sm font-medium text-primary">Premium — Yakında</p>
+      <p className="text-sm font-medium text-primary">Cyllene Premium — Çok yakında</p>
       <p className="mt-2 text-sm text-muted-foreground">
-        Ses klipleri, detaylı AI analizi ve sınırsız geçmiş kayıtları Faz 2&apos;de.
+        Detaylı gece analizi, sınırsız geçmiş kayıtları ve gelişmiş raporlar yolda.
       </p>
     </div>
   );

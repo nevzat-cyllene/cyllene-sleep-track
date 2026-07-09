@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { InstallPWA } from "@/components/install-pwa";
 
 const nav = [
-  { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
+  { href: "/dashboard", label: "Sabah Raporu", icon: BarChart3 },
   { href: "/record", label: "Kayıt", icon: Mic },
 ];
 
