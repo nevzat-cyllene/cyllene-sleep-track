@@ -1,3 +1,4 @@
+import { siteConfig } from "@/lib/site-config";
 import Link from "next/link";
 import { ArrowRight, Lock, Mic, Moon, ShieldCheck, Sparkles } from "lucide-react";
 import { MarketingHeader } from "@/components/marketing/marketing-header";
@@ -61,7 +62,7 @@ export default function LandingPage() {
                 </h1>
 
                 <p className="text-pretty text-lg text-muted-foreground">
-                  CySleep, gece uykunuzdaki sesleri cihazınızda analiz eder. Horlama,
+                  {siteConfig.name}, gece uykunuzdaki sesleri cihazınızda analiz eder. Horlama,
                   öksürük ve gürültü olaylarını sabah modern bir dashboard ile gösterir.
                 </p>
 
@@ -218,7 +219,7 @@ export default function LandingPage() {
         <footer className="border-t border-white/5 py-10">
           <Container className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} CySleep
+              © {new Date().getFullYear()} {siteConfig.name}
             </div>
             <div className="text-sm text-muted-foreground">
               <Link className="hover:text-foreground" href="/login">

@@ -1,5 +1,6 @@
 "use client";
 
+import { siteConfig } from "@/lib/site-config";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BarChart3, Mic, Moon } from "lucide-react";
@@ -36,9 +37,9 @@ export function AppSidebar() {
             <Moon className="h-4 w-4 text-primary" />
           </div>
           <div className="min-w-0 leading-tight group-data-[collapsible=icon]/sidebar-wrapper:hidden">
-            <div className="truncate font-semibold">CySleep</div>
+            <div className="truncate font-semibold">{siteConfig.shortName}</div>
             <div className="truncate text-xs text-muted-foreground">
-              Sleep Quality Tracker
+              {siteConfig.tagline}
             </div>
           </div>
         </Link>

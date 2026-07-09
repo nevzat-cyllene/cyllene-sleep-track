@@ -1,5 +1,6 @@
 "use client";
 
+import { siteConfig } from "@/lib/site-config";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Moon } from "lucide-react";
@@ -19,10 +20,10 @@ export function MarketingHeader() {
           </div>
           <div className="leading-tight">
             <div className="font-semibold tracking-tight">
-              <span className="text-gradient">CySleep</span>
+              <span className="text-gradient">{siteConfig.shortName}</span>
             </div>
             <div className="text-xs text-muted-foreground">
-              Privacy-first sleep insights
+              {siteConfig.tagline}
             </div>
           </div>
         </Link>

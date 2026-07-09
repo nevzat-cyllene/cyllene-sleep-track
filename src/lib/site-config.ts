@@ -1,11 +1,18 @@
 import type { Metadata, Viewport } from "next";
 
 export const siteConfig = {
-  name: "CySleep",
+  /** Ana marka adı — Türkçe arayüzde her yerde */
+  name: "Cyllene Uyku Takipçisi",
+  /** Kısa ad — PWA, sidebar, ikon altı */
+  shortName: "Cyllene",
+  /** İngilizce alt başlık / teknik ad */
+  tagline: "Cyllene Sleep Track",
+  /** npm paket ve repo adı */
+  packageName: "cyllene-sleep-track",
   description:
     "Gece uykunuzu cihaz içi ses analizi ile izleyin. Horlama, öksürük ve gürültü olaylarını sabah modern bir dashboard ile görün.",
   url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-};
+} as const;
 
 export const defaultMetadata: Metadata = {
   title: {
@@ -17,7 +24,7 @@ export const defaultMetadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: siteConfig.name,
+    title: siteConfig.shortName,
   },
   formatDetection: {
     telephone: false,

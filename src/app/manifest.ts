@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
+import { siteConfig } from "@/lib/site-config";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "CySleep — Uyku Kalitesi Takibi",
-    short_name: "CySleep",
-    description:
-      "Gece uykunuzdaki sesleri cihaz içi analiz ile izleyin. Horlama, öksürük ve gürültü raporları.",
+    name: siteConfig.name,
+    short_name: siteConfig.shortName,
+    description: siteConfig.description,
     start_url: "/dashboard",
     display: "standalone",
     background_color: "#0f0a1a",

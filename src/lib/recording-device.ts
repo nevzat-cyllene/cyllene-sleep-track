@@ -1,3 +1,5 @@
+import { siteConfig } from "@/lib/site-config";
+
 export type DevicePlatform = "ios" | "android" | "desktop" | "unknown";
 
 export type WakeLockStatus = "active" | "fallback" | "inactive";
@@ -42,7 +44,9 @@ function getPlatformSteps(platform: DevicePlatform, isPwa: boolean): string[] {
     ];
 
     if (!isPwa) {
-      steps.unshift("Safari'de paylaş → Ana Ekrana Ekle ile CySleep'i PWA olarak kurun");
+      steps.unshift(
+        `Safari'de paylaş → Ana Ekrana Ekle ile ${siteConfig.name}'i PWA olarak kurun`
+      );
     }
 
     return steps;
@@ -51,7 +55,7 @@ function getPlatformSteps(platform: DevicePlatform, isPwa: boolean): string[] {
   if (platform === "android") {
     return [
       "Ayarlar → Ekran → Ekran zaman aşımı → 30 dakika veya Hiçbir Zaman",
-      "Ayarlar → Uygulamalar → CySleep → Pil → Kısıtlama yok / Sınırsız",
+      `Ayarlar → Uygulamalar → ${siteConfig.shortName} → Pil → Kısıtlama yok / Sınırsız`,
       "Kayıt sırasında ekranı kapatmayın veya uygulamadan çıkmayın",
       "Telefonu şarja takın",
     ];
@@ -73,7 +77,7 @@ export function getRecordingGuidance(
       status: "ok",
       title: "Ekran açık kalacak",
       message: isPwa
-        ? "CySleep ana ekrandan açık. Bu kayıt ekranı gece boyunca uyanık kalır; mikrofon kesintisiz çalışır. Yine de telefonu şarja takmanızı öneririz."
+        ? `${siteConfig.shortName} ana ekrandan açık. Bu kayıt ekranı gece boyunca uyanık kalır; mikrofon kesintisiz çalışır. Yine de telefonu şarja takmanızı öneririz.`
         : "Ekran uyanık tutuluyor. Kayıt bu ekran açıkken devam eder — telefonu kilitlemeyin ve şarja takın.",
     };
   }
@@ -125,7 +129,7 @@ export function getPreRecordingGuidance(
       status: "warning",
       title: "Önce ana ekrana ekleyin",
       message:
-        "Safari'den açıkken iPhone ekranı kapanınca mikrofon durabilir. CySleep'i Ana Ekrana Ekleyip oradan açın; ardından kayıt ekranı uyanık kalır:",
+        `${siteConfig.name}'i Ana Ekrana Ekleyip oradan açın; ardından kayıt ekranı uyanık kalır:`,
       steps: getPlatformSteps(platform, isPwa),
     };
   }

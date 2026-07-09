@@ -1,7 +1,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type { LocalSleepSession } from "@/types";
 
-interface CySleepDB extends DBSchema {
+interface CylleneSleepDB extends DBSchema {
   sessions: {
     key: string;
     value: LocalSleepSession;
@@ -9,14 +9,14 @@ interface CySleepDB extends DBSchema {
   };
 }
 
-const DB_NAME = "cysleep";
+const DB_NAME = "cyllene-sleep-track";
 const DB_VERSION = 1;
 
-let dbPromise: Promise<IDBPDatabase<CySleepDB>> | null = null;
+let dbPromise: Promise<IDBPDatabase<CylleneSleepDB>> | null = null;
 
 function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<CySleepDB>(DB_NAME, DB_VERSION, {
+    dbPromise = openDB<CylleneSleepDB>(DB_NAME, DB_VERSION, {
       upgrade(db) {
         const store = db.createObjectStore("sessions", { keyPath: "id" });
         store.createIndex("by-synced", "synced");

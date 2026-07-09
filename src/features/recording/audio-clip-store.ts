@@ -9,7 +9,7 @@ export interface EventAudioClip {
   durationMs: number;
 }
 
-interface CySleepAudioDB extends DBSchema {
+interface CylleneSleepAudioDB extends DBSchema {
   eventClips: {
     key: string;
     value: EventAudioClip;
@@ -17,14 +17,14 @@ interface CySleepAudioDB extends DBSchema {
   };
 }
 
-const DB_NAME = "cysleep-audio";
+const DB_NAME = "cyllene-sleep-track-audio";
 const DB_VERSION = 1;
 
-let dbPromise: Promise<IDBPDatabase<CySleepAudioDB>> | null = null;
+let dbPromise: Promise<IDBPDatabase<CylleneSleepAudioDB>> | null = null;
 
 function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<CySleepAudioDB>(DB_NAME, DB_VERSION, {
+    dbPromise = openDB<CylleneSleepAudioDB>(DB_NAME, DB_VERSION, {
       upgrade(db) {
         const store = db.createObjectStore("eventClips", { keyPath: "eventId" });
         store.createIndex("by-session", "sessionId");

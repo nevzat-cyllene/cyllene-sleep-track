@@ -1,4 +1,4 @@
--- CySleep initial schema (Faz 1 MVP)
+-- Cyllene Sleep Track initial schema (Faz 1 MVP)
 
 create extension if not exists "uuid-ossp";
 

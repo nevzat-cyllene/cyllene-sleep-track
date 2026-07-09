@@ -1,5 +1,6 @@
 "use client";
 
+import { siteConfig } from "@/lib/site-config";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -50,7 +51,7 @@ export function LoginForm() {
       <CardHeader className="text-center">
         <div className="flex items-center justify-center pb-2">
           <Badge variant="secondary" className="bg-white/5 text-muted-foreground">
-            CySleep · Secure Login
+            {siteConfig.name} · Giriş
           </Badge>
         </div>
         <CardTitle className="text-2xl tracking-tight">Tekrar hoş geldin</CardTitle>

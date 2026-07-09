@@ -46,9 +46,9 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  --color-cysleep-purple: oklch(0.62 0.22 285);
-  --color-cysleep-cyan: oklch(0.78 0.14 195);
-  --color-cysleep-glow: oklch(0.55 0.2 285);
+  --color-cyllene-purple: oklch(0.62 0.22 285);
+  --color-cyllene-cyan: oklch(0.78 0.14 195);
+  --color-cyllene-glow: oklch(0.55 0.2 285);
 }
 
 :root {
