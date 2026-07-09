@@ -25,4 +25,4 @@ Vercel'e bağlayın ve `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KE
 
 ## Repo
 
-https://github.com/nevzat-cyllene/CySleep (Cyllene Sleep Track)
+https://github.com/nevzat-cyllene/cyllene-sleep-track
