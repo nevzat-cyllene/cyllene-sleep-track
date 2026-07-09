@@ -1,8 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Moon } from "lucide-react";
+import {
+  ArrowUpRight,
+  ChevronRight,
+  Clock3,
+  MoonStar,
+  ShieldCheck,
+  Sparkles,
+  Waves,
+} from "lucide-react";
 import { toast } from "sonner";
 import { RecordSetup } from "./components/record-setup";
 import { SleepModeScreen } from "./components/sleep-mode-screen";
@@ -11,12 +20,10 @@ import { retryUnsyncedSessions, syncSessionToSupabase, fetchUserSessions } from 
 import { useRecordingUI } from "@/components/app/recording-ui-context";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import type { LocalSleepSession, SleepSession } from "@/types";
+import { SleepScoreRing } from "@/features/dashboard/components/sleep-score-ring";
 import { formatDate } from "@/lib/sleep-utils";
 import { formatDurationHours } from "@/lib/sleep-analytics";
-import { Card, CardContent } from "@/components/ui/card";
-import { SleepScoreRing } from "@/features/dashboard/components/sleep-score-ring";
+import type { LocalSleepSession, SleepSession } from "@/types";
 
 export function SleepPageClient() {
   const router = useRouter();
@@ -99,50 +106,108 @@ export function SleepPageClient() {
   }
 
   return (
-    <div className="space-y-8 pb-4">
-      <div className="text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/15">
-          <Moon className="h-8 w-8 text-primary" />
+    <div className="space-y-6 pb-3 sm:space-y-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="mb-3 flex items-center gap-2 text-xs text-[#78b7ff]">
+            <Sparkles className="h-3.5 w-3.5" />
+            Gece rutinin hazır
+          </div>
+          <h1 className="text-4xl font-medium tracking-[-0.055em] sm:text-5xl">İyi geceler.</h1>
+          <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">
+            Uykunu anlamak için yapman gereken tek şey, geceyi başlatmak.
+          </p>
         </div>
-        <h1 className="text-2xl font-semibold">İyi geceler</h1>
-        <p className="mt-2 text-muted-foreground">
-          Uykuya başladığınızda ses analizi gece boyunca devam eder.
-        </p>
+        <div className="flex w-fit items-center gap-2 rounded-full border border-emerald-400/12 bg-emerald-400/6 px-3 py-2 text-[10px] text-emerald-300">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          Gizlilik koruması etkin
+        </div>
       </div>
-
-      {lastSession && (
-        <Link href={`/journal/${lastSession.id}`}>
-          <Card className="border-white/10 bg-sleep-card/80 shadow-soft transition hover:border-cyllene-cyan/30">
-            <CardContent className="flex items-center gap-4 py-4">
-              <SleepScoreRing score={lastSession.sleep_score ?? 0} size={72} />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Son gece
-                </p>
-                <p className="font-medium">{formatDate(lastSession.started_at)}</p>
-                <p className="text-sm text-muted-foreground">
-                  {formatDurationHours(lastSession.duration_minutes)} ·{" "}
-                  {lastSession.snore_count} horlama
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-      )}
 
       <RecordSetup
         onStart={() => void startRecording()}
         isLoading={status === "preparing" || syncing}
-        startLabel="Uykuya Başla"
+        startLabel="Bu geceyi başlat"
         compact
       />
 
-      {error && <p className="text-center text-sm text-destructive">{error}</p>}
+      {error && (
+        <p className="rounded-2xl border border-destructive/20 bg-destructive/8 px-4 py-3 text-center text-sm text-destructive">
+          {error}
+        </p>
+      )}
 
-      <div className="text-center">
-        <Button variant="ghost" size="sm" render={<Link href="/journal" />}>
-          Geçmiş gecelere bak →
-        </Button>
+      <div className="grid gap-4 lg:grid-cols-[1.2fr_.8fr]">
+        {lastSession ? (
+          <Link
+            href={`/journal/${lastSession.id}`}
+            className="surface-panel group rounded-[1.65rem] p-5 transition hover:border-[#6da9ff]/20 sm:p-6"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#78b7ff]">
+                  Son gece
+                </p>
+                <h2 className="mt-2 text-xl font-medium tracking-[-0.03em]">
+                  {formatDate(lastSession.started_at)}
+                </h2>
+              </div>
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.04] text-white/30 transition group-hover:bg-[#155eff]/15 group-hover:text-[#78b7ff]">
+                <ArrowUpRight className="h-4 w-4" />
+              </span>
+            </div>
+
+            <div className="mt-6 flex items-center gap-5">
+              <SleepScoreRing score={lastSession.sleep_score ?? 0} size={92} />
+              <div className="grid flex-1 grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3">
+                  <Clock3 className="mb-2 h-3.5 w-3.5 text-[#78b7ff]" />
+                  <p className="text-sm font-medium">
+                    {formatDurationHours(lastSession.duration_minutes)}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-white/30">Toplam uyku</p>
+                </div>
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3">
+                  <Waves className="mb-2 h-3.5 w-3.5 text-[#78b7ff]" />
+                  <p className="text-sm font-medium">{lastSession.snore_count}</p>
+                  <p className="mt-0.5 text-[10px] text-white/30">Horlama olayı</p>
+                </div>
+              </div>
+            </div>
+          </Link>
+        ) : (
+          <div className="surface-panel rounded-[1.65rem] p-6">
+            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#78b7ff]">
+              İlk raporun
+            </p>
+            <h2 className="mt-3 text-xl font-medium tracking-[-0.03em]">
+              Sabah burada bir hikâye olacak.
+            </h2>
+            <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+              İlk gece tamamlandığında uyku skorun, ses olayların ve zaman çizelgen burada görünür.
+            </p>
+          </div>
+        )}
+
+        <div className="surface-panel flex flex-col justify-between rounded-[1.65rem] p-5 sm:p-6">
+          <div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#155eff]/12 text-[#78b7ff]">
+              <MoonStar className="h-4.5 w-4.5" />
+            </div>
+            <h2 className="mt-5 text-lg font-medium tracking-[-0.025em]">Gece arşivin</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Tüm kayıtlarını, ses kliplerini ve sabah raporlarını tek yerde incele.
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            className="mt-5 h-10 w-full justify-between rounded-xl bg-white/[0.03] px-3 text-white/55 hover:bg-white/[0.06] hover:text-white"
+            render={<Link href="/journal" />}
+          >
+            Geçmiş gecelere bak
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

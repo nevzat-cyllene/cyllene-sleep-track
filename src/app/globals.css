@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -46,46 +46,46 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  --color-cyllene-purple: oklch(0.62 0.22 285);
-  --color-cyllene-cyan: oklch(0.78 0.14 195);
-  --color-cyllene-glow: oklch(0.55 0.2 285);
+  --color-cyllene-purple: oklch(0.61 0.22 264);
+  --color-cyllene-cyan: oklch(0.78 0.13 226);
+  --color-cyllene-glow: oklch(0.61 0.23 259);
   --color-sleep-quality: oklch(0.75 0.18 55);
   --color-sleep-card: oklch(0.14 0.04 240);
 }
 
 :root {
-  --background: oklch(0.12 0.03 265);
-  --foreground: oklch(0.96 0.01 265);
-  --card: oklch(0.16 0.04 265 / 80%);
-  --card-foreground: oklch(0.96 0.01 265);
-  --popover: oklch(0.16 0.04 265);
-  --popover-foreground: oklch(0.96 0.01 265);
-  --primary: oklch(0.68 0.2 285);
-  --primary-foreground: oklch(0.98 0.01 265);
-  --secondary: oklch(0.22 0.05 265);
-  --secondary-foreground: oklch(0.92 0.02 265);
-  --muted: oklch(0.2 0.04 265);
-  --muted-foreground: oklch(0.68 0.04 265);
-  --accent: oklch(0.24 0.06 285);
-  --accent-foreground: oklch(0.92 0.02 265);
+  --background: oklch(0.105 0.03 260);
+  --foreground: oklch(0.97 0.01 250);
+  --card: oklch(0.155 0.035 258 / 88%);
+  --card-foreground: oklch(0.97 0.01 250);
+  --popover: oklch(0.15 0.035 258);
+  --popover-foreground: oklch(0.97 0.01 250);
+  --primary: oklch(0.66 0.21 258);
+  --primary-foreground: oklch(0.99 0.005 250);
+  --secondary: oklch(0.2 0.045 258);
+  --secondary-foreground: oklch(0.93 0.015 250);
+  --muted: oklch(0.19 0.035 258);
+  --muted-foreground: oklch(0.69 0.035 250);
+  --accent: oklch(0.235 0.07 258);
+  --accent-foreground: oklch(0.95 0.015 250);
   --destructive: oklch(0.65 0.22 25);
-  --border: oklch(0.3 0.05 265 / 40%);
-  --input: oklch(0.25 0.05 265 / 60%);
-  --ring: oklch(0.62 0.22 285);
-  --chart-1: oklch(0.68 0.2 285);
-  --chart-2: oklch(0.72 0.16 195);
+  --border: oklch(0.43 0.045 258 / 28%);
+  --input: oklch(0.25 0.045 258 / 72%);
+  --ring: oklch(0.67 0.2 258);
+  --chart-1: oklch(0.67 0.2 258);
+  --chart-2: oklch(0.77 0.14 224);
   --chart-3: oklch(0.75 0.18 85);
   --chart-4: oklch(0.65 0.22 25);
   --chart-5: oklch(0.6 0.12 265);
-  --radius: 0.75rem;
-  --sidebar: oklch(0.14 0.035 265);
-  --sidebar-foreground: oklch(0.96 0.01 265);
-  --sidebar-primary: oklch(0.68 0.2 285);
-  --sidebar-primary-foreground: oklch(0.98 0.01 265);
-  --sidebar-accent: oklch(0.22 0.05 265);
-  --sidebar-accent-foreground: oklch(0.92 0.02 265);
-  --sidebar-border: oklch(0.3 0.05 265 / 40%);
-  --sidebar-ring: oklch(0.62 0.22 285);
+  --radius: 0.875rem;
+  --sidebar: oklch(0.125 0.032 258 / 94%);
+  --sidebar-foreground: oklch(0.96 0.01 250);
+  --sidebar-primary: oklch(0.67 0.2 258);
+  --sidebar-primary-foreground: oklch(0.99 0.005 250);
+  --sidebar-accent: oklch(0.22 0.055 258);
+  --sidebar-accent-foreground: oklch(0.94 0.015 250);
+  --sidebar-border: oklch(0.43 0.045 258 / 24%);
+  --sidebar-ring: oklch(0.67 0.2 258);
 }
 
 @layer base {
@@ -95,24 +95,33 @@
   body {
     @apply bg-background text-foreground;
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -20%, oklch(0.35 0.15 285 / 30%), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.3 0.12 195 / 15%), transparent);
+      radial-gradient(ellipse 70% 45% at 16% -12%, oklch(0.42 0.18 260 / 22%), transparent),
+      radial-gradient(ellipse 55% 36% at 100% 90%, oklch(0.43 0.13 225 / 12%), transparent);
     background-attachment: fixed;
+    min-width: 320px;
   }
   html {
     @apply font-sans;
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+  ::selection {
+    background: oklch(0.66 0.21 258 / 45%);
+    color: white;
   }
 }
 
 @layer utilities {
   .glass {
-    @apply border border-white/10 bg-card/55 backdrop-blur-xl;
+    @apply border border-white/[0.08] bg-card/70 backdrop-blur-2xl;
   }
   .glow-purple {
-    box-shadow: 0 0 40px oklch(0.55 0.2 285 / 25%);
+    box-shadow:
+      0 18px 50px oklch(0.48 0.2 258 / 28%),
+      0 0 0 1px oklch(0.82 0.08 245 / 8%) inset;
   }
   .text-gradient {
-    @apply bg-gradient-to-r from-[oklch(0.78_0.14_195)] to-[oklch(0.68_0.2_285)] bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-[oklch(0.86_0.08_235)] via-[oklch(0.75_0.14_248)] to-[oklch(0.67_0.21_268)] bg-clip-text text-transparent;
   }
   .grid-bg {
     background-image:
@@ -122,7 +131,38 @@
   }
   .shadow-soft {
     box-shadow:
-      0 10px 30px oklch(0.02 0 0 / 35%),
-      0 1px 0 oklch(1 0 0 / 6%) inset;
+      0 22px 70px oklch(0.02 0.02 260 / 35%),
+      0 1px 0 oklch(1 0 0 / 7%) inset;
+  }
+  .surface-panel {
+    @apply border border-white/[0.075] bg-[linear-gradient(145deg,rgba(18,30,58,.82),rgba(7,14,31,.88))] shadow-[0_24px_80px_rgba(0,5,20,.32),inset_0_1px_0_rgba(255,255,255,.055)] backdrop-blur-2xl;
+  }
+  .night-stars {
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(255,255,255,.9) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 74% 13%, rgba(150,195,255,.82) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 87% 39%, rgba(255,255,255,.7) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 24% 47%, rgba(130,180,255,.7) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 61% 56%, rgba(255,255,255,.72) 0 1px, transparent 1.5px);
+    background-size: 270px 270px, 330px 330px, 410px 410px, 360px 360px, 460px 460px;
+  }
+  .night-horizon {
+    background:
+      linear-gradient(135deg, transparent 52%, rgba(15,34,70,.8) 52.4% 62%, transparent 62.4%) 4% 100% / 32% 78% no-repeat,
+      linear-gradient(225deg, transparent 48%, rgba(8,24,54,.92) 48.4% 66%, transparent 66.4%) 42% 100% / 40% 64% no-repeat,
+      linear-gradient(140deg, transparent 46%, rgba(10,28,60,.92) 46.4% 70%, transparent 70.4%) 90% 100% / 46% 72% no-repeat,
+      linear-gradient(to top, #02050d, transparent);
+    filter: drop-shadow(0 -18px 38px rgba(18,86,180,.08));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

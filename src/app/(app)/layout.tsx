@@ -7,13 +7,17 @@ import { SidebarInset, SidebarProvider, SidebarRail } from "@/components/ui/side
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider defaultOpen>
+    <SidebarProvider defaultOpen className="bg-[#050a16]">
       <AppSidebar />
       <SidebarRail className="hidden md:flex" />
-      <SidebarInset className="bg-transparent">
+      <SidebarInset className="relative overflow-hidden bg-transparent">
         <RecordingUIProvider>
           <AppTopbar />
-          <Container className="pb-24 pt-6 md:pb-8 md:py-8">{children}</Container>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute right-[-12rem] top-[-8rem] h-[32rem] w-[32rem] rounded-full bg-[#175fff]/8 blur-[120px]"
+          />
+          <Container className="relative pb-28 pt-6 md:py-8">{children}</Container>
           <MobileBottomNav />
         </RecordingUIProvider>
       </SidebarInset>

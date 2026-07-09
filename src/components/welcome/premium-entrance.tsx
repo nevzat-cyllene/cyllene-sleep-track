@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Moon } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, MoonStar, Volume2, VolumeX } from "lucide-react";
 import { AmbientWelcomeSound } from "@/lib/ambient-welcome-sound";
 import { markGuestSplashSeen } from "@/lib/guest-splash-storage";
 import { siteConfig } from "@/lib/site-config";
@@ -13,156 +13,253 @@ interface PremiumEntranceProps {
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-const LINES = [
-  { at: 0, text: null },
-  { at: 2800, text: siteConfig.shortName },
-  { at: 5200, text: "Geceyi dinle." },
-  { at: 7200, text: "Sabahı ölç." },
-  { at: 9200, text: "Derin bir nefes alın." },
-  { at: 11500, text: null },
+const MOMENTS = [
+  {
+    eyebrow: "Gece başlıyor",
+    title: "Bir an dur.",
+    body: "Omuzlarını bırak ve derin bir nefes al.",
+  },
+  {
+    eyebrow: siteConfig.shortName,
+    title: "Geceni dinler.",
+    body: "Sabah, uykuna dair anlaşılır bir hikâyeye uyanırsın.",
+  },
+  {
+    eyebrow: "Gizlilik önce",
+    title: "Sesin sende kalır.",
+    body: "Analiz cihazında gerçekleşir; ham ses kayıtların buluta gönderilmez.",
+  },
 ] as const;
 
 export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
   const soundRef = useRef<AmbientWelcomeSound | null>(null);
   const doneRef = useRef(false);
-  const startedRef = useRef(false);
-  const [lineIndex, setLineIndex] = useState(0);
-  const [exiting, setExiting] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const [started, setStarted] = useState(false);
   const [soundOn, setSoundOn] = useState(false);
+  const [moment, setMoment] = useState(0);
+  const [exiting, setExiting] = useState(false);
+
+  useEffect(() => {
+    soundRef.current = new AmbientWelcomeSound();
+    return () => soundRef.current?.dispose();
+  }, []);
+
+  useEffect(() => {
+    if (!started) return;
+
+    const second = window.setTimeout(() => setMoment(1), reduceMotion ? 900 : 3600);
+    const third = window.setTimeout(() => setMoment(2), reduceMotion ? 1800 : 7000);
+
+    return () => {
+      window.clearTimeout(second);
+      window.clearTimeout(third);
+    };
+  }, [reduceMotion, started]);
+
+  const begin = useCallback(async () => {
+    if (started) return;
+    setStarted(true);
+
+    try {
+      await soundRef.current?.start();
+      setSoundOn(true);
+    } catch {
+      setSoundOn(false);
+    }
+  }, [started]);
 
   const finish = useCallback(async () => {
     if (doneRef.current) return;
     doneRef.current = true;
     setExiting(true);
     markGuestSplashSeen();
-    await soundRef.current?.fadeOut(2.2);
+    await soundRef.current?.fadeOut(reduceMotion ? 0.2 : 1.3);
     onComplete();
-  }, [onComplete]);
+  }, [onComplete, reduceMotion]);
 
-  const begin = useCallback(async () => {
-    if (startedRef.current) return;
-    startedRef.current = true;
-    try {
-      await soundRef.current?.start();
-      setSoundOn(true);
-    } catch {
-      // autoplay blocked — görsel devam eder
+  const toggleSound = useCallback(() => {
+    if (soundOn) {
+      void soundRef.current?.fadeOut(0.5);
+      setSoundOn(false);
+      return;
     }
-  }, []);
 
-  useEffect(() => {
     soundRef.current = new AmbientWelcomeSound();
-    void begin();
+    void soundRef.current
+      .start()
+      .then(() => setSoundOn(true))
+      .catch(() => setSoundOn(false));
+  }, [soundOn]);
 
-    const timers = LINES.map((line, i) =>
-      setTimeout(() => setLineIndex(i), line.at)
-    );
-    const endTimer = setTimeout(() => void finish(), 13500);
-
-    return () => {
-      timers.forEach(clearTimeout);
-      clearTimeout(endTimer);
-      soundRef.current?.dispose();
-    };
-  }, [begin, finish]);
-
-  const currentLine = LINES[lineIndex]?.text;
-  const isBrand = currentLine === siteConfig.shortName;
+  const current = MOMENTS[moment];
 
   return (
     <motion.div
-      className="fixed inset-0 z-[250] flex cursor-pointer flex-col items-center justify-center overflow-hidden bg-black text-white"
+      className="fixed inset-0 z-[250] isolate overflow-hidden bg-[#02050d] text-white"
       initial={{ opacity: 1 }}
-      animate={{ opacity: exiting ? 0 : 1 }}
-      transition={{ duration: 1.4, ease }}
-      onClick={() => {
-        if (!startedRef.current) void begin();
-        else if (lineIndex >= 2) void finish();
-      }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          if (!startedRef.current) void begin();
-          else void finish();
-        }
-      }}
+      animate={{ opacity: exiting ? 0 : 1, scale: exiting ? 1.015 : 1 }}
+      transition={{ duration: reduceMotion ? 0.2 : 1.2, ease }}
     >
-      <div className="pointer-events-none absolute inset-0">
-        {[...Array(3)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute left-1/2 top-1/2 rounded-full border border-cyllene-cyan/20"
-            style={{
-              width: 120 + i * 90,
-              height: 120 + i * 90,
-              marginLeft: -(60 + i * 45),
-              marginTop: -(60 + i * 45),
-            }}
-            animate={{
-              scale: [1, 1.35, 1],
-              opacity: [0.15, 0.45, 0.15],
-            }}
-            transition={{
-              duration: 5 + i * 1.2,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.8,
-            }}
-          />
-        ))}
+      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
         <motion.div
-          className="absolute left-1/2 top-1/2 h-[70vmin] w-[70vmin] -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{
-            background:
-              "radial-gradient(circle, oklch(0.78 0.14 195 / 18%) 0%, oklch(0.5 0.1 280 / 6%) 40%, transparent 70%)",
-          }}
-          animate={{ scale: [0.95, 1.08, 0.95], opacity: [0.4, 0.85, 0.4] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -left-[15%] top-[-18%] h-[65vw] min-h-[420px] w-[65vw] min-w-[420px] rounded-full bg-[#194eff]/20 blur-[110px]"
+          animate={reduceMotion ? undefined : { x: [0, 40, -10, 0], y: [0, 30, 10, 0] }}
+          transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
         />
+        <motion.div
+          className="absolute -bottom-[30%] right-[-10%] h-[70vw] min-h-[460px] w-[70vw] min-w-[460px] rounded-full bg-[#17b4e8]/15 blur-[130px]"
+          animate={reduceMotion ? undefined : { x: [0, -35, 0], y: [0, -25, 0] }}
+          transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
+        />
+
+        <div className="night-stars absolute inset-0 opacity-75" />
+        <div className="absolute inset-x-0 bottom-0 h-[44%] bg-[linear-gradient(180deg,transparent_0%,#02050d_82%)]" />
+
+        <motion.div
+          className="absolute left-1/2 top-[24%] h-40 w-40 -translate-x-1/2 rounded-full border border-white/10 bg-[radial-gradient(circle_at_34%_30%,#ffffff_0%,#d8e7ff_26%,#5a79ca_68%,#183276_100%)] shadow-[0_0_90px_rgba(96,145,255,0.28)] sm:h-52 sm:w-52"
+          initial={{ opacity: 0, y: 30, scale: 0.86 }}
+          animate={{
+            opacity: started ? 0.42 : 0.72,
+            y: started ? -22 : 0,
+            scale: started ? 1.2 : 1,
+          }}
+          transition={{ duration: reduceMotion ? 0.2 : 2.6, ease }}
+        >
+          <span className="absolute left-[24%] top-[30%] h-7 w-7 rounded-full bg-[#6f8bd1]/20 blur-[1px]" />
+          <span className="absolute bottom-[27%] right-[19%] h-10 w-10 rounded-full bg-[#6f8bd1]/15 blur-[1px]" />
+        </motion.div>
+
+        <div className="absolute inset-x-0 bottom-0 h-[28%] opacity-80">
+          <div className="night-horizon absolute inset-x-0 bottom-0 h-full" />
+        </div>
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#4e8cff]/40 to-transparent" />
       </div>
 
-      <div className="relative z-10 flex flex-col items-center gap-8 px-8 text-center">
-        <motion.div
-          animate={{ scale: [1, 1.06, 1] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          className="flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] shadow-[0_0_80px_oklch(0.78_0.14_195/25%)]"
-        >
-          <Moon className="h-9 w-9 text-cyllene-cyan" />
-        </motion.div>
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-10">
+        <header className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-xl">
+              <MoonStar className="h-4.5 w-4.5 text-[#78b7ff]" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold tracking-tight">{siteConfig.shortName}</p>
+              <p className="text-[10px] uppercase tracking-[0.24em] text-white/35">
+                Uyku zekâsı
+              </p>
+            </div>
+          </div>
 
-        <div className="flex min-h-[120px] items-center justify-center">
+          {started && (
+            <motion.button
+              type="button"
+              onClick={toggleSound}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-white/55 backdrop-blur-xl transition hover:bg-white/10 hover:text-white"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              aria-label={soundOn ? "Sesi kapat" : "Sesi aç"}
+            >
+              {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </motion.button>
+          )}
+        </header>
+
+        <main className="flex flex-1 items-end pb-[12vh] sm:items-center sm:pb-0">
           <AnimatePresence mode="wait">
-            {currentLine && (
-              <motion.p
-                key={currentLine}
-                initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -12, filter: "blur(6px)" }}
-                transition={{ duration: 1.1, ease }}
-                className={
-                  isBrand
-                    ? "text-4xl font-semibold tracking-tight sm:text-5xl"
-                    : "max-w-xs text-lg font-light leading-relaxed tracking-wide text-white/70"
-                }
+            {!started ? (
+              <motion.div
+                key="invitation"
+                className="max-w-xl"
+                initial={{ opacity: 0, y: 22 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -18, filter: "blur(8px)" }}
+                transition={{ duration: reduceMotion ? 0.2 : 1.2, delay: 0.25, ease }}
               >
-                {currentLine}
-              </motion.p>
+                <p className="mb-4 text-xs font-medium uppercase tracking-[0.32em] text-[#78b7ff]">
+                  İlk gecene hoş geldin
+                </p>
+                <h1 className="max-w-lg text-balance text-[clamp(3rem,10vw,6.5rem)] font-medium leading-[0.92] tracking-[-0.065em]">
+                  Geceyi
+                  <span className="block bg-gradient-to-r from-white via-[#bcd8ff] to-[#5e9eff] bg-clip-text text-transparent">
+                    yavaşlat.
+                  </span>
+                </h1>
+                <p className="mt-6 max-w-sm text-pretty text-base font-light leading-7 text-white/52 sm:text-lg">
+                  Kısa bir nefes alanıyla başla. Ambiyans yalnızca sen dokunduğunda açılır.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => void begin()}
+                  className="group mt-9 flex items-center gap-4 rounded-full border border-white/12 bg-white/[0.07] py-2.5 pl-5 pr-2.5 shadow-[0_16px_60px_rgba(0,50,160,.25),inset_0_1px_0_rgba(255,255,255,.12)] backdrop-blur-2xl transition hover:border-[#78b7ff]/35 hover:bg-white/[0.1]"
+                >
+                  <span className="text-sm font-medium">Dokun ve nefes al</span>
+                  <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-[#1769ff] text-white shadow-[0_0_32px_rgba(23,105,255,.55)]">
+                    <span className="absolute inset-0 animate-ping rounded-full border border-[#78b7ff]/40 [animation-duration:2.8s]" />
+                    <Volume2 className="h-4 w-4" />
+                  </span>
+                </button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="journey"
+                className="flex w-full flex-col gap-8 sm:grid sm:grid-cols-[1fr_auto] sm:items-end"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: reduceMotion ? 0.2 : 1 }}
+              >
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={moment}
+                    initial={{ opacity: 0, y: 28, filter: "blur(10px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -18, filter: "blur(8px)" }}
+                    transition={{ duration: reduceMotion ? 0.2 : 1.1, ease }}
+                    className="max-w-2xl"
+                  >
+                    <p className="mb-4 text-xs font-medium uppercase tracking-[0.3em] text-[#78b7ff]">
+                      {current.eyebrow}
+                    </p>
+                    <h2 className="text-balance text-[clamp(2.8rem,8vw,5.8rem)] font-medium leading-[0.96] tracking-[-0.06em]">
+                      {current.title}
+                    </h2>
+                    <p className="mt-5 max-w-md text-pretty text-base font-light leading-7 text-white/50 sm:text-lg">
+                      {current.body}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
+
+                <div className="flex items-center gap-4 sm:flex-col sm:items-end">
+                  <div className="flex gap-1.5">
+                    {MOMENTS.map((item, index) => (
+                      <span
+                        key={item.title}
+                        className={`h-1 rounded-full transition-all duration-700 ${
+                          index === moment ? "w-9 bg-[#6da9ff]" : "w-3 bg-white/15"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (moment < MOMENTS.length - 1) setMoment((value) => value + 1);
+                      else void finish();
+                    }}
+                    className="ml-auto flex h-13 items-center gap-3 rounded-full bg-white px-5 text-sm font-semibold text-[#06112a] shadow-[0_12px_42px_rgba(48,112,255,.3)] transition hover:scale-[1.02] sm:ml-0"
+                  >
+                    {moment === MOMENTS.length - 1 ? "Cyllene’i keşfet" : "Devam"}
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </main>
 
-        <motion.div
-          className="flex flex-col items-center gap-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: lineIndex >= 1 ? 1 : 0 }}
-          transition={{ delay: 0.5, duration: 1 }}
-        >
-          <div className="h-px w-16 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-          <p className="text-[10px] uppercase tracking-[0.45em] text-white/25">
-            {soundOn ? "Dokunun ve devam edin" : "Ses için dokunun"}
-          </p>
-        </motion.div>
+        <p className="text-[10px] uppercase tracking-[0.24em] text-white/25">
+          {started && soundOn ? "Meditasyon ambiyansı açık" : "Ses senin kontrolünde"}
+        </p>
       </div>
     </motion.div>
   );
