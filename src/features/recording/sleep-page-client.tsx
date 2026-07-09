@@ -114,7 +114,7 @@ export function SleepPageClient() {
         <Link href={`/journal/${lastSession.id}`}>
           <Card className="border-white/10 bg-sleep-card/80 shadow-soft transition hover:border-cyllene-cyan/30">
             <CardContent className="flex items-center gap-4 py-4">
-              <SleepScoreRing score={lastSession.sleep_score ?? 0} size={72} />
+              <SleepScoreRing score={lastSession.sleep_score ?? 0} size={64} compact />
               <div className="min-w-0 flex-1">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">
                   Son gece

@@ -13,5 +13,5 @@ export default async function ProfilePage() {
     .eq("id", data.user.id)
     .single();
 
-  return <ProfileClient profile={profile} email={data.user.email ?? null} />;
+  return <ProfileClient profile={profile} email={data.user.email ?? null} authProvider={data.user.app_metadata?.provider as string | undefined} />;
 }

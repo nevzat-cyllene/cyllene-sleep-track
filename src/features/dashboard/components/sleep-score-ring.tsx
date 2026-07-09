@@ -8,6 +8,8 @@ interface SleepScoreRingProps {
   className?: string;
   label?: string;
   showPercent?: boolean;
+  /** Küçük kartlarda etiketi gizler */
+  compact?: boolean;
 }
 
 export function SleepScoreRing({
@@ -16,11 +18,17 @@ export function SleepScoreRing({
   className,
   label = "Uyku Skoru",
   showPercent = false,
+  compact = false,
 }: SleepScoreRingProps) {
-  const stroke = 10;
+  const stroke = Math.max(4, Math.round(size * 0.07));
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
+  const showLabel = !compact && size >= 96;
+  const scoreClass =
+    size <= 72 ? "text-lg font-semibold" : size <= 120 ? "text-3xl font-semibold" : "text-5xl font-semibold";
+  const labelClass =
+    size <= 72 ? "text-[9px] tracking-wider" : "text-xs uppercase tracking-widest";
 
   const getColor = (s: number) => {
     if (s >= 80) return "var(--chart-2)";
@@ -54,13 +62,13 @@ export function SleepScoreRing({
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-5xl font-semibold tracking-tight tabular-nums">
+        <span className={cn("tracking-tight tabular-nums", scoreClass)}>
           {score}
           {showPercent && <span className="text-2xl">%</span>}
         </span>
-        <span className="text-xs uppercase tracking-widest text-muted-foreground">
-          {label}
-        </span>
+        {showLabel && (
+          <span className={cn("text-muted-foreground", labelClass)}>{label}</span>
+        )}
       </div>
     </div>
   );

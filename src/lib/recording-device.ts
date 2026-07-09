@@ -134,6 +134,25 @@ export function getPreRecordingGuidance(
     };
   }
 
+  if (platform === "android") {
+    return {
+      status: "warning",
+      title: "Ana ekrana eklemenizi öneririz",
+      message:
+        "Tarayıcı sekmesinden kayıt yapabilirsiniz; ancak ana ekrana eklediğinizde ekran uyanık kalma ve mikrofon daha güvenilir çalışır.",
+      steps: ["Tarayıcı menüsünden Ana Ekrana Ekle / Uygulamayı yükle"],
+    };
+  }
+
+  if (platform === "desktop") {
+    return {
+      status: "ok",
+      title: "Tarayıcıdan kullanıma hazır",
+      message:
+        "Bilgisayardan da kayıt yapabilirsiniz. Kayıt sırasında bu sekmeyi açık bırakın ve cihazın uyku moduna geçmesini engelleyin. Gece takibi için telefon daha uygundur.",
+    };
+  }
+
   return {
     status: "warning",
     title: "Ana ekrana eklemenizi öneririz",
