@@ -109,24 +109,19 @@ export function getRecordingGuidance(
 export function getPreRecordingGuidance(
   platform: DevicePlatform,
   isPwa: boolean
-): RecordingGuidance {
+): RecordingGuidance | null {
   if (isPwa) {
     if (platform === "ios") {
       return {
         status: "warning",
-        title: "Uygulama kurulu — iyi başlangıç",
+        title: "iPhone ekran kilidi",
         message:
-          "Kayda başladığınızda bu ekran açık kalır ve ekran kilidi devreye girer. iPhone'da ekran yine de kapanabilir; kayıt kesilmesin diye otomatik kilit süresini uzatın:",
+          "Kayıt sırasında ekran açık kalır; yine de otomatik kilit süresini uzatmanızı öneririz:",
         steps: getPlatformSteps(platform, isPwa),
       };
     }
 
-    return {
-      status: "ok",
-      title: "Uygulama kurulu — hazırsınız",
-      message:
-        "Kayda bastığınızda bu ekran açık kalır ve mikrofon gece boyunca çalışır. Telefonu yatağınıza yakın, şarjda ve bu ekran görünür şekilde bırakın.",
-    };
+    return null;
   }
 
   if (platform === "ios") {
@@ -150,12 +145,7 @@ export function getPreRecordingGuidance(
   }
 
   if (platform === "desktop") {
-    return {
-      status: "ok",
-      title: "Tarayıcıdan kullanıma hazır",
-      message:
-        "Bilgisayardan da kayıt yapabilirsiniz. Kayıt sırasında bu sekmeyi açık bırakın ve cihazın uyku moduna geçmesini engelleyin. Gece takibi için telefon daha uygundur.",
-    };
+    return null;
   }
 
   return {

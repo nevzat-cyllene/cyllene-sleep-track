@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { ThemeMenu } from "@/components/app/theme-menu";
 import { UserMenu } from "@/components/app/user-menu";
 import { useRecordingUI } from "@/components/app/recording-ui-context";
 import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/lib/site-config";
 import { Plus } from "lucide-react";
 
 export function AppTopbar() {
@@ -14,23 +14,32 @@ export function AppTopbar() {
   if (isRecording) return null;
 
   return (
-    <div className="sticky top-0 z-30 border-b border-white/5 bg-background/70 backdrop-blur-xl">
-      <div className="flex h-14 items-center gap-2 px-3 sm:px-4">
+    <div className="sticky top-0 z-30 border-b border-white/5 bg-background/80 backdrop-blur-xl pt-[env(safe-area-inset-top)]">
+      <div className="flex h-14 items-center gap-3 px-4">
         <SidebarTrigger className="-ml-1 hidden md:flex" />
-        <div className="flex-1" />
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2"
-          render={<Link href="/sleep" />}
+
+        <Link
+          href="/sleep"
+          className="text-base font-semibold tracking-tight md:hidden"
         >
-          <Plus className="h-4 w-4" />
-          Uykuya başla
-        </Button>
-        <ThemeMenu />
-        <UserMenu />
+          {siteConfig.shortName}
+        </Link>
+
+        <div className="hidden flex-1 md:block" />
+
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden gap-2 md:inline-flex"
+            render={<Link href="/sleep" />}
+          >
+            <Plus className="h-4 w-4" />
+            Uykuya başla
+          </Button>
+          <UserMenu />
+        </div>
       </div>
     </div>
   );
 }
-

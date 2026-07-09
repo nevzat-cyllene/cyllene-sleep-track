@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -14,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 export function UserMenu() {
   const router = useRouter();
@@ -38,11 +40,21 @@ export function UserMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="ghost" size="icon-sm" aria-label="Hesap" />
+          <Button
+            variant="ghost"
+            className={cn(
+              "h-10 w-10 shrink-0 rounded-full p-0",
+              "touch-manipulation [-webkit-tap-highlight-color:transparent]",
+              "active:scale-95 transition-transform duration-75"
+            )}
+            aria-label="Hesap"
+          />
         }
       >
-        <Avatar size="sm">
-          <AvatarFallback>{initials}</AvatarFallback>
+        <Avatar className="size-9 border border-white/10 bg-primary/15">
+          <AvatarFallback className="bg-transparent text-xs font-semibold text-white">
+            {initials}
+          </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-56">
@@ -50,6 +62,11 @@ export function UserMenu() {
           <User />
           <span className="truncate">{email ?? "Hesap"}</span>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link href="/profile" />}>
+          <User />
+          Profil
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={handleSignOut}>
           <LogOut />
@@ -59,4 +76,3 @@ export function UserMenu() {
     </DropdownMenu>
   );
 }
-
