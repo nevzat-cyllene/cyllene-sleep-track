@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { InstallPWA } from "@/components/install-pwa";
 import { getOnboardingAnswers } from "@/lib/onboarding-storage";
 import { formatOnboardingSummary } from "@/lib/onboarding-summary";
-import { getDevicePlatform } from "@/lib/recording-device";
+import { getDevicePlatform, isMobilePlatform } from "@/lib/recording-device";
 import type { Profile } from "@/types";
 import { LogOut, Moon, User } from "lucide-react";
 
@@ -27,7 +27,7 @@ function formatAuthProvider(provider?: string) {
 export function ProfileClient({ profile, email, authProvider }: ProfileClientProps) {
   const router = useRouter();
   const [sleepProfile, setSleepProfile] = useState<{ label: string; value: string }[]>([]);
-  const isMobile = ["ios", "android"].includes(getDevicePlatform());
+  const isMobile = isMobilePlatform(getDevicePlatform());
 
   useEffect(() => {
     const answers = getOnboardingAnswers();

@@ -25,6 +25,11 @@ export function getDevicePlatform(): DevicePlatform {
   return "unknown";
 }
 
+export function isMobilePlatform(platform?: DevicePlatform): boolean {
+  const p = platform ?? getDevicePlatform();
+  return p === "ios" || p === "android";
+}
+
 export function isPwaInstalled(): boolean {
   if (typeof window === "undefined") return false;
 

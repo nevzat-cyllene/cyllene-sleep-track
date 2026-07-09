@@ -75,7 +75,11 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
           size="lg"
           onClick={onStart}
           disabled={isLoading}
-          className="glow-purple h-14 w-full max-w-sm rounded-2xl text-lg shadow-soft sm:w-auto sm:px-12"
+          className={
+            compact
+              ? "h-[54px] w-full max-w-sm rounded-full border-0 bg-white text-[17px] font-medium tracking-tight text-black shadow-[0_8px_32px_rgba(255,255,255,0.12)] transition hover:bg-white/92 active:scale-[0.98]"
+              : "glow-purple h-14 w-full max-w-sm rounded-2xl text-lg shadow-soft sm:w-auto sm:px-12"
+          }
         >
           {isLoading ? "Hazırlanıyor..." : startLabel ?? "Uyku Modunu Başlat"}
         </Button>

@@ -99,30 +99,27 @@ export function SleepPageClient() {
   }
 
   return (
-    <div className="space-y-8 pb-4">
-      <div className="text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/15">
-          <Moon className="h-8 w-8 text-primary" />
+    <div className="space-y-6 pb-4 md:space-y-8">
+      <div className="pt-2 text-center md:pt-0">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.04] md:h-16 md:w-16">
+          <Moon className="h-6 w-6 text-white/80 md:h-8 md:w-8" />
         </div>
-        <h1 className="text-2xl font-semibold">İyi geceler</h1>
-        <p className="mt-2 text-muted-foreground">
+        <h1 className="text-[28px] font-semibold tracking-tight md:text-2xl">İyi geceler</h1>
+        <p className="mx-auto mt-2 max-w-xs text-[15px] font-light leading-relaxed text-muted-foreground md:text-base">
           Uykuya başladığınızda ses analizi gece boyunca devam eder.
         </p>
       </div>
 
       {lastSession && (
         <Link href={`/journal/${lastSession.id}`}>
-          <Card className="border-white/10 bg-sleep-card/80 shadow-soft transition hover:border-cyllene-cyan/30">
+          <Card className="border-white/[0.08] bg-white/[0.03] shadow-none transition hover:border-white/[0.14] hover:bg-white/[0.05]">
             <CardContent className="flex items-center gap-4 py-4">
               <SleepScoreRing score={lastSession.sleep_score ?? 0} size={64} compact />
               <div className="min-w-0 flex-1">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Son gece
-                </p>
-                <p className="font-medium">{formatDate(lastSession.started_at)}</p>
-                <p className="text-sm text-muted-foreground">
-                  {formatDurationHours(lastSession.duration_minutes)} ·{" "}
-                  {lastSession.snore_count} horlama
+                <p className="text-[11px] font-medium text-white/40">Son gece</p>
+                <p className="text-[17px] font-medium tracking-tight">{formatDate(lastSession.started_at)}</p>
+                <p className="text-sm font-light text-muted-foreground">
+                  {formatDurationHours(lastSession.duration_minutes)} · {lastSession.snore_count} horlama
                 </p>
               </div>
             </CardContent>

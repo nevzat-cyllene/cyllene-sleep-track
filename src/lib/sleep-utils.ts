@@ -59,12 +59,27 @@ export function formatTime(date: Date | number | string): string {
   }).format(d);
 }
 
-export function formatWallClock(date: Date): string {
-  return new Intl.DateTimeFormat("tr-TR", {
+export function formatWallClockParts(date: Date): { hours: string; minutes: string; seconds: string } {
+  const parts = new Intl.DateTimeFormat("tr-TR", {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-  }).format(date);
+    hour12: false,
+  }).formatToParts(date);
+
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "00";
+  return { hours: get("hour"), minutes: get("minute"), seconds: get("second") };
+}
+
+export function formatElapsedParts(ms: number): { hours: string; minutes: string; seconds: string } {
+  const hours = Math.floor(ms / 3600000);
+  const minutes = Math.floor((ms % 3600000) / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  return {
+    hours: String(hours).padStart(2, "0"),
+    minutes: String(minutes).padStart(2, "0"),
+    seconds: String(seconds).padStart(2, "0"),
+  };
 }
 
 export function formatDate(date: Date | string): string {

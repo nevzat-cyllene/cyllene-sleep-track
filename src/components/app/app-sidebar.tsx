@@ -19,7 +19,6 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { InstallPWA } from "@/components/install-pwa";
 
 const nav = [
   { href: "/sleep", label: "Uyku", icon: Moon },
@@ -79,9 +78,6 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="gap-2">
-        <div className="group-data-[collapsible=icon]/sidebar-wrapper:hidden">
-          <InstallPWA />
-        </div>
         <Button
           variant="outline"
           className="group-data-[collapsible=icon]/sidebar-wrapper:hidden"
