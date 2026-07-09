@@ -8,6 +8,42 @@ export interface StagePoint {
   db: number;
 }
 
+export interface StageBlock {
+  stage: SleepStage;
+  weight: number;
+}
+
+/** Evre şeridini sabit sayıda blokta gösterir — yüzlerce ince çizgi (CD izi) oluşmaz. */
+export function aggregateStageBand(
+  stages: StagePoint[],
+  durationMinutes: number,
+  maxBlocks = 40
+): StageBlock[] {
+  if (stages.length === 0 || durationMinutes <= 0) return [];
+
+  const blockCount = Math.min(maxBlocks, Math.max(8, Math.ceil(durationMinutes / 10)));
+  const span = durationMinutes / blockCount;
+  const blocks: StageBlock[] = [];
+
+  for (let i = 0; i < blockCount; i++) {
+    const start = i * span;
+    const end = (i + 1) * span;
+    const window = stages.filter((s) => s.minute >= start && s.minute < end);
+    if (window.length === 0) continue;
+
+    const counts: Record<SleepStage, number> = { awake: 0, light: 0, deep: 0 };
+    for (const s of window) counts[s.stage]++;
+
+    const stage = (Object.entries(counts) as [SleepStage, number][]).sort(
+      (a, b) => b[1] - a[1]
+    )[0]![0];
+
+    blocks.push({ stage, weight: 1 });
+  }
+
+  return blocks;
+}
+
 export function estimateSleepStages(
   session: SleepSession,
   noiseSamples: SleepNoiseSample[]

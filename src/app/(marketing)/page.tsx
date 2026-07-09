@@ -17,13 +17,13 @@ const features = [
     icon: Mic,
     title: "Ses analizi telefonunda",
     description:
-      "Horlama, öksürük ve ani gürültüler gece boyunca cihazında tespit edilir. Ses kaydı sunucuya gönderilmez.",
+      "Horlama, öksürük ve ani gürültüler uyku boyunca cihazında tespit edilir. Ses kaydı sunucuya gönderilmez.",
   },
   {
     icon: Moon,
     title: "Sabah raporu",
     description:
-      "Uyku skoru, gece zaman çizelgesi ve olay sayıları tek bakışta. Her sabah net bir özet.",
+      "Uyku skoru, zaman çizelgesi ve olay sayıları tek bakışta. Her sabah net bir özet.",
   },
   {
     icon: Headphones,
@@ -55,15 +55,13 @@ export default function LandingPage() {
                 </div>
 
                 <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
-                  Gecenizi izleyin.
-                  <span className="block text-gradient">
-                    Sabah net, ölçülebilir rapor alın.
-                  </span>
+                  Uykunuzu izleyin.
+                  <span className="block text-gradient">Sabah net, ölçülebilir rapor alın.</span>
                 </h1>
 
                 <p className="text-pretty text-lg text-muted-foreground">
-                  {siteConfig.name}, gece uykunuzdaki sesleri telefonunuzda analiz eder. Horlama,
-                  öksürük ve gürültü olaylarını sabah raporunda gösterir.
+                  {siteConfig.name}, uykunuzdaki sesleri telefonunuzda analiz eder. Horlama, öksürük
+                  ve gürültü olaylarını sabah raporunda gösterir.
                 </p>
 
                 <div className="flex flex-col gap-3 sm:flex-row">
@@ -95,7 +93,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Mic className="h-4 w-4 text-primary/80" />
-                    Gece boyunca kayıt
+                    Uyku boyunca kayıt
                   </div>
                 </div>
               </div>
@@ -127,7 +125,7 @@ export default function LandingPage() {
                     </div>
                     <div className="h-40 rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent" />
                     <div className="text-xs text-muted-foreground">
-                      Dün gece — örnek görünüm
+                      Dünkü uyku — örnek görünüm
                     </div>
                   </CardContent>
                 </Card>
@@ -140,10 +138,11 @@ export default function LandingPage() {
           <Container>
             <div className="mb-10 space-y-3">
               <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                Gece boyunca ne olur?
+                Uyku boyunca ne olur?
               </h2>
               <p className="max-w-2xl text-muted-foreground">
-                Telefonu yatağının yakınına koy, uyku. Sabah kalktığında geceye dair net bir özet seni beklesin.
+                Telefonu yatağının yakınına koy, uyu. Sabah kalktığında uykuya dair net bir özet seni
+                beklesin.
               </p>
             </div>
 
@@ -190,7 +189,7 @@ export default function LandingPage() {
                   <AccordionItem value="q3">
                     <AccordionTrigger>Premium plan ne sunacak?</AccordionTrigger>
                     <AccordionContent>
-                      Detaylı gece analizi, sınırsız geçmiş kayıtları ve gelişmiş raporlar premium
+                      Detaylı uyku analizi, sınırsız geçmiş kayıtları ve gelişmiş raporlar premium
                       planda olacak. Çok yakında.
                     </AccordionContent>
                   </AccordionItem>
@@ -205,7 +204,7 @@ export default function LandingPage() {
             <div className="rounded-3xl border border-white/10 bg-gradient-to-r from-primary/15 to-cyan-400/10 p-8 sm:p-10">
               <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h3 className="text-xl font-semibold">Bu gece ilk kaydını başlat</h3>
+                  <h3 className="text-xl font-semibold">İlk uyku kaydını başlat</h3>
                   <p className="mt-1 text-muted-foreground">
                     Birkaç dakikada kur, sabah raporunu gör.
                   </p>

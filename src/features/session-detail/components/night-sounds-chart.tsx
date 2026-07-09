@@ -13,7 +13,8 @@ import {
   YAxis,
 } from "recharts";
 import { formatTime } from "@/lib/sleep-utils";
-import { estimateSleepStages } from "@/lib/sleep-analytics";
+import { aggregateStageBand, estimateSleepStages } from "@/lib/sleep-analytics";
+import type { StageBlock } from "@/lib/sleep-analytics";
 import type { SleepEvent, SleepNoiseSample, SleepSession } from "@/types";
 import { cn } from "@/lib/utils";
 import { Activity, MessageCircle, Volume2, Wind } from "lucide-react";
@@ -56,18 +57,21 @@ function formatMinuteTick(startMs: number, minute: number) {
   return formatTime(new Date(startMs + minute * 60000));
 }
 
-function StageBand({ stages }: { stages: ReturnType<typeof estimateSleepStages> }) {
-  if (stages.length === 0) return null;
+function StageBand({ blocks }: { blocks: StageBlock[] }) {
+  if (blocks.length === 0) return null;
 
   return (
     <div className="space-y-2">
       <div className="flex h-2.5 overflow-hidden rounded-full border border-white/[0.08] bg-white/[0.03]">
-        {stages.map((s) => (
+        {blocks.map((block, index) => (
           <div
-            key={s.minute}
-            className="min-w-px flex-1 transition-colors"
-            style={{ backgroundColor: STAGE_COLORS[s.stage] }}
-            title={`${STAGE_LABELS[s.stage]} · ${s.minute} dk`}
+            key={index}
+            className="min-w-px transition-colors"
+            style={{
+              flex: block.weight,
+              backgroundColor: STAGE_COLORS[block.stage],
+            }}
+            title={STAGE_LABELS[block.stage]}
           />
         ))}
       </div>
@@ -129,7 +133,11 @@ export function NightSoundsChart({
   const startMs = new Date(session.started_at).getTime();
   const durationMinutes = session.duration_minutes ?? 0;
   const stages = estimateSleepStages(session, noiseSamples);
-  const showStages = durationMinutes >= MIN_STAGE_MINUTES && stages.length > 0;
+  const stageBlocks = useMemo(
+    () => aggregateStageBand(stages, durationMinutes),
+    [stages, durationMinutes]
+  );
+  const showStages = durationMinutes >= MIN_STAGE_MINUTES && stageBlocks.length > 0;
 
   const filteredEvents = events.filter((e) => activeFilters.has(e.event_type));
   const selected =
@@ -219,7 +227,7 @@ export function NightSoundsChart({
             <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.2em] text-white/30">
               Tahmini evreler
             </p>
-            <StageBand stages={stages} />
+            <StageBand blocks={stageBlocks} />
           </div>
         )}
 
@@ -232,7 +240,7 @@ export function NightSoundsChart({
         <div className="h-[240px] w-full min-w-0 sm:h-[260px]">
           {noiseData.length === 0 && eventData.length === 0 ? (
             <div className="flex h-full items-center justify-center text-sm text-white/40">
-              Bu gece için grafik verisi yok
+              Bu uyku için grafik verisi yok
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">

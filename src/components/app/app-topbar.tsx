@@ -20,6 +20,7 @@ export function AppTopbar() {
 
         <Link
           href="/sleep"
+          prefetch
           className="text-base font-semibold tracking-tight md:hidden"
         >
           {siteConfig.shortName}
@@ -32,7 +33,7 @@ export function AppTopbar() {
             variant="outline"
             size="sm"
             className="hidden gap-2 md:inline-flex"
-            render={<Link href="/sleep" />}
+            render={<Link href="/sleep" prefetch />}
           >
             <Plus className="h-4 w-4" />
             Uykuya başla

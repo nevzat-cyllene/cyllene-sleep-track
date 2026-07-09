@@ -88,7 +88,7 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-semibold tracking-tight">Gece özeti</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Uyku özeti</h1>
           <p className="truncate text-sm text-muted-foreground capitalize">
             {formatWeekdayRange(session.started_at, session.ended_at)}
           </p>
@@ -164,7 +164,7 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
           events={events}
           selectedEventId={selectedEventId}
           onSelectEvent={setSelectedEventId}
-          emptyMessage="Bu gece olay tespit edilmedi."
+          emptyMessage="Bu uyku için olay tespit edilmedi."
           audioContext="cloud"
         />
       </div>

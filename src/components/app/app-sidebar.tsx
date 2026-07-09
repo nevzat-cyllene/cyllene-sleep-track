@@ -33,7 +33,7 @@ export function AppSidebar() {
   return (
     <Sidebar variant="inset" collapsible="icon" className="hidden md:flex">
       <SidebarHeader className="gap-2">
-        <Link href="/sleep" className="flex items-center gap-2 rounded-lg p-2">
+        <Link href="/sleep" prefetch className="flex items-center gap-2 rounded-lg p-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-white/10">
             <Moon className="h-4 w-4 text-primary" />
           </div>
@@ -62,6 +62,7 @@ export function AppSidebar() {
                       render={
                         <Link
                           href={item.href}
+                          prefetch
                           className={cn("flex items-center gap-2")}
                         />
                       }
@@ -81,7 +82,7 @@ export function AppSidebar() {
         <Button
           variant="outline"
           className="group-data-[collapsible=icon]/sidebar-wrapper:hidden"
-          render={<Link href="/sleep" />}
+          render={<Link href="/sleep" prefetch />}
         >
           Uykuya başla
         </Button>

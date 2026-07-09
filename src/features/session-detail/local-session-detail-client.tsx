@@ -146,7 +146,7 @@ export function LocalSessionDetailClient({
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-xl font-semibold">Gece kaydı</h1>
+          <h1 className="text-xl font-semibold">Uyku kaydı</h1>
           <p className="text-sm text-muted-foreground">{formatDate(session.started_at)}</p>
         </div>
       </div>
@@ -219,7 +219,7 @@ export function LocalSessionDetailClient({
           events={events}
           selectedEventId={selectedEventId}
           onSelectEvent={setSelectedEventId}
-          emptyMessage="Bu gece olay tespit edilmedi."
+          emptyMessage="Bu uyku için olay tespit edilmedi."
           audioContext="local"
         />
       </div>

@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/app/user-avatar";
+import { useAuthUser } from "@/hooks/use-auth-user";
+import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-display";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,12 +21,11 @@ import { cn } from "@/lib/utils";
 
 export function UserMenu() {
   const router = useRouter();
-  const [email, setEmail] = React.useState<string | null>(null);
+  const { user } = useAuthUser();
 
-  React.useEffect(() => {
-    const supabase = createClient();
-    void supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
-  }, []);
+  const email = user?.email ?? null;
+  const displayName = getUserDisplayName(user);
+  const avatarUrl = getUserAvatarUrl(user);
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -32,9 +33,6 @@ export function UserMenu() {
     router.push("/");
     router.refresh();
   };
-
-  const initials =
-    email?.split("@")[0]?.slice(0, 2)?.toUpperCase() ?? "U";
 
   return (
     <DropdownMenu>
@@ -47,23 +45,36 @@ export function UserMenu() {
               "touch-manipulation [-webkit-tap-highlight-color:transparent]",
               "active:scale-95 transition-transform duration-75"
             )}
-            aria-label="Hesap"
+            aria-label={displayName ?? "Hesap"}
           />
         }
       >
-        <Avatar className="size-9 border border-white/10 bg-primary/15">
-          <AvatarFallback className="bg-transparent text-xs font-semibold text-white">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
+        <UserAvatar
+          avatarUrl={avatarUrl}
+          displayName={displayName}
+          email={email}
+          className="size-9 border border-white/10 bg-primary/15"
+          fallbackClassName="bg-transparent text-xs font-semibold text-white"
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-56">
-        <DropdownMenuLabel className="flex items-center gap-2">
-          <User />
-          <span className="truncate">{email ?? "Hesap"}</span>
+        <DropdownMenuLabel className="flex items-center gap-3 py-2">
+          <UserAvatar
+            avatarUrl={avatarUrl}
+            displayName={displayName}
+            email={email}
+            className="size-8 shrink-0"
+            size="sm"
+          />
+          <div className="min-w-0">
+            {displayName && displayName !== email ? (
+              <p className="truncate font-medium">{displayName}</p>
+            ) : null}
+            <p className="truncate text-xs text-muted-foreground">{email ?? "Hesap"}</p>
+          </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem render={<Link href="/profile" />}>
+        <DropdownMenuItem render={<Link href="/profile" prefetch />}>
           <User />
           Profil
         </DropdownMenuItem>

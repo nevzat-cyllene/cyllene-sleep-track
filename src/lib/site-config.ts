@@ -10,7 +10,7 @@ export const siteConfig = {
   /** npm paket ve repo adı */
   packageName: "cyllene-sleep-track",
   description:
-    "Gece uykunuzu telefonunuzda ses analizi ile izleyin. Horlama, öksürük ve gürültü olaylarını sabah raporunda görün.",
+    "Uykunuzu telefonunuzda ses analizi ile izleyin. Horlama, öksürük ve gürültü olaylarını sabah raporunda görün.",
   url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
 } as const;
 

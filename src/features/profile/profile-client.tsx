@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { InstallPWA } from "@/components/install-pwa";
+import { UserAvatar } from "@/components/app/user-avatar";
 import { getOnboardingAnswers } from "@/lib/onboarding-storage";
 import { formatOnboardingSummary } from "@/lib/onboarding-summary";
 import { getDevicePlatform, isMobilePlatform } from "@/lib/recording-device";
@@ -15,6 +16,8 @@ import { LogOut, Moon, User } from "lucide-react";
 interface ProfileClientProps {
   profile: Profile | null;
   email: string | null;
+  displayName?: string | null;
+  avatarUrl?: string | null;
   authProvider?: string;
 }
 
@@ -24,7 +27,13 @@ function formatAuthProvider(provider?: string) {
   return provider ?? "E-posta";
 }
 
-export function ProfileClient({ profile, email, authProvider }: ProfileClientProps) {
+export function ProfileClient({
+  profile,
+  email,
+  displayName,
+  avatarUrl,
+  authProvider,
+}: ProfileClientProps) {
   const router = useRouter();
   const [sleepProfile, setSleepProfile] = useState<{ label: string; value: string }[]>([]);
   const isMobile = isMobilePlatform(getDevicePlatform());
@@ -43,9 +52,21 @@ export function ProfileClient({ profile, email, authProvider }: ProfileClientPro
 
   return (
     <div className="space-y-6 pb-4">
-      <div>
-        <h1 className="text-2xl font-semibold">Profil</h1>
-        <p className="text-sm text-muted-foreground">Hesap ve uygulama ayarları</p>
+      <div className="flex items-center gap-4">
+        <UserAvatar
+          avatarUrl={avatarUrl}
+          displayName={displayName}
+          email={email}
+          className="size-16 border border-white/10 bg-primary/10"
+          size="lg"
+          fallbackClassName="text-lg font-semibold"
+        />
+        <div className="min-w-0">
+          <h1 className="truncate text-2xl font-semibold">
+            {displayName && displayName !== email ? displayName : "Profil"}
+          </h1>
+          <p className="truncate text-sm text-muted-foreground">{email ?? "—"}</p>
+        </div>
       </div>
 
       <Card className="glass border-white/10 shadow-soft">
@@ -103,7 +124,7 @@ export function ProfileClient({ profile, email, authProvider }: ProfileClientPro
           <CardContent className="space-y-4">
             <InstallPWA />
             <p className="text-sm text-muted-foreground">
-              Gece kaydı için uygulamayı ana ekrana ekleyin ve şarjda tutun.
+              Uyku kaydı için uygulamayı ana ekrana ekleyin ve şarjda tutun.
             </p>
           </CardContent>
         </Card>
@@ -114,7 +135,7 @@ export function ProfileClient({ profile, email, authProvider }: ProfileClientPro
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Web sürümünü tarayıcıdan kullanabilirsiniz. Kayıt sırasında sekmeyi açık bırakın; gece
+              Web sürümünü tarayıcıdan kullanabilirsiniz. Kayıt sırasında sekmeyi açık bırakın; uyku
               takibi için telefon daha uygundur.
             </p>
           </CardContent>

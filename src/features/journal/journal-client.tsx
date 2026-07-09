@@ -38,7 +38,7 @@ export function JournalClient({ sessions: initialSessions, userId }: JournalClie
       month: "long",
     }).format(new Date(session.started_at));
 
-    if (!window.confirm(`${label} gece kaydı silinsin mi? Ses klipleri de cihazınızdan kaldırılır.`)) {
+    if (!window.confirm(`${label} uyku kaydı silinsin mi? Ses klipleri de cihazınızdan kaldırılır.`)) {
       return;
     }
 
@@ -52,7 +52,7 @@ export function JournalClient({ sessions: initialSessions, userId }: JournalClie
     }
 
     setSessions((prev) => prev.filter((s) => s.id !== session.id));
-    toast.success("Gece kaydı silindi.");
+    toast.success("Uyku kaydı silindi.");
   };
 
   if (sessions.length === 0) {
@@ -62,8 +62,8 @@ export function JournalClient({ sessions: initialSessions, userId }: JournalClie
         <Card className="glass border-white/10 shadow-soft">
           <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
             <BookOpen className="h-10 w-10 text-muted-foreground" />
-            <p className="text-muted-foreground">Henüz kayıtlı gece yok.</p>
-            <Button render={<Link href="/sleep" />}>İlk geceyi kaydet</Button>
+            <p className="text-muted-foreground">Henüz kayıtlı uyku yok.</p>
+            <Button render={<Link href="/sleep" />}>İlk uykuyu kaydet</Button>
           </CardContent>
         </Card>
       </div>
