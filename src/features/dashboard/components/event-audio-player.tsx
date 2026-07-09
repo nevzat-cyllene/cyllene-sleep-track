@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
 import { getEventClip } from "@/features/recording/audio-clip-store";
+import { claimEventAudioPlayback, releaseEventAudioPlayback } from "./event-audio-playback";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -34,16 +35,22 @@ export function EventAudioPlayer({ eventId, className, compact, audioContext = "
     }
     setPlaying(false);
     setProgress(0);
-  }, []);
+    releaseEventAudioPlayback(eventId);
+  }, [eventId]);
 
   useEffect(() => () => cleanup(), [cleanup]);
 
-  const togglePlay = async () => {
+  const togglePlay = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+
     if (playing && audioRef.current) {
       audioRef.current.pause();
       setPlaying(false);
+      releaseEventAudioPlayback(eventId);
       return;
     }
+
+    claimEventAudioPlayback(eventId, cleanup);
 
     setLoading(true);
     setError(false);
@@ -53,6 +60,7 @@ export function EventAudioPlayer({ eventId, className, compact, audioContext = "
         const clip = await getEventClip(eventId);
         if (!clip) {
           setError(true);
+          releaseEventAudioPlayback(eventId);
           return;
         }
 
@@ -70,6 +78,7 @@ export function EventAudioPlayer({ eventId, className, compact, audioContext = "
         audio.addEventListener("ended", () => {
           setPlaying(false);
           setProgress(0);
+          releaseEventAudioPlayback(eventId);
         });
       }
 
@@ -77,6 +86,7 @@ export function EventAudioPlayer({ eventId, className, compact, audioContext = "
       setPlaying(true);
     } catch {
       setError(true);
+      releaseEventAudioPlayback(eventId);
     } finally {
       setLoading(false);
     }
@@ -107,7 +117,7 @@ export function EventAudioPlayer({ eventId, className, compact, audioContext = "
         variant="ghost"
         size="icon-sm"
         className={cn("rounded-full", className)}
-        onClick={() => void togglePlay()}
+        onClick={(e) => void togglePlay(e)}
         disabled={loading}
         aria-label={playing ? "Duraklat" : "Dinle"}
       >
@@ -123,7 +133,7 @@ export function EventAudioPlayer({ eventId, className, compact, audioContext = "
         variant="outline"
         size="icon"
         className="shrink-0 rounded-full"
-        onClick={() => void togglePlay()}
+        onClick={(e) => void togglePlay(e)}
         disabled={loading}
         aria-label={playing ? "Duraklat" : "Dinle"}
       >

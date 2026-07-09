@@ -79,7 +79,9 @@ export function DetectedEventItem({ event, variant = "light", audioContext = "lo
         </p>
       </div>
 
-      <EventAudioPlayer eventId={eventId} compact audioContext={audioContext} />
+      <div onClick={(e) => e.stopPropagation()}>
+        <EventAudioPlayer eventId={eventId} compact audioContext={audioContext} />
+      </div>
     </div>
   );
 }
