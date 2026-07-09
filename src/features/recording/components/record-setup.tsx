@@ -10,6 +10,7 @@ interface RecordSetupProps {
   isLoading?: boolean;
   startLabel?: string;
   compact?: boolean;
+  showGuidance?: boolean;
 }
 
 const tips = [
@@ -36,7 +37,13 @@ const tips = [
   },
 ];
 
-export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordSetupProps) {
+export function RecordSetup({
+  onStart,
+  isLoading,
+  startLabel,
+  compact,
+  showGuidance = !compact,
+}: RecordSetupProps) {
   return (
     <div className={compact ? "space-y-4" : "mx-auto max-w-2xl space-y-6"}>
       {!compact && (
@@ -48,7 +55,7 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
         </div>
       )}
 
-      <RecordingGuidanceBanner mode="setup" />
+      {showGuidance && <RecordingGuidanceBanner mode="setup" />}
 
       {!compact && (
         <div className="grid gap-4 sm:grid-cols-2">

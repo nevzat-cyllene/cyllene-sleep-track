@@ -6,7 +6,7 @@ import type { WakeLockMethod } from "@/features/recording/wake-lock";
 import { RecordingGuidanceBanner } from "./recording-guidance-banner";
 import { LiveSoundWave } from "./live-sound-wave";
 import { SwipeToStop } from "./swipe-to-stop";
-import { cn } from "@/lib/utils";
+import { getWakeGreeting } from "@/lib/sleep-greeting";
 
 interface SleepModeScreenProps {
   elapsedMs: number;
@@ -58,6 +58,8 @@ export function SleepModeScreen({
   const wall = formatWallClockParts(wallClock);
   const elapsed = formatElapsedParts(elapsedMs);
 
+  const wakeGreeting = getWakeGreeting(elapsedMs, wallClock);
+
   const statusLabel = isFinishing
     ? "Gece kaydediliyor"
     : wakeLockStatus === "active"
@@ -84,9 +86,9 @@ export function SleepModeScreen({
 
         {isFinishing && (
           <div className="mb-5 shrink-0 rounded-[20px] border border-cyllene-cyan/20 bg-gradient-to-br from-cyllene-purple/10 to-cyllene-cyan/5 px-5 py-4 backdrop-blur-xl">
-            <p className="text-[15px] font-medium text-white">Günaydın</p>
+            <p className="text-[15px] font-medium text-white">{wakeGreeting.title}</p>
             <p className="mt-1 text-sm font-light leading-relaxed text-white/55">
-              Gece kaydınız tamamlandı. Analiz edilip günlüğe ekleniyor.
+              {wakeGreeting.message}
             </p>
           </div>
         )}

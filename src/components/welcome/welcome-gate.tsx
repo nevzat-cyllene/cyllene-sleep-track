@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { shouldShowOnboarding } from "@/lib/onboarding-storage";
-import { shouldShowGuestSplash } from "@/lib/guest-splash-storage";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 import { PremiumEntrance } from "./premium-entrance";
 
@@ -19,9 +18,7 @@ export function WelcomeGate({ children }: { children: React.ReactNode }) {
     void supabase.auth.getUser().then(({ data }) => {
       const isLoggedIn = !!data.user;
 
-      if (!isLoggedIn && shouldShowGuestSplash()) {
-        setMode("guest");
-      } else if (isLoggedIn && shouldShowOnboarding()) {
+      if (isLoggedIn && shouldShowOnboarding()) {
         setMode("onboarding");
       } else {
         setMode("none");

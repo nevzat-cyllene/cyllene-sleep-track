@@ -21,7 +21,7 @@ export function aggregateStageBand(
 ): StageBlock[] {
   if (stages.length === 0 || durationMinutes <= 0) return [];
 
-  const blockCount = Math.min(maxBlocks, Math.max(8, Math.ceil(durationMinutes / 10)));
+  const blockCount = Math.min(maxBlocks, Math.max(6, Math.ceil(durationMinutes / 20)));
   const span = durationMinutes / blockCount;
   const blocks: StageBlock[] = [];
 
@@ -42,6 +42,51 @@ export function aggregateStageBand(
   }
 
   return blocks;
+}
+
+export function downsampleNoiseForChart(
+  samples: { minute: number; db: number }[],
+  maxPoints = 48
+): { minute: number; db: number }[] {
+  if (samples.length <= maxPoints) return samples;
+
+  const sorted = [...samples].sort((a, b) => a.minute - b.minute);
+  const maxMinute = Math.max(...sorted.map((s) => s.minute), 1);
+  const span = maxMinute / maxPoints;
+  const result: { minute: number; db: number }[] = [];
+
+  for (let i = 0; i < maxPoints; i++) {
+    const start = i * span;
+    const end = (i + 1) * span;
+    const window = sorted.filter((s) => s.minute >= start && s.minute < end);
+    if (window.length === 0) continue;
+    result.push({
+      minute: start + span / 2,
+      db: window.reduce((sum, item) => sum + item.db, 0) / window.length,
+    });
+  }
+
+  return result;
+}
+
+export function stageBandGradient(
+  blocks: StageBlock[],
+  colors: Record<SleepStage, string>
+): string {
+  if (blocks.length === 0) return "transparent";
+
+  const total = blocks.reduce((sum, block) => sum + block.weight, 0);
+  let position = 0;
+  const stops: string[] = [];
+
+  for (const block of blocks) {
+    const width = (block.weight / total) * 100;
+    const color = colors[block.stage];
+    stops.push(`${color} ${position}%`, `${color} ${position + width}%`);
+    position += width;
+  }
+
+  return `linear-gradient(90deg, ${stops.join(", ")})`;
 }
 
 export function estimateSleepStages(

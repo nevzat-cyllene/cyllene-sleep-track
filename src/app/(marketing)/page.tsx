@@ -1,7 +1,9 @@
 import { siteConfig } from "@/lib/site-config";
 import Link from "next/link";
-import { ArrowRight, Headphones, Lock, Mic, Moon, ShieldCheck, Smartphone } from "lucide-react";
+import { Moon, ShieldCheck, Smartphone, Mic, Headphones, Lock } from "lucide-react";
 import { MarketingHeader } from "@/components/marketing/marketing-header";
+import { LandingHeroCta } from "@/components/marketing/landing-hero-cta";
+import { LandingFooterLinks } from "@/components/marketing/landing-footer-links";
 import { Container } from "@/components/shell/container";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,23 +66,7 @@ export default function LandingPage() {
                   ve gürültü olaylarını sabah raporunda gösterir.
                 </p>
 
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Button
-                    size="lg"
-                    className="glow-purple rounded-2xl gap-2"
-                    render={<Link href="/signup" />}
-                  >
-                    Ücretsiz Başla <ArrowRight className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="rounded-2xl"
-                    render={<Link href="/login" />}
-                  >
-                    Giriş Yap
-                  </Button>
-                </div>
+                <LandingHeroCta />
 
                 <div className="flex flex-wrap items-center gap-6 pt-2 text-xs text-muted-foreground">
                   <div className="flex items-center gap-2">
@@ -227,13 +213,7 @@ export default function LandingPage() {
               © {new Date().getFullYear()} {siteConfig.name}
             </div>
             <div className="text-sm text-muted-foreground">
-              <Link className="hover:text-foreground" href="/login">
-                Giriş
-              </Link>
-              <span className="mx-2">·</span>
-              <Link className="hover:text-foreground" href="/signup">
-                Ücretsiz Başla
-              </Link>
+              <LandingFooterLinks />
             </div>
           </Container>
         </footer>

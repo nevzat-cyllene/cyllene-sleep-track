@@ -110,6 +110,10 @@ export function getPreRecordingGuidance(
   platform: DevicePlatform,
   isPwa: boolean
 ): RecordingGuidance | null {
+  if (platform === "desktop") {
+    return null;
+  }
+
   if (isPwa) {
     if (platform === "ios") {
       return {
@@ -127,32 +131,12 @@ export function getPreRecordingGuidance(
   if (platform === "ios") {
     return {
       status: "warning",
-      title: "Önce ana ekrana ekleyin",
+      title: "Kayıt öncesi öneri",
       message:
-        `${siteConfig.name}'i Ana Ekrana Ekleyip oradan açın; ardından kayıt ekranı uyanık kalır:`,
+        "Uzun uyku kaydı için uygulamayı ana ekrana ekleyip oradan açmanız daha güvenilirdir. İsterseniz tarayıcıdan da başlayabilirsiniz.",
       steps: getPlatformSteps(platform, isPwa),
     };
   }
 
-  if (platform === "android") {
-    return {
-      status: "warning",
-      title: "Ana ekrana eklemenizi öneririz",
-      message:
-        "Tarayıcı sekmesinden kayıt yapabilirsiniz; ancak ana ekrana eklediğinizde ekran uyanık kalma ve mikrofon daha güvenilir çalışır.",
-      steps: ["Tarayıcı menüsünden Ana Ekrana Ekle / Uygulamayı yükle"],
-    };
-  }
-
-  if (platform === "desktop") {
-    return null;
-  }
-
-  return {
-    status: "warning",
-    title: "Ana ekrana eklemenizi öneririz",
-    message:
-      "Tarayıcı sekmesinden kayıt yapabilirsiniz; ancak ana ekrana eklediğinizde ekran uyanık kalma ve mikrofon daha güvenilir çalışır.",
-    steps: ["Tarayıcı menüsünden Ana Ekrana Ekle / Uygulamayı yükle"],
-  };
+  return null;
 }

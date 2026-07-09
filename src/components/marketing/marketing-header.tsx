@@ -30,8 +30,19 @@ export function MarketingHeader() {
         </Link>
 
         <div className="flex items-center gap-2">
-          {ready && user ? (
-            <UserMenu />
+          {!ready ? (
+            <div className="h-9 w-28 animate-pulse rounded-lg bg-white/5" />
+          ) : user ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                render={<Link href="/sleep" prefetch />}
+              >
+                Panel
+              </Button>
+              <UserMenu />
+            </>
           ) : (
             <>
               <Button

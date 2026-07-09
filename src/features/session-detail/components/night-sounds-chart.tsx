@@ -13,7 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import { formatTime } from "@/lib/sleep-utils";
-import { aggregateStageBand, estimateSleepStages } from "@/lib/sleep-analytics";
+import { aggregateStageBand, downsampleNoiseForChart, estimateSleepStages, stageBandGradient } from "@/lib/sleep-analytics";
 import type { StageBlock } from "@/lib/sleep-analytics";
 import type { SleepEvent, SleepNoiseSample, SleepSession } from "@/types";
 import { cn } from "@/lib/utils";
@@ -60,21 +60,14 @@ function formatMinuteTick(startMs: number, minute: number) {
 function StageBand({ blocks }: { blocks: StageBlock[] }) {
   if (blocks.length === 0) return null;
 
+  const gradient = stageBandGradient(blocks, STAGE_COLORS as Record<"awake" | "light" | "deep", string>);
+
   return (
     <div className="space-y-2">
-      <div className="flex h-2.5 overflow-hidden rounded-full border border-white/[0.08] bg-white/[0.03]">
-        {blocks.map((block, index) => (
-          <div
-            key={index}
-            className="min-w-px transition-colors"
-            style={{
-              flex: block.weight,
-              backgroundColor: STAGE_COLORS[block.stage],
-            }}
-            title={STAGE_LABELS[block.stage]}
-          />
-        ))}
-      </div>
+      <div
+        className="h-2.5 overflow-hidden rounded-full border border-white/[0.08]"
+        style={{ background: gradient }}
+      />
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-white/45">
         {(Object.keys(STAGE_LABELS) as Array<keyof typeof STAGE_LABELS>).map((key) => (
           <span key={key} className="inline-flex items-center gap-1.5">
@@ -145,9 +138,14 @@ export function NightSoundsChart({
 
   const noiseData = useMemo(
     () =>
-      noiseSamples.map((s) => ({
-        minute: s.minute_offset,
-        db: Number(s.avg_db),
+      downsampleNoiseForChart(
+        noiseSamples.map((s) => ({
+          minute: s.minute_offset,
+          db: Number(s.avg_db),
+        })),
+        56
+      ).map((point) => ({
+        ...point,
         kind: "noise" as const,
       })),
     [noiseSamples]
@@ -270,7 +268,7 @@ export function NightSoundsChart({
                 {noiseData.length > 0 && (
                   <Area
                     data={noiseData}
-                    type="monotone"
+                    type="basis"
                     dataKey="db"
                     stroke="oklch(0.78 0.14 195)"
                     fill="url(#cylleneNoiseGradient)"

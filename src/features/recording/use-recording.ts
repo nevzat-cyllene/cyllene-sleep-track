@@ -7,8 +7,9 @@ import {
   getActiveSession,
   saveSession,
 } from "./session-store";
-import { saveEventClip } from "./audio-clip-store";
-import { float32ToWav } from "@/lib/audio-clip-utils";
+import { saveEventClip, getEventClip } from "./audio-clip-store";
+import { float32ToWav, decodeWavBlob } from "@/lib/audio-clip-utils";
+import { findMergeTargetEvent, mergeFloat32Audio } from "@/lib/event-merge";
 import { classifyAudio, preloadYamnet } from "./yamnet-classifier";
 import { calculateSleepScore } from "@/lib/sleep-utils";
 import type { LocalSleepEvent, LocalSleepSession, NoiseSample } from "@/types";
@@ -94,18 +95,53 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
           confidence,
         };
 
-        const wavBlob = float32ToWav(payload.audioData, sampleRate);
+        const mergeTarget = findMergeTargetEvent(sessionRef.current.events, classifiedEvent);
 
-        await saveEventClip({
-          eventId: classifiedEvent.id,
-          sessionId: sessionRef.current.id,
-          occurredAt: classifiedEvent.timestamp,
-          sampleRate,
-          wavBlob,
-          durationMs: classifiedEvent.durationMs,
-        });
+        if (mergeTarget) {
+          const gapMs = Math.max(
+            0,
+            classifiedEvent.timestamp - (mergeTarget.timestamp + mergeTarget.durationMs)
+          );
+          const gapSamples = Math.floor((gapMs / 1000) * sampleRate);
+          const silence = gapSamples > 0 ? new Float32Array(gapSamples) : null;
 
-        sessionRef.current.events.push(classifiedEvent);
+          const existingClip = await getEventClip(mergeTarget.id);
+          const chunks: Float32Array[] = [];
+          if (existingClip) {
+            const decoded = await decodeWavBlob(existingClip.wavBlob);
+            if (decoded) chunks.push(decoded);
+          }
+          if (silence) chunks.push(silence);
+          chunks.push(payload.audioData);
+
+          const mergedAudio = mergeFloat32Audio(chunks);
+          mergeTarget.durationMs += gapMs + classifiedEvent.durationMs;
+          mergeTarget.peakDb = Math.max(mergeTarget.peakDb, classifiedEvent.peakDb);
+          mergeTarget.confidence = Math.max(mergeTarget.confidence, confidence);
+
+          await saveEventClip({
+            eventId: mergeTarget.id,
+            sessionId: sessionRef.current.id,
+            occurredAt: mergeTarget.timestamp,
+            sampleRate,
+            wavBlob: float32ToWav(mergedAudio, sampleRate),
+            durationMs: mergeTarget.durationMs,
+          });
+        } else {
+          const wavBlob = float32ToWav(payload.audioData, sampleRate);
+
+          await saveEventClip({
+            eventId: classifiedEvent.id,
+            sessionId: sessionRef.current.id,
+            occurredAt: classifiedEvent.timestamp,
+            sampleRate,
+            wavBlob,
+            durationMs: classifiedEvent.durationMs,
+          });
+
+          sessionRef.current.events.push(classifiedEvent);
+        }
+
         setEventCount(sessionRef.current.events.length);
         setDetectedEvents([...sessionRef.current.events]);
         await persistSession();
