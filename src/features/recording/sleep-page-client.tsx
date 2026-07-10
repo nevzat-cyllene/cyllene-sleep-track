@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -37,6 +38,11 @@ export function SleepPageClient() {
   const [syncing, setSyncing] = useState(false);
   const [userId, setUserId] = useState<string | undefined>();
   const [lastSession, setLastSession] = useState<SleepSession | null>(null);
+  const [portalReady, setPortalReady] = useState(false);
+
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
 
   const onSessionComplete = useCallback(
     async (session: LocalSleepSession) => {
@@ -101,7 +107,7 @@ export function SleepPageClient() {
   }, [status, setIsRecording]);
 
   if (status === "recording" || status === "stopping") {
-    return (
+    const screen = (
       <SleepModeScreen
         elapsedMs={elapsedMs}
         currentDb={currentDb}
@@ -113,6 +119,12 @@ export function SleepPageClient() {
         onStop={() => void stopRecording()}
       />
     );
+
+    // Must escape .cyllene-route-frame (transform/filter) or fixed fullscreen is clipped.
+    if (portalReady) {
+      return createPortal(screen, document.body);
+    }
+    return screen;
   }
 
   const lastSessionEventSummary = lastSession ? getSleepEventSummary(lastSession) : null;

@@ -52,7 +52,7 @@ function AnalysisHandoffScreen({
   eventCount: number;
 }) {
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col overflow-hidden bg-[#020816] text-white">
+    <div className="fixed inset-0 z-[300] flex flex-col overflow-hidden bg-[#020816] text-white">
       <div className="pointer-events-none absolute inset-0">
         <div className="night-stars absolute inset-0 opacity-24" />
         <div className="absolute left-1/2 top-[-12rem] h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-[#1769ff]/20 blur-[120px]" />
@@ -155,7 +155,7 @@ export function SleepModeScreen({
         : "Kayıt kesilebilir";
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col overflow-hidden bg-[#020816] text-white">
+    <div className="fixed inset-0 z-[300] flex flex-col overflow-hidden bg-[#020816] text-white">
       <div className="pointer-events-none absolute inset-0">
         <div className="night-stars absolute inset-0 opacity-[0.18]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_86%_52%_at_50%_-12%,rgba(111,210,255,.16),transparent_62%),radial-gradient(circle_at_18%_22%,rgba(23,105,255,.12),transparent_34%),linear-gradient(180deg,rgba(2,8,22,.2)_0%,rgba(2,8,22,.88)_72%,rgba(1,5,14,.96)_100%)]" />
