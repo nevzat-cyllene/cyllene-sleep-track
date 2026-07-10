@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +11,22 @@ interface SwipeToStopProps {
 
 const THRESHOLD = 72;
 
+function useIsCoarsePointer() {
+  const [coarse, setCoarse] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(pointer: coarse)");
+    const sync = () => setCoarse(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  return coarse;
+}
+
 export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
+  const isCoarsePointer = useIsCoarsePointer();
   const [dragY, setDragY] = useState(0);
   const startYRef = useRef(0);
   const draggingRef = useRef(false);
@@ -19,7 +34,7 @@ export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
   const progress = Math.min(1, dragY / THRESHOLD);
 
   const onPointerDown = (e: React.PointerEvent) => {
-    if (disabled) return;
+    if (disabled || !isCoarsePointer) return;
     draggingRef.current = true;
     startYRef.current = e.clientY;
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -40,8 +55,27 @@ export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
     setDragY(0);
   };
 
+  // Desktop / fine pointer: centered click control — swipe is a mobile gesture.
+  if (!isCoarsePointer) {
+    return (
+      <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-3 pb-4">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={onStop}
+          className={cn(
+            "flex h-14 w-full max-w-xs items-center justify-center rounded-full border border-[#8dbdff]/18 bg-[linear-gradient(135deg,rgba(143,209,255,.16),rgba(23,105,255,.28))] text-sm font-semibold text-white shadow-[0_16px_48px_rgba(23,105,255,.22),inset_0_1px_0_rgba(255,255,255,.1)] transition hover:brightness-110 active:scale-[0.98]",
+            disabled && "opacity-50"
+          )}
+        >
+          {disabled ? "Rapor hazırlanıyor…" : "Kaydı tamamla"}
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex w-full max-w-sm flex-col items-center gap-3 pb-4">
+    <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-3 pb-4">
       <p className="text-xs uppercase tracking-[0.25em] text-white/40">
         {disabled ? "Rapor hazırlanıyor…" : "Kaydı tamamlamak için yukarı kaydır"}
       </p>

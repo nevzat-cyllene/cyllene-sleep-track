@@ -81,11 +81,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setFinishing(true);
     markOnboardingComplete(answers);
 
-    void soundRef.current?.fadeOut(0.9);
-    await wait(760);
+    soundRef.current?.dispose();
+    soundRef.current = null;
+    await wait(420);
 
     router.push("/sleep");
-    await wait(420);
+    await wait(280);
     onComplete();
   }, [answers, finishing, onComplete, router]);
 

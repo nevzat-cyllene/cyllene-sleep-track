@@ -2,6 +2,8 @@
  * Cyllene açılış ambiyansı.
  * Önce ürün için verilen MP3 ambiyansını kullanır; tarayıcı reddederse WebAudio fallback çalışır.
  */
+import { registerWelcomeAmbience } from "@/lib/stop-app-audio";
+
 const FILE_AMBIENCE_TARGET_VOLUME = 0.42;
 const FILE_AMBIENCE_FADE_IN_SEC = 7.2;
 
@@ -17,6 +19,7 @@ export class AmbientWelcomeSound {
 
   async start(): Promise<void> {
     if (this.running) return;
+    registerWelcomeAmbience(this);
 
     if (await this.startFileAmbience()) return;
     await this.startGeneratedAmbience();
@@ -109,6 +112,8 @@ export class AmbientWelcomeSound {
   }
 
   dispose(): void {
+    registerWelcomeAmbience(null);
+
     if (this.fadeFrame !== null) {
       cancelAnimationFrame(this.fadeFrame);
       this.fadeFrame = null;

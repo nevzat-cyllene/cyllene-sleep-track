@@ -11,6 +11,7 @@ import { saveEventClip } from "./audio-clip-store";
 import { float32ToWav } from "@/lib/audio-clip-utils";
 import { classifyAudio } from "./yamnet-classifier";
 import { calculateSleepScore } from "@/lib/sleep-utils";
+import { stopAllAppAudio } from "@/lib/stop-app-audio";
 import type { LocalSleepEvent, LocalSleepSession, NoiseSample } from "@/types";
 
 export type RecordingStatus = "idle" | "preparing" | "recording" | "stopping";
@@ -173,6 +174,8 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
     setError(null);
     setStatus("preparing");
     eventQueueRef.current = Promise.resolve();
+    // Welcome MP3 / previous event clips must not leak into the night session.
+    stopAllAppAudio();
 
     try {
       const existing = await getActiveSession();

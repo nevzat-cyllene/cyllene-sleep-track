@@ -87,9 +87,10 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
     doneRef.current = true;
     setExiting(true);
     markGuestSplashSeen();
-    // Never block exit on long audio fade — prior IndexSizeError left this awaiting forever.
-    void soundRef.current?.fadeOut(reduceMotion ? 0.2 : 1.4);
-    await wait(reduceMotion ? 220 : 900);
+    // Hard-stop ambience so it cannot leak into sleep recording.
+    soundRef.current?.dispose();
+    soundRef.current = null;
+    await wait(reduceMotion ? 180 : 520);
     onComplete();
   }, [onComplete, reduceMotion]);
 

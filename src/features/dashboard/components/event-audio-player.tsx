@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, Smartphone } from "lucide-react";
+import { toast } from "sonner";
 import { getEventClip } from "@/features/recording/audio-clip-store";
+import { getStopAllAudioEventName } from "@/lib/stop-app-audio";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -27,11 +29,12 @@ function getLikelySourceDeviceCopy(): MissingDeviceCopy {
   return isCurrentDeviceMobile
     ? {
         short: "Webde",
-        detail: "Kaydı başlattığın web tarayıcısında dinleyebilirsin.",
+        detail: "Ses klibi bu telefonda yok. Kaydı başlattığın web tarayıcısında dinleyebilirsin.",
       }
     : {
-        short: "Mobilde",
-        detail: "Kaydı başlattığın mobil cihazında dinleyebilirsin.",
+        short: "Yok",
+        detail:
+          "Ses klibi bu tarayıcıda yok. Kayıt başka cihazda veya başka bir site adresinde yapıldıysa klip orada kalır.",
       };
 }
 
@@ -65,9 +68,14 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
       const nextEventId = (event as CustomEvent<string>).detail;
       if (nextEventId !== eventId) cleanup();
     };
+    const handleStopAll = () => cleanup();
 
     window.addEventListener(EVENT_AUDIO_PLAY_EVENT, handleOtherPlayback);
-    return () => window.removeEventListener(EVENT_AUDIO_PLAY_EVENT, handleOtherPlayback);
+    window.addEventListener(getStopAllAudioEventName(), handleStopAll);
+    return () => {
+      window.removeEventListener(EVENT_AUDIO_PLAY_EVENT, handleOtherPlayback);
+      window.removeEventListener(getStopAllAudioEventName(), handleStopAll);
+    };
   }, [cleanup, eventId]);
 
   const togglePlay = async () => {
@@ -84,18 +92,24 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
     try {
       if (!audioRef.current) {
         const clip = await getEventClip(eventId);
-        if (!clip) {
-          setMissingDevice(getLikelySourceDeviceCopy());
+        if (!clip?.wavBlob) {
+          const copy = getLikelySourceDeviceCopy();
+          setMissingDevice(copy);
+          toast.message("Ses dosyası bu cihazda yok", { description: copy.detail });
           return;
         }
 
-        const url = URL.createObjectURL(clip.wavBlob);
+        const wav =
+          clip.wavBlob instanceof Blob
+            ? clip.wavBlob
+            : new Blob([clip.wavBlob], { type: "audio/wav" });
+        const url = URL.createObjectURL(wav);
         urlRef.current = url;
         const audio = new Audio(url);
         audioRef.current = audio;
 
         audio.addEventListener("loadedmetadata", () => {
-          setDuration(audio.duration);
+          setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
         });
         audio.addEventListener("timeupdate", () => {
           setProgress(audio.currentTime);
@@ -111,6 +125,7 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
       setPlaying(true);
     } catch {
       setError(true);
+      toast.error("Ses klibi açılamadı");
     } finally {
       setLoading(false);
     }
@@ -127,10 +142,11 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
       return (
         <span
           className={cn(
-            "inline-flex max-w-28 items-center gap-1.5 rounded-full border border-[#6da9ff]/12 bg-[#155eff]/8 px-2 py-1 text-[10px] font-medium text-[#8fc0ff]",
+            "inline-flex max-w-36 items-center gap-1.5 rounded-full border border-[#6da9ff]/12 bg-[#155eff]/8 px-2 py-1 text-[10px] font-medium text-[#8fc0ff]",
             className
           )}
           role="status"
+          title={missingDevice.detail}
         >
           <Smartphone className="h-3 w-3 shrink-0" />
           <span className="truncate">{missingDevice.short}</span>
