@@ -52,16 +52,17 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
   }, []);
 
   useEffect(() => {
-    if (!started) return;
+    if (!started || exiting) return;
 
-    const second = window.setTimeout(() => setMoment(1), reduceMotion ? 900 : momentReadDuration);
-    const third = window.setTimeout(() => setMoment(2), reduceMotion ? 1800 : momentReadDuration * 2);
+    const next = window.setTimeout(
+      () => setMoment((value) => (value + 1) % MOMENTS.length),
+      reduceMotion ? 2400 : momentReadDuration
+    );
 
     return () => {
-      window.clearTimeout(second);
-      window.clearTimeout(third);
+      window.clearTimeout(next);
     };
-  }, [reduceMotion, started]);
+  }, [exiting, moment, reduceMotion, started]);
 
   const begin = useCallback(async () => {
     if (started) return;

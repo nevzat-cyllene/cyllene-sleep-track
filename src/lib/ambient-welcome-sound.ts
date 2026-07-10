@@ -1,18 +1,46 @@
 /**
  * Cyllene açılış ambiyansı.
- * Telifli bir melodi kopyalamaz; okyanus nefesi + yumuşak sinematik fantezi hissi verir.
+ * Önce ürün için verilen MP3 ambiyansını kullanır; tarayıcı reddederse WebAudio fallback çalışır.
  */
 export class AmbientWelcomeSound {
+  private audio: HTMLAudioElement | null = null;
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private oscillators: OscillatorNode[] = [];
   private noiseSources: AudioBufferSourceNode[] = [];
   private timers: Array<ReturnType<typeof setTimeout>> = [];
+  private fadeFrame: number | null = null;
   private running = false;
 
   async start(): Promise<void> {
     if (this.running) return;
 
+    if (await this.startFileAmbience()) return;
+    await this.startGeneratedAmbience();
+  }
+
+  private async startFileAmbience(): Promise<boolean> {
+    if (typeof Audio === "undefined") return false;
+
+    const audio = new Audio("/audio/cyllene-welcome.mp3");
+    audio.loop = true;
+    audio.preload = "auto";
+    audio.volume = 0;
+
+    try {
+      this.audio = audio;
+      await audio.play();
+      this.running = true;
+      void this.fadeAudioVolume(0.54, 2.4);
+      return true;
+    } catch {
+      audio.pause();
+      this.audio = null;
+      return false;
+    }
+  }
+
+  private async startGeneratedAmbience(): Promise<void> {
     this.ctx = new AudioContext();
     await this.ctx.resume();
 
@@ -60,6 +88,12 @@ export class AmbientWelcomeSound {
   }
 
   async fadeOut(durationSec = 2.5): Promise<void> {
+    if (this.audio) {
+      await this.fadeAudioVolume(0, durationSec);
+      this.dispose();
+      return;
+    }
+
     if (!this.ctx || !this.masterGain) return;
 
     const now = this.ctx.currentTime;
@@ -72,6 +106,18 @@ export class AmbientWelcomeSound {
   }
 
   dispose(): void {
+    if (this.fadeFrame !== null) {
+      cancelAnimationFrame(this.fadeFrame);
+      this.fadeFrame = null;
+    }
+
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.currentTime = 0;
+      this.audio.src = "";
+      this.audio = null;
+    }
+
     for (const timer of this.timers) {
       clearTimeout(timer);
     }
@@ -106,6 +152,37 @@ export class AmbientWelcomeSound {
     this.ctx = null;
     this.masterGain = null;
     this.running = false;
+  }
+
+  private fadeAudioVolume(targetVolume: number, durationSec: number): Promise<void> {
+    if (!this.audio) return Promise.resolve();
+
+    const audio = this.audio;
+    const startVolume = audio.volume;
+    const startAt = performance.now();
+    const durationMs = Math.max(1, durationSec * 1000);
+
+    if (this.fadeFrame !== null) {
+      cancelAnimationFrame(this.fadeFrame);
+      this.fadeFrame = null;
+    }
+
+    return new Promise((resolve) => {
+      const tick = (now: number) => {
+        const progress = Math.min(1, (now - startAt) / durationMs);
+        audio.volume = startVolume + (targetVolume - startVolume) * progress;
+
+        if (progress < 1) {
+          this.fadeFrame = requestAnimationFrame(tick);
+          return;
+        }
+
+        this.fadeFrame = null;
+        resolve();
+      };
+
+      this.fadeFrame = requestAnimationFrame(tick);
+    });
   }
 
   private startFantasyPad(destination: AudioNode, now: number) {
