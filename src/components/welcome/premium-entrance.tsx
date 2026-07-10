@@ -20,19 +20,19 @@ const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve,
 
 const MOMENTS = [
   {
-    eyebrow: "Işık azalır",
-    title: "Karanlık boş değildir.",
-    body: "Telefon yanında durur; gece, izlerini sessizce bırakır.",
+    eyebrow: "Cihaz içi analiz",
+    title: "Ham ses cihazında kalır.",
+    body: "Cyllene gece boyunca oluşan ses sinyallerini telefonunda işler.",
   },
   {
     eyebrow: siteConfig.shortName,
-    title: "Sessizliğin haritasını çıkarır.",
-    body: "Horlama, öksürük ve ani sesler sabaha net bir zaman çizelgesi olur.",
+    title: "Gece olayları işaretlenir.",
+    body: "Horlama, öksürük ve ani sesler sabah raporunda okunabilir anlara dönüşür.",
   },
   {
-    eyebrow: "Mahremiyet",
-    title: "Kayıt değil, anlam kalır.",
-    body: "Analiz cihazında yapılır; ham ses buluta taşınmaz.",
+    eyebrow: "Sabah raporu",
+    title: "Uyku ritmin netleşir.",
+    body: "Skor, zaman çizelgesi ve tespit edilen anlar sade bir özet halinde açılır.",
   },
 ] as const;
 
@@ -139,18 +139,18 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
           transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
         />
         {!reduceMotion &&
-          [0, 1].map((line) => (
+          [0, 1, 2, 3].map((line) => (
             <motion.span
               key={line}
-              className="absolute left-0 h-px w-56 bg-gradient-to-r from-transparent via-[#8cc4ff]/35 to-transparent blur-[0.5px]"
-              style={{ top: `${19 + line * 24}%`, rotate: -10 }}
-              initial={{ x: "-35vw", opacity: 0 }}
-              animate={{ x: "125vw", opacity: [0, 0.38, 0] }}
+              className="absolute left-0 h-px w-48 bg-gradient-to-r from-transparent via-[#d8ecff]/45 to-transparent blur-[0.45px] sm:w-64"
+              style={{ top: `${16 + line * 15}%`, rotate: -11 + line * 1.5 }}
+              initial={{ x: "-42vw", opacity: 0 }}
+              animate={{ x: "128vw", opacity: [0, 0.46, 0] }}
               transition={{
-                duration: 3.1 + line * 0.35,
+                duration: 3.25 + line * 0.28,
                 repeat: Infinity,
-                repeatDelay: 2.2 + line * 0.6,
-                delay: line * 0.45,
+                repeatDelay: 1.65 + line * 0.32,
+                delay: line * 0.42,
                 ease: "easeInOut",
               }}
             />
@@ -222,9 +222,14 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
             animate={
               reduceMotion || exiting
                 ? undefined
-                : { rotate: started ? [0, 0.8, -0.6, 0] : [0, -0.6, 0.4, 0] }
+                : { rotate: 360 }
             }
-            transition={{ duration: started ? 10 : 8.5, repeat: Infinity, ease: "easeInOut" }}
+            transition={{
+              duration: started ? 96 : 118,
+              repeat: Infinity,
+              ease: "linear",
+              delay: started ? 0 : moonEntryDuration * 0.72,
+            }}
           >
             <Image
               src="/brand/cyllene-moon.webp"
@@ -323,9 +328,9 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                   transition={{ duration: reduceMotion ? 0.2 : 0.82, delay: 0.28, ease }}
                 >
-                  Gece susar.
+                  Uyku sinyali ölçülür.
                   <span className="block bg-gradient-to-r from-white via-[#bcd8ff] to-[#5e9eff] bg-clip-text text-transparent">
-                    İzleri kalır.
+                    Sabah raporu oluşur.
                   </span>
                 </motion.h1>
                 <motion.p
@@ -334,8 +339,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                   transition={{ duration: reduceMotion ? 0.2 : 0.68, delay: 0.68, ease }}
                 >
-                  Cyllene, karanlıkta oluşan ses izlerini sabaha sade bir uyku haritası olarak
-                  taşır.
+                  Cyllene, gece boyunca oluşan horlama, öksürük ve ani sesleri cihazında analiz eder.
                 </motion.p>
 
                 <motion.button

@@ -81,17 +81,17 @@ export default function LandingPage() {
                   <span className="absolute inset-0 animate-ping rounded-full bg-[#6da9ff] opacity-60" />
                   <span className="relative h-2 w-2 rounded-full bg-[#6da9ff]" />
                 </span>
-                Cihaz içi premium uyku analizi
+                Sleep intelligence · cihaz içi analiz
               </div>
 
               <h1 className="text-balance text-[clamp(3.35rem,8vw,6.8rem)] font-medium leading-[0.89] tracking-[-0.07em]">
-                Gecenin izini çöz.
-                <span className="mt-2 block text-gradient">Sabaha berrak uyan.</span>
+                Uyku sinyalini ölç.
+                <span className="mt-2 block text-gradient">Sabah raporunu netleştir.</span>
               </h1>
 
               <p className="mt-7 max-w-xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-                Cyllene, horlama, öksürük ve ani ses izlerini cihazında işler; ham sesi
-                taşımadan geceyi sakin, net ve kişisel bir sabah raporuna dönüştürür.
+                Cyllene, horlama, öksürük ve ani sesleri telefonunda analiz eder; ham sesi
+                yüklemeden skor, zaman çizelgesi ve olay özetini profesyonel bir sabah raporuna dönüştürür.
               </p>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -100,7 +100,7 @@ export default function LandingPage() {
                   className="glow-purple h-13 rounded-full bg-[#1769ff] px-6 hover:bg-[#2d79ff]"
                   render={<Link href="/signup" />}
                 >
-                  İlk raporu başlat
+                  Ücretsiz başla
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
                 <Button
@@ -114,7 +114,7 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-xs text-muted-foreground">
-                {["Kredi kartı gerekmez", "Ham ses cihazda kalır", "Uyku skoru ve zaman çizelgesi"].map(
+                {["Kredi kartı gerekmez", "Ham ses yüklenmez", "Skor ve zaman çizelgesi"].map(
                   (item) => (
                     <span key={item} className="flex items-center gap-2">
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-400/10 text-emerald-300">
@@ -153,6 +153,153 @@ export default function LandingPage() {
             </div>
 
             <div className="relative mx-auto hidden w-full max-w-[35rem] md:block lg:mx-0 lg:ml-auto">
+              <div className="absolute -inset-8 rounded-full bg-[#1c67ff]/14 blur-[110px]" />
+              <div className="relative overflow-hidden rounded-[2rem] border border-white/[0.075] bg-[linear-gradient(145deg,rgba(7,17,39,.96),rgba(4,10,24,.98)_58%,rgba(3,7,18,.98))] p-4 shadow-[0_30px_120px_rgba(20,82,190,.24),inset_0_1px_0_rgba(255,255,255,.075)] backdrop-blur-2xl">
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(105,181,255,.14),transparent_30%),radial-gradient(circle_at_82%_18%,rgba(23,105,255,.12),transparent_34%)]" />
+                <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(158,205,255,.42),transparent)]" />
+
+                <div className="relative flex items-center justify-between rounded-[1.25rem] border border-white/[0.06] bg-white/[0.035] px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#1769ff,#6fd2ff)] shadow-[0_10px_34px_rgba(23,105,255,.35)]">
+                      <MoonStar className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold tracking-[-0.02em]">Sleep intelligence</p>
+                      <p className="text-xs text-white/36">Cyllene gece raporu · cihaz içi analiz</p>
+                    </div>
+                  </div>
+                  <span className="rounded-full border border-emerald-300/15 bg-emerald-300/8 px-2.5 py-1 text-[10px] font-medium text-emerald-300">
+                    Ham ses yüklenmez
+                  </span>
+                </div>
+
+                <div className="relative mt-4 grid gap-3 lg:grid-cols-[1.05fr_.72fr]">
+                  <section className="rounded-[1.55rem] border border-[#8dbdff]/12 bg-[linear-gradient(150deg,rgba(14,35,77,.72),rgba(7,17,39,.86))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.055)]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.22em] text-[#91c1ff]/65">Uyku skoru</p>
+                        <div className="mt-2 flex items-end gap-2">
+                          <span className="text-5xl font-medium leading-none tracking-[-0.08em]">86</span>
+                          <span className="pb-1 text-sm text-white/38">/100</span>
+                        </div>
+                      </div>
+                      <div className="rounded-full border border-[#8dbdff]/12 bg-[#1769ff]/10 px-3 py-1.5 text-[10px] text-[#a9d7ff]">
+                        Önceki geceye göre %8 sakin
+                      </div>
+                    </div>
+
+                    <div className="mt-5 h-36 overflow-hidden rounded-[1.15rem] border border-white/[0.055] bg-[#06142f]/78">
+                      <div className="relative h-full">
+                        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.035)_1px,transparent_1px)] bg-[size:100%_33%,25%_100%] opacity-45" />
+                        <div className="absolute inset-x-4 top-3 flex justify-between text-[9px] text-white/24">
+                          <span>00:00</span>
+                          <span>02:00</span>
+                          <span>04:00</span>
+                          <span>06:00</span>
+                          <span>08:00</span>
+                        </div>
+                        <svg
+                          className="absolute inset-x-4 bottom-5 top-8 h-[5.8rem] w-[calc(100%-2rem)]"
+                          viewBox="0 0 420 110"
+                          preserveAspectRatio="none"
+                          aria-hidden="true"
+                        >
+                          <defs>
+                            <linearGradient id="landing-saas-signal" x1="0" x2="1" y1="0" y2="0">
+                              <stop offset="0%" stopColor="#326bff" stopOpacity="0.28" />
+                              <stop offset="46%" stopColor="#6fd2ff" stopOpacity="0.95" />
+                              <stop offset="100%" stopColor="#9c8cff" stopOpacity="0.55" />
+                            </linearGradient>
+                          </defs>
+                          <path
+                            d="M0 74 C38 62 62 68 92 51 C126 31 162 38 196 58 C232 80 258 84 292 62 C326 40 356 42 420 25"
+                            fill="none"
+                            stroke="url(#landing-saas-signal)"
+                            strokeLinecap="round"
+                            strokeWidth="4.5"
+                          />
+                          <path
+                            d="M0 88 C48 82 86 84 130 72 C178 60 220 88 266 82 C318 76 352 52 420 58"
+                            fill="none"
+                            stroke="#91c1ff"
+                            strokeLinecap="round"
+                            strokeOpacity=".16"
+                            strokeWidth="2"
+                          />
+                        </svg>
+                        <span className="absolute left-[22%] top-[56%] h-2.5 w-2.5 rounded-full border border-[#9dd7ff] bg-[#6fd2ff] shadow-[0_0_18px_rgba(111,210,255,.78)]" />
+                        <span className="absolute left-[61%] top-[41%] h-2.5 w-2.5 rounded-full border border-[#b8adff] bg-[#8f7cff] shadow-[0_0_18px_rgba(143,124,255,.68)]" />
+                        <span className="absolute left-[84%] top-[29%] h-2.5 w-2.5 rounded-full border border-[#9dd7ff] bg-[#6fd2ff] shadow-[0_0_18px_rgba(111,210,255,.78)]" />
+                      </div>
+                    </div>
+                  </section>
+
+                  <aside className="grid gap-3">
+                    {sleepMetrics.slice(1).map((metric) => (
+                      <div
+                        key={metric.label}
+                        className="rounded-[1.35rem] border border-white/[0.065] bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.045)]"
+                      >
+                        <p className="text-[10px] uppercase tracking-[0.18em] text-white/32">{metric.label}</p>
+                        <p className="mt-2 text-2xl font-medium tracking-[-0.055em] text-white">{metric.value}</p>
+                        <p className="mt-1 text-[10px] text-[#8fc0ff]/68">{metric.meta}</p>
+                      </div>
+                    ))}
+                    <div className="rounded-[1.35rem] border border-emerald-300/12 bg-[linear-gradient(145deg,rgba(22,163,116,.105),rgba(21,94,255,.06))] p-4">
+                      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-emerald-300/72">
+                        <LockKeyhole className="h-3.5 w-3.5" />
+                        Mahremiyet
+                      </div>
+                      <p className="mt-3 text-sm leading-5 text-white/62">
+                        Ses dosyası değil, yalnızca rapor metrikleri senkronize edilir.
+                      </p>
+                    </div>
+                  </aside>
+                </div>
+
+                <div className="relative mt-3 rounded-[1.45rem] border border-white/[0.065] bg-white/[0.035] p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Tespit edilen anlar</p>
+                      <p className="mt-0.5 text-xs text-white/34">Dinlenebilir olaylar ve gece zaman çizelgesi</p>
+                    </div>
+                    <span className="flex items-center gap-1.5 rounded-full bg-[#1769ff]/10 px-2.5 py-1 text-[10px] text-[#9bd5ff]">
+                      <AudioWaveform className="h-3 w-3" />
+                      14 olay
+                    </span>
+                  </div>
+                  <div className="mt-3 grid gap-2">
+                    {acousticEvents.map((event) => (
+                      <div
+                        key={`${event.time}-${event.title}`}
+                        className="flex items-center gap-3 rounded-2xl border border-white/[0.045] bg-black/10 px-3 py-2.5"
+                      >
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${event.tone} shadow-[0_0_18px_currentColor]`} />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="truncate text-xs font-medium text-white/78">{event.title}</p>
+                            <span className="text-[10px] tabular-nums text-white/34">{event.time}</span>
+                          </div>
+                          <p className="mt-0.5 text-[10px] text-white/30">{event.meta}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute -bottom-6 -left-5 flex items-center gap-3 rounded-2xl border border-[#8dbdff]/14 bg-[linear-gradient(135deg,rgba(18,48,102,.9),rgba(6,16,38,.94))] px-4 py-3 shadow-[0_18px_55px_rgba(17,88,210,.24),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-2xl">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#155eff]/14">
+                  <Sparkles className="h-4 w-4 text-[#8fc0ff]" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium">Rapor özeti hazır</p>
+                  <p className="text-[10px] text-white/35">Skor · zaman çizelgesi · olaylar</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="hidden">
               <div className="absolute -inset-10 rounded-full bg-[#185cff]/18 blur-[100px]" />
               <div className="relative overflow-hidden rounded-[2.15rem] border border-[#8dbdff]/16 bg-[radial-gradient(circle_at_18%_0%,rgba(111,210,255,.18),transparent_34%),linear-gradient(145deg,rgba(22,49,96,.92),rgba(8,20,46,.94)_54%,rgba(4,10,24,.96)_100%)] p-4 shadow-[0_28px_120px_rgba(30,112,255,.26),inset_0_1px_0_rgba(255,255,255,.09)] backdrop-blur-2xl sm:p-5">
                 <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#6fd2ff]/16 blur-[70px]" />
