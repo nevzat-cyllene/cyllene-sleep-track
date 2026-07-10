@@ -85,15 +85,16 @@ export default function LandingPage() {
               </div>
 
               <h1 className="text-balance text-[clamp(2.75rem,6.4vw,5.45rem)] font-medium leading-[0.9] tracking-[-0.065em]">
-                <span className="block">Uyku sinyalini</span>
-                <span className="block">ölç.</span>
-                <span className="block text-gradient">Sabaha enerjik</span>
-                <span className="block text-gradient">uyan.</span>
+                <span className="block">Bedeninizin gece</span>
+                <span className="block">çalışmasını</span>
+                <span className="block text-gradient">görünür</span>
+                <span className="block text-gradient">kılın.</span>
               </h1>
 
               <p className="mt-5 max-w-lg text-pretty text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
-                Cyllene; horlama, öksürük ve çevresel sesleri cihazında analiz eder. Ham ses
-                yüklenmeden skor, zaman çizelgesi ve sade sabah özeti hazırlar.
+                Siz dinlenirken Cyllene çalışır. Gece boyunca oluşan horlama ve ani sesleri
+                cihazınızda gizlilikle analiz eder. Karmaşık verileri, sabah kahvenize eşlik
+                edecek bir sağlık rehberine dönüştürür.
               </p>
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
