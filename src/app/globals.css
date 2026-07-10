@@ -156,7 +156,7 @@
   }
   .moon-texture-spin {
     animation: cyllene-moon-texture-spin 472s linear infinite;
-    animation-delay: 9.35s;
+    animation-delay: 0s;
     animation-fill-mode: both;
     backface-visibility: hidden;
     transform-origin: 50% 50%;
