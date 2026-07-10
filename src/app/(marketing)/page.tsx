@@ -74,9 +74,9 @@ export default function LandingPage() {
             <div className="absolute right-[-12rem] top-36 hidden h-[30rem] w-[30rem] rounded-full bg-[#6fd2ff]/10 blur-[130px] sm:block" />
           </div>
 
-          <Container className="relative grid min-h-[calc(100svh-4rem)] items-center gap-9 py-10 sm:py-12 lg:grid-cols-[.98fr_1.02fr] lg:py-14">
-            <div className="max-w-2xl">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#6da9ff]/20 bg-[#155eff]/10 px-3.5 py-2 text-xs font-medium text-[#91c1ff] shadow-[inset_0_1px_0_rgba(255,255,255,.06)]">
+          <Container className="relative grid min-h-[calc(100svh-4rem)] items-center gap-8 py-7 sm:gap-9 sm:py-12 lg:grid-cols-[.98fr_1.02fr] lg:py-14">
+            <div className="max-w-xl sm:max-w-2xl">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#6da9ff]/20 bg-[#155eff]/10 px-3.5 py-2 text-xs font-medium text-[#91c1ff] shadow-[inset_0_1px_0_rgba(255,255,255,.06)] sm:mb-5">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inset-0 animate-ping rounded-full bg-[#6da9ff] opacity-60" />
                   <span className="relative h-2 w-2 rounded-full bg-[#6da9ff]" />
@@ -84,23 +84,23 @@ export default function LandingPage() {
                 Sleep intelligence · cihaz içi analiz
               </div>
 
-              <h1 className="text-balance text-[clamp(2.75rem,6.4vw,5.45rem)] font-medium leading-[0.9] tracking-[-0.065em]">
+              <h1 className="text-balance text-[clamp(2.45rem,11vw,5.45rem)] font-medium leading-[0.92] tracking-[-0.065em] sm:text-[clamp(2.75rem,6.4vw,5.45rem)] sm:leading-[0.9]">
                 <span className="block">Bedeninizin gece</span>
                 <span className="block">çalışmasını</span>
                 <span className="block text-gradient">görünür</span>
                 <span className="block text-gradient">kılın.</span>
               </h1>
 
-              <p className="mt-5 max-w-lg text-pretty text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+              <p className="mt-4 max-w-lg text-pretty text-sm leading-6 text-muted-foreground sm:mt-5 sm:text-base sm:leading-7">
                 Siz dinlenirken Cyllene çalışır. Gece boyunca oluşan horlama ve ani sesleri
                 cihazınızda gizlilikle analiz eder. Karmaşık verileri, sabah kahvenize eşlik
                 edecek bir sağlık rehberine dönüştürür.
               </p>
 
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row">
                 <Button
                   size="lg"
-                  className="glow-purple h-13 rounded-full bg-[#1769ff] px-6 hover:bg-[#2d79ff]"
+                  className="glow-purple h-12 rounded-full bg-[#1769ff] px-6 hover:bg-[#2d79ff] sm:h-13"
                   render={<Link href="/signup" />}
                 >
                   Ücretsiz başla
@@ -109,14 +109,14 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="h-13 rounded-full border-white/10 bg-white/[0.035] px-6 backdrop-blur-xl hover:bg-white/[0.07]"
+                  className="h-12 rounded-full border-white/10 bg-white/[0.035] px-6 backdrop-blur-xl hover:bg-white/[0.07] sm:h-13"
                   render={<Link href="/login" />}
                 >
                   Hesabına giriş yap
                 </Button>
               </div>
 
-              <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2.5 text-xs text-muted-foreground">
+              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2.5 text-xs text-muted-foreground sm:mt-5">
                 {["Kredi kartı gerekmez", "Ham ses yüklenmez", "Skor ve zaman çizelgesi"].map(
                   (item) => (
                     <span key={item} className="flex items-center gap-2">
@@ -129,30 +129,6 @@ export default function LandingPage() {
                 )}
               </div>
 
-              <div className="mt-8 rounded-[1.55rem] border border-[#8dbdff]/14 bg-[linear-gradient(145deg,rgba(18,38,76,.82),rgba(6,15,35,.92))] p-4 shadow-[0_18px_70px_rgba(24,105,255,.16),inset_0_1px_0_rgba(255,255,255,.07)] md:hidden">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">Uyku imzası</p>
-                    <p className="mt-0.5 text-[11px] text-white/35">Örnek rapor görünümü</p>
-                  </div>
-                  <span className="rounded-full bg-[#155eff]/14 px-2.5 py-1 text-[10px] text-[#9bd5ff]/75">
-                    cihaz içi
-                  </span>
-                </div>
-                <div className="mt-4 grid grid-cols-3 gap-2">
-                  {sleepMetrics.map((metric) => (
-                    <div key={metric.label} className="rounded-2xl bg-white/[0.045] p-3">
-                      <p className="text-[9px] uppercase tracking-[0.12em] text-white/28">
-                        {metric.label}
-                      </p>
-                      <p className="mt-1 text-lg font-medium tracking-[-0.04em]">{metric.value}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 h-2 rounded-full bg-white/[0.05]">
-                  <div className="h-full w-[68%] rounded-full bg-[linear-gradient(90deg,#1769ff,#6fd2ff)]" />
-                </div>
-              </div>
             </div>
 
             <div className="relative mx-auto hidden w-full max-w-[35rem] md:block lg:mx-0 lg:ml-auto">
@@ -459,6 +435,33 @@ export default function LandingPage() {
                   <p className="text-xs font-medium">Sabah özeti hazır</p>
                   <p className="text-[10px] text-white/35">Net skor · zaman çizelgesi · olaylar</p>
                 </div>
+              </div>
+            </div>
+          </Container>
+
+          <Container className="relative z-10 pb-9 md:hidden">
+            <div className="rounded-[1.55rem] border border-[#8dbdff]/14 bg-[linear-gradient(145deg,rgba(18,38,76,.82),rgba(6,15,35,.92))] p-4 shadow-[0_18px_70px_rgba(24,105,255,.16),inset_0_1px_0_rgba(255,255,255,.07)]">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Uyku imzası</p>
+                  <p className="mt-0.5 text-[11px] text-white/35">Örnek rapor görünümü</p>
+                </div>
+                <span className="rounded-full bg-[#155eff]/14 px-2.5 py-1 text-[10px] text-[#9bd5ff]/75">
+                  cihaz içi
+                </span>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {sleepMetrics.map((metric) => (
+                  <div key={metric.label} className="rounded-2xl bg-white/[0.045] p-3">
+                    <p className="text-[9px] uppercase tracking-[0.12em] text-white/28">
+                      {metric.label}
+                    </p>
+                    <p className="mt-1 text-lg font-medium tracking-[-0.04em]">{metric.value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 h-2 rounded-full bg-white/[0.05]">
+                <div className="h-full w-[68%] rounded-full bg-[linear-gradient(90deg,#1769ff,#6fd2ff)]" />
               </div>
             </div>
           </Container>
