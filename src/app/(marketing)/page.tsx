@@ -74,7 +74,7 @@ export default function LandingPage() {
             <div className="absolute right-[-12rem] top-36 hidden h-[30rem] w-[30rem] rounded-full bg-[#6fd2ff]/10 blur-[130px] sm:block" />
           </div>
 
-          <Container className="relative grid min-h-[calc(100svh-4rem)] items-center gap-8 py-7 sm:gap-9 sm:py-12 lg:grid-cols-[.98fr_1.02fr] lg:py-14">
+          <Container className="relative grid min-h-[calc(100svh-4rem)] items-center gap-8 py-6 pb-10 sm:gap-9 sm:py-12 lg:grid-cols-[.98fr_1.02fr] lg:py-14">
             <div className="max-w-xl sm:max-w-2xl">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#6da9ff]/20 bg-[#155eff]/10 px-3.5 py-2 text-xs font-medium text-[#91c1ff] shadow-[inset_0_1px_0_rgba(255,255,255,.06)] sm:mb-5">
                 <span className="relative flex h-2 w-2">
@@ -439,7 +439,7 @@ export default function LandingPage() {
             </div>
           </Container>
 
-          <Container className="relative z-10 pb-9 md:hidden">
+          <Container className="relative z-10 pt-[22svh] pb-9 md:hidden">
             <div className="rounded-[1.55rem] border border-[#8dbdff]/14 bg-[linear-gradient(145deg,rgba(18,38,76,.82),rgba(6,15,35,.92))] p-4 shadow-[0_18px_70px_rgba(24,105,255,.16),inset_0_1px_0_rgba(255,255,255,.07)]">
               <div className="flex items-center justify-between">
                 <div>
