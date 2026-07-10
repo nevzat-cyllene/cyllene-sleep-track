@@ -14,6 +14,7 @@ interface PremiumEntranceProps {
 
 const ease = [0.22, 1, 0.36, 1] as const;
 const moonFlowEase = [0.2, 0.72, 0.18, 1] as const;
+const moonEntryDuration = 9.1;
 const centerTransform = (_: unknown, generated: string) => `translateX(-50%) ${generated}`;
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
@@ -165,7 +166,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
         <motion.div
           className="absolute left-1/2 top-[14%] z-[2] h-72 w-72 rounded-full border border-[#9cc8ff]/18 bg-[radial-gradient(circle,rgba(178,211,255,.16)_0%,rgba(94,143,255,.07)_45%,transparent_72%)] blur-[0.3px] will-change-transform sm:h-96 sm:w-96"
           transformTemplate={centerTransform}
-          initial={{ x: "38vw", y: "-9vh", opacity: 0, scale: 0.38, rotate: -24 }}
+          initial={{ x: "64vw", y: "-17vh", opacity: 0, scale: 0.24, rotate: -34 }}
           animate={{
             x: exiting
               ? "20vw"
@@ -178,7 +179,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
             rotate: exiting ? 24 : started ? 14 : 10,
           }}
           transition={{
-            duration: reduceMotion ? 0.2 : exiting ? 0.9 : started ? 1.05 : 5.1,
+            duration: reduceMotion ? 0.2 : exiting ? 0.9 : started ? 1.05 : moonEntryDuration,
             ease: moonFlowEase,
           }}
         />
@@ -187,14 +188,14 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
           style={{ perspective: 1100 }}
           transformTemplate={centerTransform}
           initial={{
-            x: "40vw",
-            y: "-9vh",
+            x: "68vw",
+            y: "-18vh",
             opacity: 0,
-            scale: 0.34,
-            rotateX: 18,
-            rotateY: -48,
-            rotateZ: 20,
-            filter: "blur(14px)",
+            scale: 0.2,
+            rotateX: 22,
+            rotateY: -58,
+            rotateZ: 26,
+            filter: "blur(16px)",
           }}
           animate={{
             x: exiting
@@ -211,7 +212,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
             filter: exiting ? "blur(18px)" : "blur(0px)",
           }}
           transition={{
-            duration: reduceMotion ? 0.2 : exiting ? 0.9 : started ? 1.05 : 5.1,
+            duration: reduceMotion ? 0.2 : exiting ? 0.9 : started ? 1.05 : moonEntryDuration,
             ease: moonFlowEase,
           }}
         >
@@ -241,7 +242,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
         <motion.div
           className="absolute left-1/2 top-[16%] z-[1] h-64 w-[28rem] rounded-full bg-[radial-gradient(ellipse,rgba(150,190,255,.2)_0%,rgba(78,132,255,.075)_43%,transparent_73%)] blur-2xl will-change-transform sm:h-80 sm:w-[38rem]"
           transformTemplate={centerTransform}
-          initial={{ x: "36vw", y: "-8vh", opacity: 0, scale: 0.48 }}
+          initial={{ x: "62vw", y: "-15vh", opacity: 0, scale: 0.3 }}
           animate={{
             x: exiting
               ? "14vw"
@@ -253,7 +254,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
             scale: exiting ? 0.86 : started ? 1.08 : 1,
           }}
           transition={{
-            duration: reduceMotion ? 0.2 : exiting ? 0.9 : started ? 1.05 : 5.1,
+            duration: reduceMotion ? 0.2 : exiting ? 0.9 : started ? 1.05 : moonEntryDuration,
             ease: moonFlowEase,
           }}
         />

@@ -70,8 +70,8 @@ export default function LandingPage() {
         <section className="relative">
           <div className="pointer-events-none absolute inset-0" aria-hidden="true">
             <div className="night-stars absolute inset-0 opacity-25" />
-            <div className="absolute left-1/2 top-8 h-[34rem] w-[52rem] -translate-x-1/2 rounded-full bg-[#185cff]/12 blur-[140px]" />
-            <div className="absolute right-[-12rem] top-36 h-[30rem] w-[30rem] rounded-full bg-[#6fd2ff]/10 blur-[130px]" />
+            <div className="absolute left-1/2 top-8 hidden h-[34rem] w-[52rem] -translate-x-1/2 rounded-full bg-[#185cff]/12 blur-[140px] sm:block" />
+            <div className="absolute right-[-12rem] top-36 hidden h-[30rem] w-[30rem] rounded-full bg-[#6fd2ff]/10 blur-[130px] sm:block" />
           </div>
 
           <Container className="relative grid min-h-[calc(100svh-4rem)] items-center gap-14 py-16 lg:grid-cols-[1.02fr_.98fr] lg:py-24">
@@ -125,9 +125,34 @@ export default function LandingPage() {
                   )
                 )}
               </div>
+
+              <div className="mt-8 rounded-[1.55rem] border border-[#8dbdff]/14 bg-[linear-gradient(145deg,rgba(18,38,76,.82),rgba(6,15,35,.92))] p-4 shadow-[0_18px_70px_rgba(24,105,255,.16),inset_0_1px_0_rgba(255,255,255,.07)] md:hidden">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Uyku imzası</p>
+                    <p className="mt-0.5 text-[11px] text-white/35">Örnek rapor görünümü</p>
+                  </div>
+                  <span className="rounded-full bg-[#155eff]/14 px-2.5 py-1 text-[10px] text-[#9bd5ff]/75">
+                    cihaz içi
+                  </span>
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  {sleepMetrics.map((metric) => (
+                    <div key={metric.label} className="rounded-2xl bg-white/[0.045] p-3">
+                      <p className="text-[9px] uppercase tracking-[0.12em] text-white/28">
+                        {metric.label}
+                      </p>
+                      <p className="mt-1 text-lg font-medium tracking-[-0.04em]">{metric.value}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 h-2 rounded-full bg-white/[0.05]">
+                  <div className="h-full w-[68%] rounded-full bg-[linear-gradient(90deg,#1769ff,#6fd2ff)]" />
+                </div>
+              </div>
             </div>
 
-            <div className="relative mx-auto w-full max-w-[35rem] lg:mx-0 lg:ml-auto">
+            <div className="relative mx-auto hidden w-full max-w-[35rem] md:block lg:mx-0 lg:ml-auto">
               <div className="absolute -inset-10 rounded-full bg-[#185cff]/18 blur-[100px]" />
               <div className="relative overflow-hidden rounded-[2.15rem] border border-[#8dbdff]/16 bg-[radial-gradient(circle_at_18%_0%,rgba(111,210,255,.18),transparent_34%),linear-gradient(145deg,rgba(22,49,96,.92),rgba(8,20,46,.94)_54%,rgba(4,10,24,.96)_100%)] p-4 shadow-[0_28px_120px_rgba(30,112,255,.26),inset_0_1px_0_rgba(255,255,255,.09)] backdrop-blur-2xl sm:p-5">
                 <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#6fd2ff]/16 blur-[70px]" />
