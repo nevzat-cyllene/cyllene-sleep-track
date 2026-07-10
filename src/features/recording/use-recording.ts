@@ -9,7 +9,7 @@ import {
 } from "./session-store";
 import { saveEventClip } from "./audio-clip-store";
 import { float32ToWav } from "@/lib/audio-clip-utils";
-import { classifyAudio, preloadYamnet } from "./yamnet-classifier";
+import { classifyAudio } from "./yamnet-classifier";
 import { calculateSleepScore } from "@/lib/sleep-utils";
 import type { LocalSleepEvent, LocalSleepSession, NoiseSample } from "@/types";
 
@@ -175,9 +175,6 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
     eventQueueRef.current = Promise.resolve();
 
     try {
-      // Never await model preload — tfhub/CORS must not block mic start.
-      void preloadYamnet();
-
       const existing = await getActiveSession();
       const session = existing ?? createSession(userId);
       if (userId) session.userId = userId;
