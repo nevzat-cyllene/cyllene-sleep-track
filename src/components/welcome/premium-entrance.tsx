@@ -217,9 +217,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
           }}
         >
           <div
-            className={`relative h-full w-full overflow-hidden rounded-full border border-white/16 bg-[#07111f]/35 shadow-[0_0_88px_rgba(152,198,255,.34),0_0_210px_rgba(30,118,255,.18)] will-change-transform ${
-              reduceMotion || exiting ? "" : "moon-soft-spin"
-            }`}
+            className="relative h-full w-full overflow-hidden rounded-full border border-white/16 bg-[#07111f]/35 shadow-[0_0_88px_rgba(152,198,255,.34),0_0_210px_rgba(30,118,255,.18)] [contain:paint]"
             style={{ transformStyle: "preserve-3d" }}
           >
             <Image
@@ -228,7 +226,9 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
               fill
               priority
               sizes="(max-width: 640px) 13rem, 18rem"
-              className="scale-[1.018] object-cover [filter:contrast(1.05)_brightness(.86)]"
+              className={`object-cover [filter:contrast(1.05)_brightness(.86)] ${
+                reduceMotion || exiting ? "scale-[1.08]" : "moon-texture-spin"
+              }`}
             />
             <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_22%,rgba(255,255,255,.22),transparent_24%),radial-gradient(circle_at_68%_52%,transparent_0_44%,rgba(3,7,18,.34)_65%,rgba(0,2,8,.62)_100%)] mix-blend-multiply" />
             <span className="absolute inset-0 rounded-full shadow-[inset_-32px_-22px_50px_rgba(3,7,18,.52),inset_18px_14px_28px_rgba(255,255,255,.18)]" />
@@ -308,31 +308,29 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                 <div>
                   <motion.p
                     className="mb-4 text-xs font-medium uppercase tracking-[0.32em] text-[#78b7ff]"
-                    initial={{ opacity: 0, y: 12, filter: "blur(8px)" }}
+                    initial={{ opacity: 0, y: 12, filter: "blur(16px)" }}
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                    transition={{ duration: reduceMotion ? 0.2 : 0.55, delay: 0.12, ease }}
+                    transition={{ duration: reduceMotion ? 0.2 : moonEntryDuration, delay: 0.08, ease: moonFlowEase }}
                   >
                     Ay yükselirken
                   </motion.p>
                   <motion.h1
                     className="max-w-[25rem] text-balance text-[clamp(2.35rem,8.4vw,5.4rem)] font-medium leading-[0.96] tracking-[-0.06em] sm:max-w-2xl"
-                    initial={{ opacity: 0, y: 22, filter: "blur(12px)" }}
+                    initial={{ opacity: 0, y: 22, filter: "blur(18px)" }}
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                    transition={{ duration: reduceMotion ? 0.2 : 0.82, delay: 0.28, ease }}
+                    transition={{ duration: reduceMotion ? 0.2 : moonEntryDuration, delay: 0.12, ease: moonFlowEase }}
                   >
-                    Dinlenmenin sessiz dilini keşfedin.
+                    Uykunun sessiz dilini keşfedin.
                   </motion.h1>
                   <motion.p
                     className="mt-5 max-w-[31rem] text-pretty text-sm font-light leading-6 text-white/54 sm:text-base sm:leading-7"
-                    initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
+                    initial={{ opacity: 0, y: 16, filter: "blur(16px)" }}
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                    transition={{ duration: reduceMotion ? 0.2 : 0.68, delay: 0.68, ease }}
+                    transition={{ duration: reduceMotion ? 0.2 : moonEntryDuration, delay: 0.18, ease: moonFlowEase }}
                   >
-                    Uyku, bedenin gece boyunca anlattığı bir hikayedir. Cyllene, akıllı akustik
-                    tanıma mimarisiyle bu hikayenin detaylarını – nefes ritimlerinizi,
-                    öksürükleri ve çevresel sesleri – cihaz içi işleme gücüyle analiz eder.
-                    Güne başlarken, kişisel alışkanlıklarınızı iyileştirecek sade, şık ve
-                    anlamlı bir sabah özetiyle uyanın.
+                    Uyku, bedenin gece boyunca anlattığı bir hikayedir. Cyllene, akıllı
+                    akustik tanıma mimarisiyle bu hikayenin detaylarını cihaz içi işleme
+                    gücüyle analiz eder.
                   </motion.p>
 
                 <motion.button
