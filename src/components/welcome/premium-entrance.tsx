@@ -88,7 +88,10 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
     setExiting(true);
     markGuestSplashSeen();
     await Promise.all([
-      soundRef.current?.fadeOut(reduceMotion ? 0.2 : 4.2) ?? Promise.resolve(),
+      Promise.race([
+        soundRef.current?.fadeOut(reduceMotion ? 0.2 : 4.2) ?? Promise.resolve(),
+        wait(reduceMotion ? 400 : 4500),
+      ]),
       wait(reduceMotion ? 220 : 1250),
     ]);
     onComplete();

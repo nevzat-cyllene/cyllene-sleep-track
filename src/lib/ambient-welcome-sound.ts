@@ -161,7 +161,9 @@ export class AmbientWelcomeSound {
     if (!this.audio) return Promise.resolve();
 
     const audio = this.audio;
-    const startVolume = audio.volume;
+    const clamp = (value: number) => Math.min(1, Math.max(0, value));
+    const startVolume = clamp(audio.volume);
+    const endVolume = clamp(targetVolume);
     const startAt = performance.now();
     const durationMs = Math.max(1, durationSec * 1000);
 
@@ -171,17 +173,31 @@ export class AmbientWelcomeSound {
     }
 
     return new Promise((resolve) => {
-      const tick = (now: number) => {
-        const progress = Math.min(1, (now - startAt) / durationMs);
-        audio.volume = startVolume + (targetVolume - startVolume) * progress;
+      const finish = () => {
+        this.fadeFrame = null;
+        try {
+          audio.volume = endVolume;
+        } catch {
+          // ignore
+        }
+        resolve();
+      };
 
-        if (progress < 1) {
-          this.fadeFrame = requestAnimationFrame(tick);
+      const tick = (now: number) => {
+        try {
+          const progress = Math.min(1, Math.max(0, (now - startAt) / durationMs));
+          audio.volume = clamp(startVolume + (endVolume - startVolume) * progress);
+
+          if (progress < 1) {
+            this.fadeFrame = requestAnimationFrame(tick);
+            return;
+          }
+        } catch {
+          finish();
           return;
         }
 
-        this.fadeFrame = null;
-        resolve();
+        finish();
       };
 
       this.fadeFrame = requestAnimationFrame(tick);
