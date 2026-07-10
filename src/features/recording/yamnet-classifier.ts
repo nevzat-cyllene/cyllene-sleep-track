@@ -2,7 +2,7 @@ import * as tf from "@tensorflow/tfjs";
 import type { SleepEventType } from "@/types";
 
 const YAMNET_MODEL_URL =
-  "https://tfhub.dev/google/tfjs-model/yamnet/tfjs/1/model.json?tfjs-format=file";
+  process.env.NEXT_PUBLIC_YAMNET_MODEL_URL?.trim() ?? "";
 
 const CLASS_MAP: Record<string, SleepEventType> = {
   Snoring: "snore",
@@ -35,13 +35,28 @@ let model: tf.GraphModel | null = null;
 let loading: Promise<tf.GraphModel> | null = null;
 
 export async function loadYamnetModel(): Promise<tf.GraphModel> {
+  if (!YAMNET_MODEL_URL) {
+    throw new Error("YAMNet model URL is not configured; heuristic classifier is active.");
+  }
+
   if (model) return model;
   if (loading) return loading;
 
-  loading = tf.loadGraphModel(YAMNET_MODEL_URL, { fromTFHub: true }).then((m) => {
-    model = m;
-    return m;
-  });
+  loading = tf
+    .loadGraphModel(
+      YAMNET_MODEL_URL,
+      YAMNET_MODEL_URL.includes("tfhub.dev") && !YAMNET_MODEL_URL.endsWith(".json")
+        ? { fromTFHub: true }
+        : undefined
+    )
+    .then((m) => {
+      model = m;
+      return m;
+    })
+    .catch((error) => {
+      loading = null;
+      throw error;
+    });
 
   return loading;
 }
@@ -171,6 +186,8 @@ export async function classifyAudio(
 }
 
 export async function preloadYamnet(): Promise<void> {
+  if (!YAMNET_MODEL_URL) return;
+
   try {
     await loadYamnetModel();
   } catch {

@@ -2,6 +2,9 @@
  * Cyllene açılış ambiyansı.
  * Önce ürün için verilen MP3 ambiyansını kullanır; tarayıcı reddederse WebAudio fallback çalışır.
  */
+const FILE_AMBIENCE_TARGET_VOLUME = 0.42;
+const FILE_AMBIENCE_FADE_IN_SEC = 7.2;
+
 export class AmbientWelcomeSound {
   private audio: HTMLAudioElement | null = null;
   private ctx: AudioContext | null = null;
@@ -31,7 +34,7 @@ export class AmbientWelcomeSound {
       this.audio = audio;
       await audio.play();
       this.running = true;
-      void this.fadeAudioVolume(0.54, 2.4);
+      void this.fadeAudioVolume(FILE_AMBIENCE_TARGET_VOLUME, FILE_AMBIENCE_FADE_IN_SEC);
       return true;
     } catch {
       audio.pause();
@@ -83,11 +86,11 @@ export class AmbientWelcomeSound {
     this.startBreathModulation(oceanGain, 0.072, 0.022, now);
     this.scheduleBellPhrase(1.9);
 
-    this.masterGain.gain.exponentialRampToValueAtTime(0.3, now + 2.4);
+    this.masterGain.gain.exponentialRampToValueAtTime(0.3, now + 6.2);
     this.running = true;
   }
 
-  async fadeOut(durationSec = 2.5): Promise<void> {
+  async fadeOut(durationSec = 4.2): Promise<void> {
     if (this.audio) {
       await this.fadeAudioVolume(0, durationSec);
       this.dispose();

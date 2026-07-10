@@ -175,7 +175,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
     eventQueueRef.current = Promise.resolve();
 
     try {
-      await preloadYamnet();
+      void preloadYamnet();
 
       const existing = await getActiveSession();
       const session = existing ?? createSession(userId);

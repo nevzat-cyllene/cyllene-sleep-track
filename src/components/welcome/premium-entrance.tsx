@@ -15,7 +15,7 @@ interface PremiumEntranceProps {
 const ease = [0.22, 1, 0.36, 1] as const;
 const moonFlowEase = [0.2, 0.72, 0.18, 1] as const;
 const moonEntryDuration = 9.1;
-const momentReadDuration = 5600;
+const momentReadDuration = 7000;
 const centerTransform = (_: unknown, generated: string) => `translateX(-50%) ${generated}`;
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
@@ -44,6 +44,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
   const [started, setStarted] = useState(false);
   const [soundOn, setSoundOn] = useState(false);
   const [moment, setMoment] = useState(0);
+  const [hasSeenMomentCycle, setHasSeenMomentCycle] = useState(false);
   const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
@@ -54,10 +55,13 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
   useEffect(() => {
     if (!started || exiting) return;
 
-    const next = window.setTimeout(
-      () => setMoment((value) => (value + 1) % MOMENTS.length),
-      reduceMotion ? 2400 : momentReadDuration
-    );
+    const next = window.setTimeout(() => {
+      const nextMoment = (moment + 1) % MOMENTS.length;
+      if (nextMoment === MOMENTS.length - 1) {
+        setHasSeenMomentCycle(true);
+      }
+      setMoment(nextMoment);
+    }, reduceMotion ? 2400 : momentReadDuration);
 
     return () => {
       window.clearTimeout(next);
@@ -66,6 +70,8 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
 
   const begin = useCallback(async () => {
     if (started) return;
+    setMoment(0);
+    setHasSeenMomentCycle(false);
     setStarted(true);
 
     try {
@@ -82,15 +88,15 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
     setExiting(true);
     markGuestSplashSeen();
     await Promise.all([
-      soundRef.current?.fadeOut(reduceMotion ? 0.2 : 0.95) ?? Promise.resolve(),
-      wait(reduceMotion ? 220 : 1120),
+      soundRef.current?.fadeOut(reduceMotion ? 0.2 : 4.2) ?? Promise.resolve(),
+      wait(reduceMotion ? 220 : 1250),
     ]);
     onComplete();
   }, [onComplete, reduceMotion]);
 
   const toggleSound = useCallback(() => {
     if (soundOn) {
-      void soundRef.current?.fadeOut(0.5);
+      void soundRef.current?.fadeOut(3.2);
       setSoundOn(false);
       return;
     }
@@ -424,12 +430,18 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      if (moment < MOMENTS.length - 1) setMoment((value) => value + 1);
-                      else void finish();
+                      if (hasSeenMomentCycle) void finish();
+                      else {
+                        const nextMoment = Math.min(moment + 1, MOMENTS.length - 1);
+                        if (nextMoment === MOMENTS.length - 1) {
+                          setHasSeenMomentCycle(true);
+                        }
+                        setMoment(nextMoment);
+                      }
                     }}
                     className="ml-auto flex h-13 items-center gap-3 rounded-full bg-white px-5 text-sm font-semibold text-[#06112a] shadow-[0_12px_42px_rgba(48,112,255,.3)] transition hover:scale-[1.02] sm:ml-0"
                   >
-                    {moment === MOMENTS.length - 1 ? "Sabaha geç" : "Devam"}
+                    {hasSeenMomentCycle ? "Sabaha geç" : "Devam"}
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
