@@ -24,7 +24,12 @@ import { Button } from "@/components/ui/button";
 import { SleepScoreRing } from "@/features/dashboard/components/sleep-score-ring";
 import { formatDate } from "@/lib/sleep-utils";
 import { formatDurationHours } from "@/lib/sleep-analytics";
+import { getSleepEventSummary } from "@/lib/sleep-event-summary";
 import type { LocalSleepSession, SleepSession } from "@/types";
+
+const REPORT_HANDOFF_MIN_MS = 1400;
+const waitForReportHandoff = () =>
+  new Promise((resolve) => window.setTimeout(resolve, REPORT_HANDOFF_MIN_MS));
 
 export function SleepPageClient() {
   const router = useRouter();
@@ -53,6 +58,8 @@ export function SleepPageClient() {
           toast.message("Giriş yapmadan kayıt cihazınızda saklandı.");
           router.push(`/journal/local/${session.id}`);
         }
+
+        await waitForReportHandoff();
       } finally {
         setSyncing(false);
       }
@@ -65,6 +72,7 @@ export function SleepPageClient() {
     currentDb,
     recentDbSamples,
     elapsedMs,
+    eventCount,
     wakeLockActive,
     wakeLockMethod,
     startRecording,
@@ -100,11 +108,14 @@ export function SleepPageClient() {
         recentDbSamples={recentDbSamples}
         wakeLockActive={wakeLockActive}
         wakeLockMethod={wakeLockMethod}
+        eventCount={eventCount}
         syncing={syncing || status === "stopping"}
         onStop={() => void stopRecording()}
       />
     );
   }
+
+  const lastSessionEventSummary = lastSession ? getSleepEventSummary(lastSession) : null;
 
   return (
     <div className="space-y-5 pb-[calc(7.25rem+env(safe-area-inset-bottom))] sm:space-y-8 sm:pb-3">
@@ -176,8 +187,10 @@ export function SleepPageClient() {
                 </div>
                 <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3">
                   <Waves className="mb-2 h-3.5 w-3.5 text-[#78b7ff]" />
-                  <p className="text-sm font-medium">{lastSession.snore_count}</p>
-                  <p className="mt-0.5 text-[10px] text-white/30">Horlama olayı</p>
+                  <p className="text-sm font-medium">{lastSessionEventSummary?.count ?? 0}</p>
+                  <p className="mt-0.5 text-[10px] text-white/30">
+                    {lastSessionEventSummary?.statTitle ?? "Ses olayı"}
+                  </p>
                 </div>
               </div>
             </div>

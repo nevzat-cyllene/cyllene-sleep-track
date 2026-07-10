@@ -74,6 +74,9 @@ function heuristicClassify(audio: Float32Array, sampleRate: number): {
   let midEnergy = 0;
   let highEnergy = 0;
   let peak = 0;
+  let activeChunks = 0;
+  let loudChunks = 0;
+  let chunkCount = 0;
 
   for (let i = 0; i < audio.length; i += chunkSize) {
     const chunk = audio.subarray(i, Math.min(i + chunkSize, audio.length));
@@ -81,6 +84,9 @@ function heuristicClassify(audio: Float32Array, sampleRate: number): {
     for (let j = 0; j < chunk.length; j++) rms += chunk[j] * chunk[j];
     rms = Math.sqrt(rms / chunk.length);
     peak = Math.max(peak, rms);
+    chunkCount += 1;
+    if (rms > 0.012) activeChunks += 1;
+    if (rms > 0.045) loudChunks += 1;
 
     const zeroCrossings = chunk.reduce((count, val, idx, arr) => {
       if (idx === 0) return 0;
@@ -94,14 +100,21 @@ function heuristicClassify(audio: Float32Array, sampleRate: number): {
   }
 
   const total = lowEnergy + midEnergy + highEnergy || 1;
+  const lowRatio = lowEnergy / total;
+  const midRatio = midEnergy / total;
+  const highRatio = highEnergy / total;
+  const activeRatio = activeChunks / Math.max(1, chunkCount);
+  const loudRatio = loudChunks / Math.max(1, chunkCount);
 
-  if (lowEnergy / total > 0.55 && peak > 0.02) {
-    return { type: "snore", confidence: 0.65 };
+  if ((highRatio > 0.34 || loudRatio > 0.18) && peak > 0.045) {
+    return { type: "cough", confidence: 0.64 };
   }
-  if (highEnergy / total > 0.4 && peak > 0.05) {
-    return { type: "cough", confidence: 0.6 };
+
+  if (lowRatio > 0.68 && highRatio < 0.22 && activeRatio > 0.42 && peak > 0.024) {
+    return { type: "snore", confidence: 0.62 };
   }
-  if (midEnergy / total > 0.35) {
+
+  if (midRatio > 0.35) {
     return { type: "talk", confidence: 0.55 };
   }
   return { type: "noise", confidence: 0.5 };
@@ -124,17 +137,30 @@ export async function classifyAudio(
 
     let bestType: SleepEventType = "noise";
     let bestScore = 0;
+    const mappedScores: Record<SleepEventType, number> = {
+      snore: 0,
+      cough: 0,
+      talk: 0,
+      noise: 0,
+    };
 
     for (let i = 0; i < Math.min(scores.length, YAMNET_CLASSES.length); i++) {
       const className = YAMNET_CLASSES[i];
       const mapped = CLASS_MAP[className];
+      if (mapped) {
+        mappedScores[mapped] = Math.max(mappedScores[mapped], scores[i]);
+      }
       if (mapped && scores[i] > bestScore) {
         bestScore = scores[i];
         bestType = mapped;
       }
     }
 
-    if (bestScore > 0.15) {
+    if (mappedScores.cough > 0.12 && mappedScores.cough >= mappedScores.snore * 0.82) {
+      return { type: "cough", confidence: Math.min(0.99, mappedScores.cough) };
+    }
+
+    if (bestScore > (bestType === "snore" ? 0.18 : 0.15)) {
       return { type: bestType, confidence: Math.min(0.99, bestScore) };
     }
   } catch {

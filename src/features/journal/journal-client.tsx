@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { DeleteConfirmSheet } from "@/components/ui/delete-confirm-sheet";
 import { SwipeAction } from "@/components/ui/swipe-action";
 import { cn } from "@/lib/utils";
+import { getSleepEventSummary } from "@/lib/sleep-event-summary";
 import { deleteRemoteSleepSession } from "@/features/recording/sync-session";
 import type { SleepSession } from "@/types";
 
@@ -144,6 +145,7 @@ export function JournalClient({ sessions }: JournalClientProps) {
             {monthSessions.map((session) => {
               const score = session.sleep_score ?? 0;
               const hasScore = session.sleep_score !== null && session.sleep_score !== undefined;
+              const eventSummary = getSleepEventSummary(session);
               return (
                 <SwipeAction
                   key={session.id}
@@ -185,7 +187,7 @@ export function JournalClient({ sessions }: JournalClientProps) {
                           </span>
                           <span className="flex items-center gap-1.5">
                             <Waves className="h-3 w-3 text-[#78b7ff]" />
-                            {session.snore_count} horlama
+                            {eventSummary.compactLabel}
                           </span>
                         </div>
                       </div>
