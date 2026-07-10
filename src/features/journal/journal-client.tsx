@@ -6,6 +6,7 @@ import { ArrowUpRight, BookOpen, CalendarDays, Clock3, MoonStar, Waves } from "l
 import { toast } from "sonner";
 import { formatDate } from "@/lib/sleep-utils";
 import { Button } from "@/components/ui/button";
+import { DeleteConfirmSheet } from "@/components/ui/delete-confirm-sheet";
 import { SwipeAction } from "@/components/ui/swipe-action";
 import { cn } from "@/lib/utils";
 import { deleteRemoteSleepSession } from "@/features/recording/sync-session";
@@ -37,6 +38,7 @@ function scoreTone(score: number) {
 export function JournalClient({ sessions }: JournalClientProps) {
   const [deletedSessionIds, setDeletedSessionIds] = useState(() => new Set<string>());
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
+  const [sessionToDelete, setSessionToDelete] = useState<SleepSession | null>(null);
 
   const visibleSessions = useMemo(
     () => sessions.filter((session) => !deletedSessionIds.has(session.id)),
@@ -51,15 +53,27 @@ export function JournalClient({ sessions }: JournalClientProps) {
     );
   }, [visibleSessions]);
 
-  const handleDeleteSession = async (session: SleepSession) => {
-    if (!window.confirm("Bu gece kaydı kalıcı olarak silinsin mi?")) return;
+  const handleDeleteSession = (session: SleepSession) => {
+    setSessionToDelete(session);
+  };
 
+  const confirmDeleteSession = async () => {
+    const session = sessionToDelete;
+    if (!session) return;
+
+    setSessionToDelete(null);
     setDeletingSessionId(session.id);
+    setDeletedSessionIds((current) => new Set(current).add(session.id));
+
     try {
       await deleteRemoteSleepSession(session.id);
-      setDeletedSessionIds((current) => new Set(current).add(session.id));
       toast.success("Gece kaydı silindi.");
     } catch (error) {
+      setDeletedSessionIds((current) => {
+        const next = new Set(current);
+        next.delete(session.id);
+        return next;
+      });
       toast.error(error instanceof Error ? error.message : "Gece kaydı silinemedi.");
     } finally {
       setDeletingSessionId(null);
@@ -187,6 +201,18 @@ export function JournalClient({ sessions }: JournalClientProps) {
           </div>
         </section>
       ))}
+
+      <DeleteConfirmSheet
+        open={Boolean(sessionToDelete)}
+        title="Gece kaydı silinsin mi?"
+        description="Bu geceye ait rapor, zaman çizelgesi ve senkron kayıtları kalıcı olarak silinecek."
+        confirmLabel="Geceyi sil"
+        isPending={Boolean(deletingSessionId)}
+        onOpenChange={(open) => {
+          if (!open) setSessionToDelete(null);
+        }}
+        onConfirm={confirmDeleteSession}
+      />
     </div>
   );
 }

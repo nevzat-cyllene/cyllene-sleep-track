@@ -12,6 +12,7 @@ import { formatDurationHours, formatWeekdayRange } from "@/lib/sleep-analytics";
 import { formatDate } from "@/lib/sleep-utils";
 import type { LocalSleepEvent, LocalSleepSession, SleepEvent, SleepNoiseSample, SleepSession } from "@/types";
 import { Button } from "@/components/ui/button";
+import { DeleteConfirmSheet } from "@/components/ui/delete-confirm-sheet";
 import { syncSessionToSupabase } from "@/features/recording/sync-session";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -88,6 +89,7 @@ export function LocalSessionDetailClient({
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [activeFilters] = useState(() => new Set(["snore", "cough", "talk", "noise"]));
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<SleepEvent | null>(null);
 
   useEffect(() => {
     void getSession(localSessionId).then((s) => {
@@ -109,23 +111,35 @@ export function LocalSessionDetailClient({
     }
   };
 
-  const handleDeleteLocalEvent = async (event: SleepEvent) => {
-    if (!local || !window.confirm("Bu olay kaydı silinsin mi?")) return;
+  const handleDeleteLocalEvent = (event: SleepEvent) => {
+    setEventToDelete(event);
+  };
 
+  const confirmDeleteLocalEvent = async () => {
+    const event = eventToDelete;
+    if (!local || !event) return;
+
+    const previousLocal = local;
+    const previousSelectedEventId = selectedEventId;
+    const updated = {
+      ...local,
+      events: local.events.filter((item) => item.id !== event.id),
+    };
+
+    setEventToDelete(null);
     setDeletingEventId(event.id);
+    setLocal(updated);
+    setSelectedEventId((selected) =>
+      selected === event.id ? updated.events[0]?.id ?? null : selected
+    );
+
     try {
-      const updated = {
-        ...local,
-        events: local.events.filter((item) => item.id !== event.id),
-      };
       await saveSession(updated);
       await deleteEventClip(event.id);
-      setLocal(updated);
-      setSelectedEventId((selected) =>
-        selected === event.id ? updated.events[0]?.id ?? null : selected
-      );
       toast.success("Olay silindi.");
     } catch (error) {
+      setLocal(previousLocal);
+      setSelectedEventId(previousSelectedEventId);
       toast.error(error instanceof Error ? error.message : "Olay silinemedi.");
     } finally {
       setDeletingEventId(null);
@@ -230,6 +244,18 @@ export function LocalSessionDetailClient({
           emptyMessage="Bu gece olay tespit edilmedi."
         />
       </div>
+
+      <DeleteConfirmSheet
+        open={Boolean(eventToDelete)}
+        title="Yerel ses olayı silinsin mi?"
+        description="Bu olay ve telefonda duran ses klibi cihazdan kaldırılacak."
+        confirmLabel="Olayı sil"
+        isPending={Boolean(deletingEventId)}
+        onOpenChange={(open) => {
+          if (!open) setEventToDelete(null);
+        }}
+        onConfirm={confirmDeleteLocalEvent}
+      />
     </div>
   );
 }

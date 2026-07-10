@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { DeleteConfirmSheet } from "@/components/ui/delete-confirm-sheet";
 import { SleepScoreRing } from "@/features/dashboard/components/sleep-score-ring";
 import { DetectedEventsList } from "@/features/dashboard/components/detected-events-list";
 import { NightSoundsChart } from "./components/night-sounds-chart";
@@ -48,6 +49,7 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
   );
   const [loading, setLoading] = useState(true);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<SleepEvent | null>(null);
 
   const toggleFilter = (type: string) => {
     setActiveFilters((prev) => {
@@ -78,26 +80,36 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
       .finally(() => setLoading(false));
   }, [sessionId, userId]);
 
-  const handleDeleteEvent = async (event: SleepEvent) => {
-    if (!window.confirm("Bu olay kaydı silinsin mi?")) return;
+  const handleDeleteEvent = (event: SleepEvent) => {
+    setEventToDelete(event);
+  };
 
+  const confirmDeleteEvent = async () => {
+    const event = eventToDelete;
+    if (!event) return;
+
+    const previousEvents = events;
+    const previousSelectedEventId = selectedEventId;
+    const previousSession = session;
+    const nextEvents = events.filter((item) => item.id !== event.id);
+
+    setEventToDelete(null);
     setDeletingEventId(event.id);
+    setEvents(nextEvents);
+    setSelectedEventId((selected) => (selected === event.id ? nextEvents[0]?.id ?? null : selected));
+    setSession((current) => {
+      if (!current) return current;
+      const key = countKeys[event.event_type];
+      return { ...current, [key]: Math.max(0, current[key] - 1) };
+    });
+
     try {
       await deleteRemoteSleepEvent(event.id, event.session_id, event.event_type);
-      setEvents((current) => {
-        const next = current.filter((item) => item.id !== event.id);
-        setSelectedEventId((selected) =>
-          selected === event.id ? next[0]?.id ?? null : selected
-        );
-        return next;
-      });
-      setSession((current) => {
-        if (!current) return current;
-        const key = countKeys[event.event_type];
-        return { ...current, [key]: Math.max(0, current[key] - 1) };
-      });
       toast.success("Olay silindi.");
     } catch (error) {
+      setEvents(previousEvents);
+      setSelectedEventId(previousSelectedEventId);
+      setSession(previousSession);
       toast.error(error instanceof Error ? error.message : "Olay silinemedi.");
     } finally {
       setDeletingEventId(null);
@@ -204,6 +216,18 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
           emptyMessage="Bu gece olay tespit edilmedi."
         />
       </div>
+
+      <DeleteConfirmSheet
+        open={Boolean(eventToDelete)}
+        title="Ses olayı silinsin mi?"
+        description="Bu olay listeden kaldırılacak ve varsa cihazdaki ses klibi de temizlenecek."
+        confirmLabel="Olayı sil"
+        isPending={Boolean(deletingEventId)}
+        onOpenChange={(open) => {
+          if (!open) setEventToDelete(null);
+        }}
+        onConfirm={confirmDeleteEvent}
+      />
     </div>
   );
 }

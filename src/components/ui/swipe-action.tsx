@@ -12,7 +12,8 @@ interface SwipeActionProps {
   onAction: () => void | Promise<void>;
 }
 
-const ACTION_WIDTH = 88;
+const ACTION_WIDTH = 84;
+const OPEN_THRESHOLD = 30;
 
 export function SwipeAction({
   children,
@@ -38,9 +39,10 @@ export function SwipeAction({
   return (
     <div className={cn("relative overflow-hidden rounded-[1.45rem] bg-[#071222]", className)}>
       <div
-        className="absolute inset-y-0 right-0 flex w-[88px] items-stretch justify-end transition-opacity duration-100"
+        className="absolute inset-y-0 right-0 flex w-[84px] items-stretch justify-end transition-[opacity,transform] duration-75 ease-out"
         style={{
-          opacity: Math.min(1, Math.abs(offset) / 26),
+          opacity: Math.min(1, Math.abs(offset) / 14),
+          transform: `translateX(${Math.max(0, ACTION_WIDTH + offset) * 0.18}px)`,
           pointerEvents: offset === 0 ? "none" : "auto",
         }}
       >
@@ -53,7 +55,7 @@ export function SwipeAction({
             void onAction();
             close();
           }}
-          className="my-1 flex w-20 flex-col items-center justify-center gap-1 rounded-2xl border border-rose-300/20 bg-rose-500/90 text-[10px] font-semibold text-white shadow-[0_14px_36px_rgba(244,63,94,.28)] transition duration-150 hover:bg-rose-500 disabled:opacity-55"
+          className="my-1 flex w-[76px] flex-col items-center justify-center gap-1 rounded-2xl border border-rose-200/18 bg-[linear-gradient(145deg,rgba(255,72,108,.96),rgba(206,42,78,.94))] text-[10px] font-semibold text-white shadow-[0_14px_36px_rgba(244,63,94,.32),inset_0_1px_0_rgba(255,255,255,.16)] transition duration-75 active:scale-[0.97] disabled:opacity-55"
           aria-label={actionLabel}
         >
           <Trash2 className="h-4 w-4" />
@@ -64,7 +66,7 @@ export function SwipeAction({
       <div
         className={cn(
           "relative z-10 touch-pan-y rounded-[inherit] bg-[#071222]",
-          dragging ? "transition-none" : "transition-transform duration-150 ease-out"
+          dragging ? "transition-none" : "transition-transform duration-100 ease-out will-change-transform"
         )}
         style={{ transform: `translateX(${offset}px)` }}
         onPointerDown={(event) => {
@@ -87,6 +89,7 @@ export function SwipeAction({
           const dx = event.clientX - startX.current;
           const dy = event.clientY - startY.current;
           if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 12) return;
+          if (event.cancelable) event.preventDefault();
 
           const next = Math.min(0, Math.max(-ACTION_WIDTH, startOffset.current + dx));
           if (Math.abs(dx) > 6) {
@@ -99,7 +102,10 @@ export function SwipeAction({
         onPointerUp={(event) => {
           if (actionDisabled) return;
           setDragging(false);
-          const next = currentOffset.current <= -ACTION_WIDTH / 2 ? -ACTION_WIDTH : 0;
+          const next = currentOffset.current <= -OPEN_THRESHOLD ? -ACTION_WIDTH : 0;
+          if (next < 0 && currentOffset.current > -ACTION_WIDTH) {
+            navigator.vibrate?.(8);
+          }
           currentOffset.current = next;
           setOffset(next);
           try {
