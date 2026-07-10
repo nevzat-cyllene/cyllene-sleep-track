@@ -87,13 +87,9 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
     doneRef.current = true;
     setExiting(true);
     markGuestSplashSeen();
-    await Promise.all([
-      Promise.race([
-        soundRef.current?.fadeOut(reduceMotion ? 0.2 : 4.2) ?? Promise.resolve(),
-        wait(reduceMotion ? 400 : 4500),
-      ]),
-      wait(reduceMotion ? 220 : 1250),
-    ]);
+    // Never block exit on long audio fade — prior IndexSizeError left this awaiting forever.
+    void soundRef.current?.fadeOut(reduceMotion ? 0.2 : 1.4);
+    await wait(reduceMotion ? 220 : 900);
     onComplete();
   }, [onComplete, reduceMotion]);
 

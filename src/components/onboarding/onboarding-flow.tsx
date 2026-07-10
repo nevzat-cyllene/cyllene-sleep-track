@@ -81,10 +81,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setFinishing(true);
     markOnboardingComplete(answers);
 
-    await Promise.all([
-      soundRef.current?.fadeOut(0.9) ?? Promise.resolve(),
-      wait(760),
-    ]);
+    void soundRef.current?.fadeOut(0.9);
+    await wait(760);
 
     router.push("/sleep");
     await wait(420);

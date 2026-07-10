@@ -7,31 +7,44 @@ import { shouldShowGuestSplash } from "@/lib/guest-splash-storage";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 import { PremiumEntrance } from "./premium-entrance";
 
-type GateMode = "none" | "guest" | "onboarding";
+type GateMode = "loading" | "none" | "guest" | "onboarding";
 
 export function WelcomeGate({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<GateMode>("none");
-  const [ready, setReady] = useState(false);
+  const [mode, setMode] = useState<GateMode>("loading");
 
   useEffect(() => {
-    const supabase = createClient();
+    let cancelled = false;
 
-    void supabase.auth.getUser().then(({ data }) => {
-      const isLoggedIn = !!data.user;
+    const fallback = window.setTimeout(() => {
+      if (cancelled) return;
+      setMode((current) => {
+        if (current !== "loading") return current;
+        return shouldShowGuestSplash() ? "guest" : "none";
+      });
+    }, 1200);
 
-      if (!isLoggedIn && shouldShowGuestSplash()) {
-        setMode("guest");
-      } else if (isLoggedIn && shouldShowOnboarding()) {
-        setMode("onboarding");
-      } else {
-        setMode("none");
-      }
-      setReady(true);
-    });
+    void createClient()
+      .auth.getUser()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const isLoggedIn = !!data.user;
+        if (!isLoggedIn && shouldShowGuestSplash()) setMode("guest");
+        else if (isLoggedIn && shouldShowOnboarding()) setMode("onboarding");
+        else setMode("none");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setMode(shouldShowGuestSplash() ? "guest" : "none");
+      });
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(fallback);
+    };
   }, []);
 
   useEffect(() => {
-    if (mode !== "none") {
+    if (mode === "guest" || mode === "onboarding") {
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = "";
@@ -39,7 +52,7 @@ export function WelcomeGate({ children }: { children: React.ReactNode }) {
     }
   }, [mode]);
 
-  if (!ready) {
+  if (mode === "loading") {
     return (
       <div className="fixed inset-0 z-[260] flex items-center justify-center overflow-hidden bg-[#02050d] text-white">
         <div className="pointer-events-none absolute inset-0">
