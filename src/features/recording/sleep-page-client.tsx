@@ -107,11 +107,11 @@ export function SleepPageClient() {
   }
 
   return (
-    <div className="space-y-4 pb-8 sm:space-y-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="space-y-5 pb-[calc(7.25rem+env(safe-area-inset-bottom))] sm:space-y-8 sm:pb-3">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="flex items-center gap-2 text-[11px] text-[#78b7ff] sm:text-xs">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className="flex items-center gap-2 text-xs text-[#78b7ff]">
               <Sparkles className="h-3.5 w-3.5" />
               Uyku ritmin hazır
             </span>
@@ -120,10 +120,10 @@ export function SleepPageClient() {
               Cihaz içi analiz
             </span>
           </div>
-          <h1 className="text-[2.35rem] font-medium leading-[0.95] tracking-[-0.055em] sm:text-5xl">
+          <h1 className="text-4xl font-medium tracking-[-0.055em] sm:text-5xl">
             İyi geceler.
           </h1>
-          <p className="mt-2 max-w-lg text-[13px] leading-5 text-muted-foreground sm:mt-3 sm:text-base sm:leading-6">
+          <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">
             Telefonunu yakınına koy; Cyllene gece sinyallerini sabah raporuna dönüştürsün.
           </p>
         </div>
