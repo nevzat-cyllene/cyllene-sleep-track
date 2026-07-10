@@ -217,7 +217,7 @@ export function AppSidebar() {
             Ham ses cihazında kalır. Sabah raporu hesabınla senkron görünür.
           </p>
         </div>
-        <div className="group-data-[collapsible=icon]/sidebar-wrapper:hidden">
+        <div className="group-data-[collapsible=icon]/sidebar-wrapper:hidden md:hidden">
           <InstallPWA />
         </div>
       </SidebarFooter>

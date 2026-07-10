@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Download, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getDevicePlatform } from "@/lib/recording-device";
 import { cn } from "@/lib/utils";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -52,12 +53,23 @@ function isStandaloneDisplayMode() {
   }
 }
 
+function isMobileInstallTarget() {
+  const platform = getDevicePlatform();
+  return platform === "ios" || platform === "android";
+}
+
 export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(isStandaloneDisplayMode);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    if (installed) return;
+    setIsMobile(isMobileInstallTarget());
+  }, []);
+
+  useEffect(() => {
+    // Desktop'ta install prompt'u yakalama — konsol uyarısı ve gereksiz UI olmasın.
+    if (installed || !isMobile) return;
 
     const markInstalled = () => {
       storeInstallFlag();
@@ -76,21 +88,22 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
     const navigatorWithInstall = window.navigator as InstallPWANavigator;
     const relatedAppsPromise = navigatorWithInstall.getInstalledRelatedApps?.();
     if (relatedAppsPromise) {
-      void relatedAppsPromise.then((apps) => {
-        if (apps.length > 0) markInstalled();
-      })
-      .catch(() => {
-        // Bu API her tarayıcıda yok; yükleme akışını bozmasın.
-      });
+      void relatedAppsPromise
+        .then((apps) => {
+          if (apps.length > 0) markInstalled();
+        })
+        .catch(() => {
+          // Bu API her tarayıcıda yok; yükleme akışını bozmasın.
+        });
     }
 
     return () => {
       window.removeEventListener("beforeinstallprompt", installPromptHandler);
       window.removeEventListener("appinstalled", markInstalled);
     };
-  }, [installed]);
+  }, [installed, isMobile]);
 
-  if (installed || !deferredPrompt) return null;
+  if (!isMobile || installed || !deferredPrompt) return null;
 
   const handleInstall = async () => {
     try {

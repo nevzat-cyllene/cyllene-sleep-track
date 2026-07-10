@@ -134,11 +134,21 @@ export function getPreRecordingGuidance(
     };
   }
 
+  // Install / "Ana ekrana ekle" guidance is mobile-only.
+  if (platform === "android") {
+    return {
+      status: "warning",
+      title: "Ana ekrana eklemenizi öneririz",
+      message:
+        "Tarayıcı sekmesinden kayıt yapabilirsiniz; ancak ana ekrana eklediğinizde ekran uyanık kalma ve mikrofon daha güvenilir çalışır.",
+      steps: ["Tarayıcı menüsünden Ana Ekrana Ekle / Uygulamayı yükle"],
+    };
+  }
+
   return {
-    status: "warning",
-    title: "Ana ekrana eklemenizi öneririz",
+    status: "ok",
+    title: "Tarayıcıdan kayıt",
     message:
-      "Tarayıcı sekmesinden kayıt yapabilirsiniz; ancak ana ekrana eklediğinizde ekran uyanık kalma ve mikrofon daha güvenilir çalışır.",
-    steps: ["Tarayıcı menüsünden Ana Ekrana Ekle / Uygulamayı yükle"],
+      "Kayıt bu sekme açıkken devam eder. Bilgisayarın uyku moduna geçmesini engelleyin ve sekmeyi kapatmayın.",
   };
 }

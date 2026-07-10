@@ -77,7 +77,7 @@ export function ProfileClient({ profile, email }: ProfileClientProps) {
         </Card>
       )}
 
-      <Card className="glass border-white/10 shadow-soft">
+      <Card className="glass border-white/10 shadow-soft md:hidden">
         <CardHeader>
           <CardTitle className="text-lg">Uygulama</CardTitle>
         </CardHeader>
