@@ -161,50 +161,65 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
         <div className="absolute inset-x-0 bottom-0 h-[44%] bg-[linear-gradient(180deg,transparent_0%,#02050d_82%)]" />
 
         <motion.div
-          className="absolute z-[2] h-72 w-72 rounded-full border border-[#9cc8ff]/18 bg-[radial-gradient(circle,rgba(178,211,255,.16)_0%,rgba(94,143,255,.07)_45%,transparent_72%)] blur-[0.3px] sm:h-96 sm:w-96"
-          initial={{ left: "88%", top: "5%", x: "-50%", opacity: 0, scale: 0.48, rotate: -24 }}
+          className="absolute left-1/2 top-[14%] z-[2] h-72 w-72 rounded-full border border-[#9cc8ff]/18 bg-[radial-gradient(circle,rgba(178,211,255,.16)_0%,rgba(94,143,255,.07)_45%,transparent_72%)] blur-[0.3px] will-change-transform sm:h-96 sm:w-96"
+          initial={{ x: "calc(-50% + 38vw)", y: "-9vh", opacity: 0, scale: 0.38, rotate: -24 }}
           animate={{
-            left: exiting ? "70%" : started ? "50%" : ["88%", "80%", "64%", "50%"],
-            top: exiting ? "-8%" : started ? "15%" : ["5%", "7%", "11.5%", "14%"],
-            x: "-50%",
+            x: exiting
+              ? "calc(-50% + 20vw)"
+              : started
+                ? "-50%"
+                : [
+                    "calc(-50% + 38vw)",
+                    "calc(-50% + 29vw)",
+                    "calc(-50% + 14vw)",
+                    "-50%",
+                  ],
+            y: exiting ? "-22vh" : started ? "1vh" : ["-9vh", "-7vh", "-2.8vh", "0vh"],
             opacity: exiting ? 0 : started ? 0.18 : [0, 0.16, 0.34, 0.22],
-            scale: exiting ? 0.88 : started ? 1.2 : [0.48, 0.68, 0.94, 1],
+            scale: exiting ? 0.88 : started ? 1.2 : [0.38, 0.58, 0.9, 1],
             rotate: exiting ? 24 : started ? 14 : [-24, -12, 4, 10],
           }}
           transition={{
-            duration: reduceMotion ? 0.2 : exiting ? 0.95 : started ? 1.15 : 4.7,
+            duration: reduceMotion ? 0.2 : exiting ? 0.9 : started ? 1.05 : 3.35,
             ease,
           }}
         />
         <motion.div
-          className="absolute z-[3] h-52 w-52 sm:h-72 sm:w-72"
+          className="absolute left-1/2 top-[14%] z-[3] h-52 w-52 will-change-transform sm:h-72 sm:w-72"
           style={{ perspective: 1100 }}
           initial={{
-            left: "88%",
-            top: "5%",
-            x: "-50%",
+            x: "calc(-50% + 40vw)",
+            y: "-9vh",
             opacity: 0,
-            scale: 0.42,
+            scale: 0.34,
             rotateX: 18,
             rotateY: -48,
             rotateZ: 20,
             filter: "blur(14px)",
           }}
           animate={{
-            left: exiting ? "68%" : started ? "50%" : ["88%", "79%", "64%", "50%"],
-            top: exiting ? "-10%" : started ? "14%" : ["5%", "8%", "11.5%", "14%"],
-            x: "-50%",
+            x: exiting
+              ? "calc(-50% + 20vw)"
+              : started
+                ? "-50%"
+                : [
+                    "calc(-50% + 40vw)",
+                    "calc(-50% + 31vw)",
+                    "calc(-50% + 15vw)",
+                    "-50%",
+                  ],
+            y: exiting ? "-24vh" : started ? "0vh" : ["-9vh", "-6vh", "-2.5vh", "0vh"],
             opacity: exiting ? 0 : started ? 0.78 : 0.97,
-            scale: exiting ? 0.86 : started ? 1.04 : [0.42, 0.62, 0.9, 1],
+            scale: exiting ? 0.86 : started ? 1.04 : [0.34, 0.53, 0.86, 1],
             rotateX: exiting ? -8 : started ? 5 : [18, 11, 4, 0],
             rotateY: exiting ? 42 : started ? 14 : [-48, -30, -12, 0],
             rotateZ: exiting ? 16 : started ? 7 : [20, 12, 4, 0],
             filter: exiting ? "blur(18px)" : "blur(0px)",
           }}
-          transition={{ duration: reduceMotion ? 0.2 : exiting ? 0.95 : started ? 1.2 : 4.85, ease }}
+          transition={{ duration: reduceMotion ? 0.2 : exiting ? 0.9 : started ? 1.05 : 3.45, ease }}
         >
           <motion.div
-            className="relative h-full w-full overflow-hidden rounded-full border border-white/16 bg-[#07111f]/35 shadow-[0_0_88px_rgba(152,198,255,.34),0_0_210px_rgba(30,118,255,.18)]"
+            className="relative h-full w-full overflow-hidden rounded-full border border-white/16 bg-[#07111f]/35 shadow-[0_0_88px_rgba(152,198,255,.34),0_0_210px_rgba(30,118,255,.18)] will-change-transform"
             style={{ transformStyle: "preserve-3d" }}
             animate={
               reduceMotion || exiting
@@ -227,16 +242,24 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
         </motion.div>
 
         <motion.div
-          className="absolute z-[1] h-64 w-[28rem] rounded-full bg-[radial-gradient(ellipse,rgba(150,190,255,.2)_0%,rgba(78,132,255,.075)_43%,transparent_73%)] blur-2xl sm:h-80 sm:w-[38rem]"
-          initial={{ left: "86%", top: "8%", x: "-50%", opacity: 0, scale: 0.58 }}
+          className="absolute left-1/2 top-[16%] z-[1] h-64 w-[28rem] rounded-full bg-[radial-gradient(ellipse,rgba(150,190,255,.2)_0%,rgba(78,132,255,.075)_43%,transparent_73%)] blur-2xl will-change-transform sm:h-80 sm:w-[38rem]"
+          initial={{ x: "calc(-50% + 36vw)", y: "-8vh", opacity: 0, scale: 0.48 }}
           animate={{
-            left: exiting ? "64%" : started ? "50%" : ["86%", "77%", "62%", "50%"],
-            top: exiting ? "-7%" : started ? "16%" : ["8%", "10%", "14%", "16%"],
-            x: "-50%",
+            x: exiting
+              ? "calc(-50% + 14vw)"
+              : started
+                ? "-50%"
+                : [
+                    "calc(-50% + 36vw)",
+                    "calc(-50% + 27vw)",
+                    "calc(-50% + 12vw)",
+                    "-50%",
+                  ],
+            y: exiting ? "-20vh" : started ? "0vh" : ["-8vh", "-5.5vh", "-2vh", "0vh"],
             opacity: exiting ? 0 : started ? 0.34 : [0, 0.22, 0.5, 0.46],
-            scale: exiting ? 0.86 : started ? 1.08 : [0.58, 0.74, 0.96, 1],
+            scale: exiting ? 0.86 : started ? 1.08 : [0.48, 0.68, 0.94, 1],
           }}
-          transition={{ duration: reduceMotion ? 0.2 : exiting ? 0.95 : started ? 1.2 : 4.9, ease }}
+          transition={{ duration: reduceMotion ? 0.2 : exiting ? 0.9 : started ? 1.05 : 3.5, ease }}
         />
 
         <div className="absolute inset-x-0 bottom-0 h-[28%] opacity-80">
