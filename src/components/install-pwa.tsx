@@ -9,15 +9,21 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+function isStandaloneDisplayMode() {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.matchMedia?.("(display-mode: standalone)").matches ?? false;
+  } catch {
+    return false;
+  }
+}
+
 export function InstallPWA() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(false);
+  const [installed, setInstalled] = useState(isStandaloneDisplayMode);
 
   useEffect(() => {
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setInstalled(true);
-      return;
-    }
+    if (installed) return;
 
     const handler = (e: Event) => {
       e.preventDefault();
@@ -26,15 +32,18 @@ export function InstallPWA() {
 
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+  }, [installed]);
 
   if (installed || !deferredPrompt) return null;
 
   const handleInstall = async () => {
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") setInstalled(true);
-    setDeferredPrompt(null);
+    try {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") setInstalled(true);
+    } finally {
+      setDeferredPrompt(null);
+    }
   };
 
   return (

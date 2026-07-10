@@ -34,37 +34,39 @@ const LABELS = {
   },
 } as const;
 
+function getLabel<T extends Record<string, string>>(map: T, value: unknown) {
+  if (typeof value !== "string") return null;
+  return map[value as keyof T] ?? null;
+}
+
 export function formatOnboardingSummary(answers: OnboardingAnswers) {
   const rows: { label: string; value: string }[] = [];
 
-  if (answers.sleepSatisfaction) {
-    rows.push({
-      label: "Uyku memnuniyeti",
-      value: LABELS.sleepSatisfaction[answers.sleepSatisfaction],
-    });
+  const sleepSatisfaction = getLabel(LABELS.sleepSatisfaction, answers.sleepSatisfaction);
+  if (sleepSatisfaction) {
+    rows.push({ label: "Uyku memnuniyeti", value: sleepSatisfaction });
   }
-  if (answers.sleepHours) {
-    rows.push({
-      label: "Hedef uyku süresi",
-      value: LABELS.sleepHours[answers.sleepHours],
-    });
+
+  const sleepHours = getLabel(LABELS.sleepHours, answers.sleepHours);
+  if (sleepHours) {
+    rows.push({ label: "Hedef uyku süresi", value: sleepHours });
   }
-  if (answers.nightWaking) {
-    rows.push({
-      label: "Gece uyanma",
-      value: LABELS.nightWaking[answers.nightWaking],
-    });
+
+  const nightWaking = getLabel(LABELS.nightWaking, answers.nightWaking);
+  if (nightWaking) {
+    rows.push({ label: "Gece uyanma", value: nightWaking });
   }
-  if (answers.snoringConcern) {
-    rows.push({
-      label: "Horlama",
-      value: LABELS.snoringConcern[answers.snoringConcern],
-    });
+
+  const snoringConcern = getLabel(LABELS.snoringConcern, answers.snoringConcern);
+  if (snoringConcern) {
+    rows.push({ label: "Horlama", value: snoringConcern });
   }
-  if (answers.healthConditions?.length) {
+
+  if (Array.isArray(answers.healthConditions) && answers.healthConditions.length) {
     const health = answers.healthConditions
-      .filter((c) => c !== "none")
-      .map((c) => LABELS.healthConditions[c])
+      .filter((condition) => condition !== "none")
+      .map((condition) => getLabel(LABELS.healthConditions, condition))
+      .filter(Boolean)
       .join(", ");
     rows.push({
       label: "Sağlık",

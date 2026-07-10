@@ -12,9 +12,9 @@ const WELCOME_KEY = "cyllene-welcome-complete";
 
 export function getOnboardingAnswers(): OnboardingAnswers | null {
   if (typeof window === "undefined") return null;
-  const raw = localStorage.getItem(ONBOARDING_KEY);
-  if (!raw) return null;
   try {
+    const raw = localStorage.getItem(ONBOARDING_KEY);
+    if (!raw) return null;
     return JSON.parse(raw) as OnboardingAnswers;
   } catch {
     return null;
@@ -22,16 +22,28 @@ export function getOnboardingAnswers(): OnboardingAnswers | null {
 }
 
 export function saveOnboardingAnswers(answers: OnboardingAnswers): void {
-  localStorage.setItem(ONBOARDING_KEY, JSON.stringify(answers));
+  try {
+    localStorage.setItem(ONBOARDING_KEY, JSON.stringify(answers));
+  } catch {
+    // Storage can be blocked or unavailable in some browser modes.
+  }
 }
 
 export function hasCompletedOnboarding(): boolean {
   if (typeof window === "undefined") return true;
-  return localStorage.getItem(WELCOME_KEY) === "1";
+  try {
+    return localStorage.getItem(WELCOME_KEY) === "1";
+  } catch {
+    return true;
+  }
 }
 
 export function markOnboardingComplete(answers?: OnboardingAnswers): void {
-  localStorage.setItem(WELCOME_KEY, "1");
+  try {
+    localStorage.setItem(WELCOME_KEY, "1");
+  } catch {
+    // Storage can be blocked or unavailable in some browser modes.
+  }
   if (answers) {
     saveOnboardingAnswers({ ...answers, completedAt: Date.now() });
   }
