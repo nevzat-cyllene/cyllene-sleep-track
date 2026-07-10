@@ -1,8 +1,26 @@
 import * as tf from "@tensorflow/tfjs";
 import type { SleepEventType } from "@/types";
 
-const YAMNET_MODEL_URL =
-  process.env.NEXT_PUBLIC_YAMNET_MODEL_URL?.trim() ?? "";
+/**
+ * Browser cannot load models from tfhub.dev (CORS). Only use a same-origin or
+ * CORS-enabled URL via NEXT_PUBLIC_YAMNET_MODEL_URL. Otherwise heuristic runs.
+ */
+const RAW_YAMNET_MODEL_URL = process.env.NEXT_PUBLIC_YAMNET_MODEL_URL?.trim() ?? "";
+
+function resolveYamnetLoadConfig(rawUrl: string): { url: string; fromTFHub: boolean } | null {
+  if (!rawUrl) return null;
+  // TF Hub blocks browser fetches — never attempt it from the client.
+  if (rawUrl.includes("tfhub.dev")) return null;
+
+  const hasModelJson = /model\.json(\?|$)/.test(rawUrl);
+  return {
+    url: rawUrl,
+    // fromTFHub appends /model.json — only when the URL is a bare hub-style path.
+    fromTFHub: !hasModelJson,
+  };
+}
+
+const YAMNET_LOAD = resolveYamnetLoadConfig(RAW_YAMNET_MODEL_URL);
 
 const CLASS_MAP: Record<string, SleepEventType> = {
   Snoring: "snore",
@@ -35,7 +53,7 @@ let model: tf.GraphModel | null = null;
 let loading: Promise<tf.GraphModel> | null = null;
 
 export async function loadYamnetModel(): Promise<tf.GraphModel> {
-  if (!YAMNET_MODEL_URL) {
+  if (!YAMNET_LOAD) {
     throw new Error("YAMNet model URL is not configured; heuristic classifier is active.");
   }
 
@@ -44,10 +62,8 @@ export async function loadYamnetModel(): Promise<tf.GraphModel> {
 
   loading = tf
     .loadGraphModel(
-      YAMNET_MODEL_URL,
-      YAMNET_MODEL_URL.includes("tfhub.dev") && !YAMNET_MODEL_URL.endsWith(".json")
-        ? { fromTFHub: true }
-        : undefined
+      YAMNET_LOAD.url,
+      YAMNET_LOAD.fromTFHub ? { fromTFHub: true } : undefined
     )
     .then((m) => {
       model = m;
@@ -186,7 +202,7 @@ export async function classifyAudio(
 }
 
 export async function preloadYamnet(): Promise<void> {
-  if (!YAMNET_MODEL_URL) return;
+  if (!YAMNET_LOAD) return;
 
   try {
     await loadYamnetModel();

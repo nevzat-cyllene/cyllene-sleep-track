@@ -175,6 +175,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
     eventQueueRef.current = Promise.resolve();
 
     try {
+      // Never await model preload — tfhub/CORS must not block mic start.
       void preloadYamnet();
 
       const existing = await getActiveSession();
@@ -196,6 +197,9 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
 
       const audioContext = new AudioContext();
       audioContextRef.current = audioContext;
+      if (audioContext.state === "suspended") {
+        await audioContext.resume();
+      }
 
       await audioContext.audioWorklet.addModule("/audio-processor.js");
       const source = audioContext.createMediaStreamSource(stream);
