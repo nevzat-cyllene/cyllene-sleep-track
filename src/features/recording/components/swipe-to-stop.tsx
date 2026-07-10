@@ -47,7 +47,7 @@ export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
       </p>
       <div
         className={cn(
-          "relative flex h-16 w-full touch-none select-none items-end justify-center rounded-full border border-white/10 bg-white/5",
+          "relative flex h-16 w-full touch-none select-none items-end justify-center overflow-hidden rounded-full border border-[#8dbdff]/14 bg-[linear-gradient(180deg,rgba(23,105,255,.11),rgba(255,255,255,.035))] shadow-[0_16px_60px_rgba(23,105,255,.16),inset_0_1px_0_rgba(255,255,255,.08)]",
           disabled && "opacity-50"
         )}
         onPointerDown={onPointerDown}
@@ -56,13 +56,13 @@ export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
         onPointerCancel={onPointerUp}
       >
         <div
-          className="absolute inset-x-0 bottom-0 rounded-full bg-cyllene-cyan/20 transition-all"
+          className="absolute inset-x-0 bottom-0 rounded-full bg-[linear-gradient(180deg,rgba(111,210,255,.3),rgba(23,105,255,.18))] transition-all"
           style={{ height: `${Math.max(28, 28 + progress * 36)}px` }}
         />
         <button
           type="button"
           disabled={disabled}
-          className="relative z-10 mb-2 flex flex-col items-center gap-1 rounded-full px-6 py-2 text-white/70 transition-transform"
+          className="relative z-10 mb-2 flex flex-col items-center gap-1 rounded-full px-6 py-2 text-[#bddcff]/76 transition-transform"
           style={{ transform: `translateY(-${dragY}px)` }}
         >
           <ChevronUp className={cn("h-5 w-5", progress > 0.6 && "text-cyllene-cyan")} />

@@ -34,6 +34,10 @@ interface WorkletEventMessage {
   sampleRate: number;
 }
 
+interface WorkletFlushedMessage {
+  type: "flushed";
+}
+
 const LIVE_WAVE_SAMPLES = 120;
 
 function bucketNoiseSamples(session: LocalSleepSession) {
@@ -59,6 +63,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
   const [error, setError] = useState<string | null>(null);
   const [wakeLockActive, setWakeLockActive] = useState(false);
   const [wakeLockMethod, setWakeLockMethod] = useState<WakeLockMethod>("none");
+  const [currentSession, setCurrentSession] = useState<LocalSleepSession | null>(null);
 
   const sessionRef = useRef<LocalSleepSession | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -69,7 +74,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
   const elapsedIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const wasHiddenRef = useRef(false);
   const eventQueueRef = useRef<Promise<void>>(Promise.resolve());
-  const stoppingRef = useRef(false);
+  const flushResolveRef = useRef<(() => void) | null>(null);
 
   const persistSession = useCallback(async () => {
     if (sessionRef.current) {
@@ -80,7 +85,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
   const enqueueEvent = useCallback(
     (payload: PendingEventPayload) => {
       eventQueueRef.current = eventQueueRef.current.then(async () => {
-        if (!sessionRef.current || stoppingRef.current) return;
+        if (!sessionRef.current) return;
 
         const sampleRate = payload.pendingEvent.durationMs > 0
           ? audioContextRef.current?.sampleRate ?? 44100
@@ -118,6 +123,26 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
     await eventQueueRef.current;
   }, []);
 
+  const flushActiveEvent = useCallback(async () => {
+    const worklet = workletRef.current;
+    if (!worklet) return;
+
+    await new Promise<void>((resolve) => {
+      const timeout = window.setTimeout(() => {
+        flushResolveRef.current = null;
+        resolve();
+      }, 700);
+
+      flushResolveRef.current = () => {
+        window.clearTimeout(timeout);
+        flushResolveRef.current = null;
+        resolve();
+      };
+
+      worklet.port.postMessage({ type: "flush" });
+    });
+  }, []);
+
   const cleanupAudio = useCallback(async () => {
     if (saveIntervalRef.current) {
       clearInterval(saveIntervalRef.current);
@@ -147,7 +172,6 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
   const startRecording = useCallback(async () => {
     setError(null);
     setStatus("preparing");
-    stoppingRef.current = false;
     eventQueueRef.current = Promise.resolve();
 
     try {
@@ -157,6 +181,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
       const session = existing ?? createSession(userId);
       if (userId) session.userId = userId;
       sessionRef.current = session;
+      setCurrentSession(session);
 
       const sessionOffsetMs = Date.now() - session.startedAt;
 
@@ -185,7 +210,13 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
       worklet.port.onmessage = (event) => {
         const data = event.data as
           | { type: "level"; db: number; elapsedMs: number }
-          | WorkletEventMessage;
+          | WorkletEventMessage
+          | WorkletFlushedMessage;
+
+        if (data.type === "flushed") {
+          flushResolveRef.current?.();
+          return;
+        }
 
         if (!sessionRef.current) return;
 
@@ -255,8 +286,8 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
 
   const stopRecording = useCallback(async () => {
     setStatus("stopping");
-    stoppingRef.current = true;
 
+    await flushActiveEvent();
     await cleanupAudio();
     await drainEventQueue();
 
@@ -283,8 +314,8 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
     setCurrentDb(0);
     setRecentDbSamples([]);
     setElapsedMs(0);
-    stoppingRef.current = false;
-  }, [cleanupAudio, drainEventQueue, onSessionComplete]);
+    setCurrentSession(null);
+  }, [cleanupAudio, drainEventQueue, flushActiveEvent, onSessionComplete]);
 
   useEffect(() => {
     const onVisibility = () => {
@@ -328,6 +359,6 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
     wakeLockMethod,
     startRecording,
     stopRecording,
-    session: sessionRef.current,
+    session: currentSession,
   };
 }

@@ -155,8 +155,14 @@ export function SleepModeScreen({
         : "Kayıt kesilebilir";
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-black text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,oklch(0.78_0.14_195/10%),transparent)]" />
+    <div className="fixed inset-0 z-[60] flex flex-col overflow-hidden bg-[#020816] text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="night-stars absolute inset-0 opacity-[0.18]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_86%_52%_at_50%_-12%,rgba(111,210,255,.16),transparent_62%),radial-gradient(circle_at_18%_22%,rgba(23,105,255,.12),transparent_34%),linear-gradient(180deg,rgba(2,8,22,.2)_0%,rgba(2,8,22,.88)_72%,rgba(1,5,14,.96)_100%)]" />
+        <div className="absolute left-1/2 top-[-13rem] h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-[#1769ff]/18 blur-[115px]" />
+        <div className="absolute bottom-[-15rem] right-[-10rem] h-[30rem] w-[30rem] rounded-full bg-[#6fd2ff]/12 blur-[120px]" />
+        <div className="absolute inset-x-8 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(151,199,255,.42),transparent)]" />
+      </div>
 
       <div className="relative z-10 flex flex-1 flex-col px-4 pb-8 pt-10">
         {wakeLockStatus !== "active" && (
@@ -170,8 +176,8 @@ export function SleepModeScreen({
 
         <div className="flex flex-1 flex-col items-center justify-center gap-10">
           <div className="text-center">
-            <p className="text-[11px] uppercase tracking-[0.45em] text-white/30">Şu an</p>
-            <p className="mt-2 text-5xl font-extralight tracking-wider tabular-nums sm:text-6xl">
+            <p className="text-[11px] uppercase tracking-[0.45em] text-[#8dbdff]/45">Şu an</p>
+            <p className="mt-2 text-5xl font-extralight tracking-wider tabular-nums text-white sm:text-6xl">
               {formatWallClock(wallClock)}
             </p>
           </div>
@@ -186,7 +192,7 @@ export function SleepModeScreen({
                 Uyku süresi
               </p>
             </div>
-            <p className="font-mono text-5xl font-light tabular-nums tracking-tight text-white sm:text-6xl">
+            <p className="font-mono text-5xl font-light tabular-nums tracking-tight text-[#eef7ff] drop-shadow-[0_0_28px_rgba(111,210,255,.14)] sm:text-6xl">
               {formatElapsedClock(elapsedMs)}
             </p>
           </div>
@@ -196,7 +202,7 @@ export function SleepModeScreen({
           <p
             className={cn(
               "text-xs uppercase tracking-[0.2em]",
-              wakeLockStatus === "active" ? "text-emerald-400/70" : "text-amber-400/70"
+              wakeLockStatus === "active" ? "text-[#75f2d6]/75" : "text-amber-300/75"
             )}
           >
             {statusLabel}
