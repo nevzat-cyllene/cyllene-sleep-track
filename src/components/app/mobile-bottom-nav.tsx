@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -24,7 +24,6 @@ export function MobileBottomNav() {
   const router = useRouter();
   const { isRecording } = useRecordingUI();
   const [pendingPath, setPendingPath] = useState<string | null>(null);
-  const pushFrameRef = useRef<number | null>(null);
 
   const warmRoute = useCallback(
     (href: string) => {
@@ -40,14 +39,6 @@ export function MobileBottomNav() {
   useEffect(() => {
     tabs.forEach(({ href }) => warmRoute(href));
   }, [warmRoute]);
-
-  useEffect(() => {
-    return () => {
-      if (pushFrameRef.current !== null) {
-        window.cancelAnimationFrame(pushFrameRef.current);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (!pendingPath) return;
@@ -71,13 +62,7 @@ export function MobileBottomNav() {
       }
 
       flushSync(() => setPendingPath(href));
-      if (pushFrameRef.current !== null) {
-        window.cancelAnimationFrame(pushFrameRef.current);
-      }
-      pushFrameRef.current = window.requestAnimationFrame(() => {
-        pushFrameRef.current = null;
-        router.push(href, { scroll: false });
-      });
+      router.push(href, { scroll: false });
     },
     [pathname, router, warmRoute]
   );
@@ -92,34 +77,18 @@ export function MobileBottomNav() {
   return (
     <>
       {isNavigating && pendingTab && PendingIcon && (
-        <div className="pointer-events-none fixed inset-x-3 bottom-[calc(6.25rem+env(safe-area-inset-bottom))] top-[max(4.75rem,env(safe-area-inset-top))] z-40 md:hidden">
-          <div className="relative h-full overflow-hidden rounded-[2rem] border border-[#8dbdff]/14 bg-[#050c18]/82 p-4 shadow-[0_24px_90px_rgba(0,4,18,.55),inset_0_1px_0_rgba(255,255,255,.07)] backdrop-blur-2xl animate-in fade-in-0 zoom-in-95 duration-100">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(23,105,255,.16),transparent_36%)]" />
-            <div className="relative">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#155eff]/18 text-[#8fc0ff] shadow-[0_12px_32px_rgba(23,105,255,.22)]">
-                  <PendingIcon className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-[#78b7ff]/72">
-                    Cyllene Flow
-                  </p>
-                  <p className="mt-1 text-sm font-medium">{pendingTab.label} hazırlanıyor</p>
-                </div>
+        <div className="pointer-events-none fixed inset-x-5 bottom-[calc(6.25rem+env(safe-area-inset-bottom))] z-40 md:hidden">
+          <div className="relative overflow-hidden rounded-2xl border border-[#8dbdff]/12 bg-[#061124]/78 px-4 py-3 shadow-[0_18px_54px_rgba(0,5,24,.38),inset_0_1px_0_rgba(255,255,255,.07)] backdrop-blur-2xl animate-in fade-in-0 slide-in-from-bottom-1 duration-75">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(111,210,255,.12),transparent_34%)]" />
+            <div className="relative flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#155eff]/16 text-[#8fc0ff]">
+                <PendingIcon className="h-4.5 w-4.5" />
               </div>
-              <div className="h-1 overflow-hidden rounded-full bg-white/[0.055]">
-                <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,#1769ff,#6fd2ff)] animate-pulse" />
-              </div>
-              <div className="mt-5 grid gap-3">
-                {[0, 1, 2].map((item) => (
-                  <div
-                    key={item}
-                    className="rounded-[1.35rem] border border-white/[0.055] bg-white/[0.035] p-4"
-                  >
-                    <div className="h-3 w-2/3 rounded-full bg-white/[0.08]" />
-                    <div className="mt-3 h-2.5 w-1/2 rounded-full bg-white/[0.045]" />
-                  </div>
-                ))}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-medium text-white/82">{pendingTab.label}</p>
+                <div className="mt-1 h-0.5 overflow-hidden rounded-full bg-white/[0.06]">
+                  <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,#1769ff,#6fd2ff)] animate-pulse" />
+                </div>
               </div>
             </div>
           </div>

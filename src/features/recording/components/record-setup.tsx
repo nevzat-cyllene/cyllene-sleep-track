@@ -39,16 +39,17 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
   if (compact) {
     return (
       <div className="space-y-4 -translate-y-2 sm:translate-y-0">
-        <div className="relative overflow-hidden rounded-[1.8rem] border border-[#8dbdff]/20 bg-[linear-gradient(135deg,rgba(35,92,168,.42)_0%,rgba(21,96,255,.25)_38%,rgba(12,31,73,.88)_100%)] p-6 shadow-[0_30px_100px_rgba(28,105,255,.24),inset_0_1px_0_rgba(255,255,255,.09)] sm:p-8">
-          <div className="night-stars pointer-events-none absolute inset-0 opacity-[0.16]" />
-          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#6fd2ff]/22 blur-[78px]" />
-          <div className="absolute -left-24 bottom-[-7rem] h-72 w-72 rounded-full bg-[#1769ff]/24 blur-[90px]" />
+        <div className="relative overflow-hidden rounded-[1.8rem] border border-[#8dbdff]/13 bg-[linear-gradient(145deg,rgba(16,31,62,.86)_0%,rgba(8,17,38,.92)_54%,rgba(4,10,24,.96)_100%)] p-6 shadow-[0_26px_90px_rgba(0,8,28,.38),inset_0_1px_0_rgba(255,255,255,.075)] sm:p-8">
+          <div className="night-stars pointer-events-none absolute inset-0 opacity-[0.1]" />
+          <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#6fd2ff]/12 blur-[82px]" />
+          <div className="absolute -left-28 bottom-[-8rem] h-72 w-72 rounded-full bg-[#1769ff]/13 blur-[94px]" />
+          <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(143,193,255,.44),transparent)]" />
 
           <div className="relative grid gap-7 sm:grid-cols-[1fr_auto] sm:items-center">
             <div>
-              <div className="mb-4 flex items-center gap-2 text-xs text-[#8bbdff]">
+              <div className="mb-4 flex items-center gap-2 text-xs text-[#8bbdff]/80">
                 <span className="relative flex h-2 w-2">
-                  <span className="absolute inset-0 animate-ping rounded-full bg-[#6da9ff] opacity-50" />
+                  <span className="absolute inset-0 animate-ping rounded-full bg-[#6da9ff] opacity-35" />
                   <span className="relative h-2 w-2 rounded-full bg-[#6da9ff]" />
                 </span>
                 Cyllene analizi hazır
@@ -62,11 +63,11 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
               </p>
 
               <div className="mt-5 flex flex-wrap gap-2">
-                <span className="flex items-center gap-1.5 rounded-full border border-white/[0.07] bg-white/[0.04] px-3 py-1.5 text-[10px] text-white/40">
+                <span className="flex items-center gap-1.5 rounded-full border border-[#8dbdff]/10 bg-white/[0.025] px-3 py-1.5 text-[10px] text-white/42">
                   <Mic2 className="h-3 w-3 text-[#78b7ff]" />
                   Gerçek zamanlı analiz
                 </span>
-                <span className="flex items-center gap-1.5 rounded-full border border-white/[0.07] bg-white/[0.04] px-3 py-1.5 text-[10px] text-white/40">
+                <span className="flex items-center gap-1.5 rounded-full border border-[#8dbdff]/10 bg-white/[0.025] px-3 py-1.5 text-[10px] text-white/42">
                   <LockKeyhole className="h-3 w-3 text-emerald-300" />
                   Cihazında kalır
                 </span>
