@@ -204,8 +204,8 @@ export function JournalClient({ sessions }: JournalClientProps) {
 
       <DeleteConfirmSheet
         open={Boolean(sessionToDelete)}
-        title="Gece kaydı silinsin mi?"
-        description="Bu geceye ait rapor, zaman çizelgesi ve senkron kayıtları kalıcı olarak silinecek."
+        title="Bu gece kaydını silmek istediğinizden emin misiniz?"
+        description="Rapor, zaman çizelgesi ve senkron kayıtlar Cyllene’den kalıcı olarak kaldırılacak."
         confirmLabel="Geceyi sil"
         isPending={Boolean(deletingSessionId)}
         onOpenChange={(open) => {

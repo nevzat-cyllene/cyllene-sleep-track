@@ -219,8 +219,8 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
 
       <DeleteConfirmSheet
         open={Boolean(eventToDelete)}
-        title="Ses olayı silinsin mi?"
-        description="Bu olay listeden kaldırılacak ve varsa cihazdaki ses klibi de temizlenecek."
+        title="Bu ses olayını silmek istediğinizden emin misiniz?"
+        description="Olay listeden kaldırılacak; varsa ilişkili ses klibi de temizlenecek."
         confirmLabel="Olayı sil"
         isPending={Boolean(deletingEventId)}
         onOpenChange={(open) => {

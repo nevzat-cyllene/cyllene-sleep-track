@@ -247,8 +247,8 @@ export function LocalSessionDetailClient({
 
       <DeleteConfirmSheet
         open={Boolean(eventToDelete)}
-        title="Yerel ses olayı silinsin mi?"
-        description="Bu olay ve telefonda duran ses klibi cihazdan kaldırılacak."
+        title="Bu yerel ses olayını silmek istediğinizden emin misiniz?"
+        description="Olay ve telefonda duran ses klibi cihazdan kaldırılacak."
         confirmLabel="Olayı sil"
         isPending={Boolean(deletingEventId)}
         onOpenChange={(open) => {
