@@ -15,6 +15,7 @@ interface PremiumEntranceProps {
 const ease = [0.22, 1, 0.36, 1] as const;
 const moonFlowEase = [0.2, 0.72, 0.18, 1] as const;
 const moonEntryDuration = 9.1;
+const momentReadDuration = 5600;
 const centerTransform = (_: unknown, generated: string) => `translateX(-50%) ${generated}`;
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
@@ -53,8 +54,8 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
   useEffect(() => {
     if (!started) return;
 
-    const second = window.setTimeout(() => setMoment(1), reduceMotion ? 550 : 2200);
-    const third = window.setTimeout(() => setMoment(2), reduceMotion ? 1100 : 4600);
+    const second = window.setTimeout(() => setMoment(1), reduceMotion ? 900 : momentReadDuration);
+    const third = window.setTimeout(() => setMoment(2), reduceMotion ? 1800 : momentReadDuration * 2);
 
     return () => {
       window.clearTimeout(second);
@@ -393,7 +394,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                     initial={{ opacity: 0, y: 26, scale: 0.99, filter: "blur(14px)" }}
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                     exit={{ opacity: 0, y: -18, scale: 1.01, filter: "blur(12px)" }}
-                    transition={{ duration: reduceMotion ? 0.2 : 0.72, ease }}
+                    transition={{ duration: reduceMotion ? 0.2 : 0.9, ease }}
                     className="max-w-2xl"
                   >
                     <p className="mb-4 text-xs font-medium uppercase tracking-[0.3em] text-[#78b7ff]">
