@@ -74,9 +74,9 @@ export default function LandingPage() {
             <div className="absolute right-[-12rem] top-36 hidden h-[30rem] w-[30rem] rounded-full bg-[#6fd2ff]/10 blur-[130px] sm:block" />
           </div>
 
-          <Container className="relative grid min-h-[calc(100svh-4rem)] items-center gap-14 py-16 lg:grid-cols-[1.02fr_.98fr] lg:py-24">
+          <Container className="relative grid min-h-[calc(100svh-4rem)] items-center gap-9 py-10 sm:py-12 lg:grid-cols-[.98fr_1.02fr] lg:py-14">
             <div className="max-w-2xl">
-              <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-[#6da9ff]/20 bg-[#155eff]/10 px-3.5 py-2 text-xs font-medium text-[#91c1ff] shadow-[inset_0_1px_0_rgba(255,255,255,.06)]">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#6da9ff]/20 bg-[#155eff]/10 px-3.5 py-2 text-xs font-medium text-[#91c1ff] shadow-[inset_0_1px_0_rgba(255,255,255,.06)]">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inset-0 animate-ping rounded-full bg-[#6da9ff] opacity-60" />
                   <span className="relative h-2 w-2 rounded-full bg-[#6da9ff]" />
@@ -84,17 +84,19 @@ export default function LandingPage() {
                 Sleep intelligence · cihaz içi analiz
               </div>
 
-              <h1 className="text-balance text-[clamp(3.35rem,8vw,6.8rem)] font-medium leading-[0.89] tracking-[-0.07em]">
-                Uyku sinyalini ölç.
-                <span className="mt-2 block text-gradient">Sabah raporunu netleştir.</span>
+              <h1 className="text-balance text-[clamp(2.75rem,6.4vw,5.45rem)] font-medium leading-[0.9] tracking-[-0.065em]">
+                <span className="block">Uyku sinyalini</span>
+                <span className="block">ölç.</span>
+                <span className="block text-gradient">Sabaha enerjik</span>
+                <span className="block text-gradient">uyan.</span>
               </h1>
 
-              <p className="mt-7 max-w-xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-                Cyllene, horlama, öksürük ve ani sesleri telefonunda analiz eder; ham sesi
-                yüklemeden skor, zaman çizelgesi ve olay özetini profesyonel bir sabah raporuna dönüştürür.
+              <p className="mt-5 max-w-lg text-pretty text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+                Cyllene; horlama, öksürük ve çevresel sesleri cihazında analiz eder. Ham ses
+                yüklenmeden skor, zaman çizelgesi ve sade sabah özeti hazırlar.
               </p>
 
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <Button
                   size="lg"
                   className="glow-purple h-13 rounded-full bg-[#1769ff] px-6 hover:bg-[#2d79ff]"
@@ -113,7 +115,7 @@ export default function LandingPage() {
                 </Button>
               </div>
 
-              <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-xs text-muted-foreground">
+              <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2.5 text-xs text-muted-foreground">
                 {["Kredi kartı gerekmez", "Ham ses yüklenmez", "Skor ve zaman çizelgesi"].map(
                   (item) => (
                     <span key={item} className="flex items-center gap-2">

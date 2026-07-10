@@ -21,6 +21,8 @@ const EVENT_COLORS: Record<string, string> = {
   noise: "var(--chart-5)",
 };
 
+const EVENT_ICONS = { snore: Wind, cough: Activity, talk: MessageCircle, noise: Volume2 };
+
 const STAGE_LABELS = { awake: "Uyanık", light: "Uyku", deep: "Derin uyku" };
 const STAGE_STYLES: Record<SleepStage, string> = {
   awake: "top-[12%] h-[22%] bg-[#7dd3fc]/75 shadow-[0_0_22px_rgba(125,211,252,.28)]",
@@ -81,6 +83,7 @@ export function NightSoundsChart({
 
   const filteredEvents = events.filter((e) => activeFilters.has(e.event_type));
   const selected = filteredEvents.find((e) => e.id === selectedEventId) ?? filteredEvents[0];
+  const SelectedIcon = selected ? EVENT_ICONS[selected.event_type] : Wind;
 
   const stageSegments = useMemo(() => {
     const ordered = [...stages].sort((a, b) => a.minute - b.minute);
@@ -98,26 +101,30 @@ export function NightSoundsChart({
     });
   }, [durationMinutes, stages]);
 
-  const soundBars = useMemo(() => {
+  const signalPoints = useMemo(() => {
     const ordered = [...chartData]
       .filter((point) => Number.isFinite(point.db))
       .sort((a, b) => a.minute - b.minute);
-    const bucketSize = Math.max(1, Math.ceil(ordered.length / 52));
-    const bars = [];
+    const bucketSize = Math.max(1, Math.ceil(ordered.length / 28));
+    const points = [];
 
     for (let index = 0; index < ordered.length; index += bucketSize) {
       const bucket = ordered.slice(index, index + bucketSize);
       const peak = Math.max(...bucket.map((point) => point.db));
       const minute = bucket[0]?.minute ?? 0;
-      bars.push({
+      points.push({
         key: `${minute}-${index}`,
-        height: clampPercent(((peak - 20) / 50) * 100),
-        minute,
+        x: clampPercent((minute / durationMinutes) * 100),
+        y: 86 - clampPercent(((peak - 22) / 54) * 68),
       });
     }
 
-    return bars;
-  }, [chartData]);
+    return points;
+  }, [chartData, durationMinutes]);
+
+  const signalPolyline = signalPoints
+    .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
+    .join(" ");
 
   const selectedPosition =
     selected !== undefined
@@ -126,12 +133,20 @@ export function NightSoundsChart({
         )
       : null;
 
+  const eventMarkers = filteredEvents.slice(0, 24).map((event) => ({
+    id: event.id,
+    type: event.event_type,
+    left: clampPercent(
+      (((new Date(event.occurred_at).getTime() - startMs) / 60000) / durationMinutes) * 100
+    ),
+    selected: event.id === (selectedEventId ?? selected?.id),
+  }));
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         {(["snore", "cough", "talk", "noise"] as const).map((type) => {
-          const icons = { snore: Wind, cough: Activity, talk: MessageCircle, noise: Volume2 };
-          const Icon = icons[type];
+          const Icon = EVENT_ICONS[type];
           const active = activeFilters.has(type);
           return (
             <button
@@ -181,32 +196,57 @@ export function NightSoundsChart({
 
       <div className="relative rounded-2xl border border-white/10 bg-[#071222] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.04)]">
         {selected && (
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 text-sm text-cyllene-cyan">
-            <Wind className="h-4 w-4" />
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 text-sm text-cyllene-cyan">
+            <SelectedIcon className="h-4 w-4" />
             {formatTime(selected.occurred_at)} {EVENT_LABELS[selected.event_type]}
           </div>
         )}
 
-        <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-white/[0.06] bg-[#06101f] px-3 pb-8 pt-4">
-          {soundBars.length === 0 ? (
+        <div className="relative isolate h-44 w-full overflow-hidden rounded-2xl border border-white/[0.06] bg-[linear-gradient(145deg,rgba(5,16,35,.96),rgba(4,10,24,.98))] px-3 pb-8 pt-4 [contain:paint]">
+          {signalPoints.length === 0 && eventMarkers.length === 0 ? (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
               Bu gece için ses verisi yok
             </div>
           ) : (
             <>
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,.035)_1px,transparent_1px)] bg-[size:25%_100%,100%_25%]" />
-              <div className="relative z-10 flex h-full items-end gap-1">
-                {soundBars.map((bar) => (
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,.026)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,.026)_1px,transparent_1px)] bg-[size:25%_100%,100%_33.333%]" />
+              <div className="absolute inset-x-4 top-1/2 h-px bg-white/[0.055]" />
+              {signalPoints.length > 1 && (
+                <svg
+                  className="absolute inset-x-4 bottom-8 top-5 z-10 h-[calc(100%-3.25rem)] w-[calc(100%-2rem)]"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <polyline
+                    points={signalPolyline}
+                    fill="none"
+                    stroke="rgba(111,210,255,.78)"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.4"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </svg>
+              )}
+              <div className="absolute inset-x-4 bottom-8 top-5 z-20">
+                {eventMarkers.map((marker) => (
                   <span
-                    key={bar.key}
-                    className="min-w-0 flex-1 rounded-t-full bg-[linear-gradient(to_top,rgba(23,105,255,.18),rgba(111,210,255,.82))] shadow-[0_0_18px_rgba(111,210,255,.16)]"
-                    style={{ height: `${Math.max(8, bar.height)}%` }}
+                    key={marker.id}
+                    className={cn(
+                      "absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border shadow-[0_0_18px_rgba(111,210,255,.28)]",
+                      marker.selected ? "border-white bg-white" : "border-[#8dbdff]/45 bg-[#6fd2ff]"
+                    )}
+                    style={{
+                      left: `${marker.left}%`,
+                      color: EVENT_COLORS[marker.type],
+                    }}
                   />
                 ))}
               </div>
               {selectedPosition !== null && (
                 <span
-                  className="absolute bottom-7 top-4 z-20 w-px bg-white/35"
+                  className="absolute bottom-8 top-5 z-30 w-px bg-white/35"
                   style={{ left: `${selectedPosition}%` }}
                 >
                   <span className="absolute -bottom-1 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-cyllene-cyan shadow-[0_0_18px_rgba(111,210,255,.65)]" />

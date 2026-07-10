@@ -154,6 +154,21 @@
       linear-gradient(to top, #02050d, transparent);
     filter: drop-shadow(0 -18px 38px rgba(18,86,180,.08));
   }
+  .moon-soft-spin {
+    animation: cyllene-moon-soft-spin 154s linear infinite;
+    animation-delay: 9.35s;
+    animation-fill-mode: both;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+  @keyframes cyllene-moon-soft-spin {
+    from {
+      transform: translateZ(0) rotate(0deg);
+    }
+    to {
+      transform: translateZ(0) rotate(360deg);
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -216,20 +216,11 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
             ease: moonFlowEase,
           }}
         >
-          <motion.div
-            className="relative h-full w-full overflow-hidden rounded-full border border-white/16 bg-[#07111f]/35 shadow-[0_0_88px_rgba(152,198,255,.34),0_0_210px_rgba(30,118,255,.18)] will-change-transform"
+          <div
+            className={`relative h-full w-full overflow-hidden rounded-full border border-white/16 bg-[#07111f]/35 shadow-[0_0_88px_rgba(152,198,255,.34),0_0_210px_rgba(30,118,255,.18)] will-change-transform ${
+              reduceMotion || exiting ? "" : "moon-soft-spin"
+            }`}
             style={{ transformStyle: "preserve-3d" }}
-            animate={
-              reduceMotion || exiting
-                ? undefined
-                : { rotate: 360 }
-            }
-            transition={{
-              duration: started ? 96 : 118,
-              repeat: Infinity,
-              ease: "linear",
-              delay: started ? 0 : moonEntryDuration * 0.72,
-            }}
           >
             <Image
               src="/brand/cyllene-moon.webp"
@@ -241,7 +232,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
             />
             <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_22%,rgba(255,255,255,.22),transparent_24%),radial-gradient(circle_at_68%_52%,transparent_0_44%,rgba(3,7,18,.34)_65%,rgba(0,2,8,.62)_100%)] mix-blend-multiply" />
             <span className="absolute inset-0 rounded-full shadow-[inset_-32px_-22px_50px_rgba(3,7,18,.52),inset_18px_14px_28px_rgba(255,255,255,.18)]" />
-          </motion.div>
+          </div>
         </motion.div>
 
         <motion.div
@@ -303,49 +294,51 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
           )}
         </motion.header>
 
-        <main className="flex flex-1 items-end pb-[12vh] sm:items-center sm:pb-0">
+        <main className="flex flex-1 items-end pb-[7vh] sm:items-center sm:pb-0">
           <AnimatePresence mode="wait">
             {!started ? (
               <motion.div
                 key="invitation"
-                className="max-w-xl"
+                className="grid w-full max-w-5xl gap-7 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-end"
                 initial={{ opacity: 1 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0, y: -24, scale: 1.015, filter: "blur(10px)" }}
                 transition={{ duration: reduceMotion ? 0.2 : 0.65, ease }}
               >
-                <motion.p
-                  className="mb-4 text-xs font-medium uppercase tracking-[0.32em] text-[#78b7ff]"
-                  initial={{ opacity: 0, y: 12, filter: "blur(8px)" }}
-                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  transition={{ duration: reduceMotion ? 0.2 : 0.55, delay: 0.12, ease }}
-                >
-                  Ay yükselirken
-                </motion.p>
-                <motion.h1
-                  className="max-w-lg text-balance text-[clamp(3rem,10vw,6.5rem)] font-medium leading-[0.92] tracking-[-0.065em]"
-                  initial={{ opacity: 0, y: 22, filter: "blur(12px)" }}
-                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  transition={{ duration: reduceMotion ? 0.2 : 0.82, delay: 0.28, ease }}
-                >
-                  Uyku sinyali ölçülür.
-                  <span className="block bg-gradient-to-r from-white via-[#bcd8ff] to-[#5e9eff] bg-clip-text text-transparent">
-                    Sabah raporu oluşur.
-                  </span>
-                </motion.h1>
-                <motion.p
-                  className="mt-6 max-w-sm text-pretty text-base font-light leading-7 text-white/52 sm:text-lg"
-                  initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
-                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  transition={{ duration: reduceMotion ? 0.2 : 0.68, delay: 0.68, ease }}
-                >
-                  Cyllene, gece boyunca oluşan horlama, öksürük ve ani sesleri cihazında analiz eder.
-                </motion.p>
+                <div>
+                  <motion.p
+                    className="mb-4 text-xs font-medium uppercase tracking-[0.32em] text-[#78b7ff]"
+                    initial={{ opacity: 0, y: 12, filter: "blur(8px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    transition={{ duration: reduceMotion ? 0.2 : 0.55, delay: 0.12, ease }}
+                  >
+                    Ay yükselirken
+                  </motion.p>
+                  <motion.h1
+                    className="max-w-[25rem] text-balance text-[clamp(2.35rem,8.4vw,5.4rem)] font-medium leading-[0.96] tracking-[-0.06em] sm:max-w-2xl"
+                    initial={{ opacity: 0, y: 22, filter: "blur(12px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    transition={{ duration: reduceMotion ? 0.2 : 0.82, delay: 0.28, ease }}
+                  >
+                    Dinlenmenin sessiz dilini keşfedin.
+                  </motion.h1>
+                  <motion.p
+                    className="mt-5 max-w-[31rem] text-pretty text-sm font-light leading-6 text-white/54 sm:text-base sm:leading-7"
+                    initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    transition={{ duration: reduceMotion ? 0.2 : 0.68, delay: 0.68, ease }}
+                  >
+                    Uyku, bedenin gece boyunca anlattığı bir hikayedir. Cyllene, akıllı akustik
+                    tanıma mimarisiyle bu hikayenin detaylarını – nefes ritimlerinizi,
+                    öksürükleri ve çevresel sesleri – cihaz içi işleme gücüyle analiz eder.
+                    Güne başlarken, kişisel alışkanlıklarınızı iyileştirecek sade, şık ve
+                    anlamlı bir sabah özetiyle uyanın.
+                  </motion.p>
 
                 <motion.button
                   type="button"
                   onClick={() => void begin()}
-                  className="group relative mt-9 flex items-center gap-4 overflow-hidden rounded-full border border-white/12 bg-white/[0.07] py-2.5 pl-5 pr-2.5 shadow-[0_16px_60px_rgba(0,50,160,.25),inset_0_1px_0_rgba(255,255,255,.12)] backdrop-blur-2xl transition duration-300 hover:scale-[1.03] hover:border-[#78b7ff]/35 hover:bg-white/[0.11] active:scale-[0.99]"
+                  className="group relative mt-7 flex items-center gap-4 overflow-hidden rounded-full border border-white/12 bg-white/[0.07] py-2.5 pl-5 pr-2.5 shadow-[0_16px_60px_rgba(0,50,160,.25),inset_0_1px_0_rgba(255,255,255,.12)] backdrop-blur-2xl transition duration-300 hover:scale-[1.03] hover:border-[#78b7ff]/35 hover:bg-white/[0.11] active:scale-[0.99]"
                   initial={{ opacity: 0, y: 14, filter: "blur(8px)" }}
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                   transition={{ duration: reduceMotion ? 0.2 : 0.5, delay: 0.98, ease }}
@@ -364,6 +357,29 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                     <Volume2 className="h-4 w-4" />
                   </span>
                 </motion.button>
+                </div>
+
+                <motion.div
+                  className="hidden rounded-[1.6rem] border border-[#8dbdff]/14 bg-white/[0.04] p-4 shadow-[0_18px_70px_rgba(24,105,255,.16),inset_0_1px_0_rgba(255,255,255,.07)] backdrop-blur-2xl lg:block"
+                  initial={{ opacity: 0, x: 18, filter: "blur(10px)" }}
+                  animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                  transition={{ duration: reduceMotion ? 0.2 : 0.7, delay: 0.62, ease }}
+                >
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-[#8fc0ff]/70">
+                    Cihaz içi akustik tanıma
+                  </p>
+                  <div className="mt-4 space-y-2">
+                    {["Nefes ritmi", "Öksürük", "Çevresel ses"].map((item) => (
+                      <div
+                        key={item}
+                        className="flex items-center justify-between rounded-2xl bg-white/[0.035] px-3 py-2"
+                      >
+                        <span className="text-xs text-white/58">{item}</span>
+                        <span className="h-1.5 w-12 rounded-full bg-[linear-gradient(90deg,#1769ff,#6fd2ff)]" />
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
               </motion.div>
             ) : (
               <motion.div
