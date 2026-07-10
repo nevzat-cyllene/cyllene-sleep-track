@@ -15,24 +15,34 @@ const EVENT_LABELS: Record<string, string> = {
 };
 
 const EVENT_COLORS: Record<string, string> = {
-  snore: "var(--chart-4)",
-  cough: "var(--chart-3)",
-  talk: "var(--chart-1)",
-  noise: "var(--chart-5)",
+  snore: "#fbbf24",
+  cough: "#fb7185",
+  talk: "#38bdf8",
+  noise: "#a1a1aa",
 };
 
 const EVENT_ICONS = { snore: Wind, cough: Activity, talk: MessageCircle, noise: Volume2 };
 
 const STAGE_LABELS = { awake: "Uyanık", light: "Uyku", deep: "Derin uyku" };
-const STAGE_STYLES: Record<SleepStage, string> = {
-  awake: "top-[12%] h-[22%] bg-[#7dd3fc]/75 shadow-[0_0_22px_rgba(125,211,252,.28)]",
-  light: "top-[40%] h-[24%] bg-[#3b82f6]/80 shadow-[0_0_22px_rgba(59,130,246,.25)]",
-  deep: "top-[68%] h-[20%] bg-[#1e40af]/90 shadow-[0_0_18px_rgba(30,64,175,.24)]",
+const STAGE_BAR: Record<SleepStage, string> = {
+  awake: "bg-[#7dd3fc]/80",
+  light: "bg-[#3b82f6]/85",
+  deep: "bg-[#1e40af]/90",
+};
+const STAGE_ROW: Record<SleepStage, string> = {
+  awake: "top-[14%]",
+  light: "top-[42%]",
+  deep: "top-[70%]",
 };
 
 function clampPercent(value: number) {
   if (!Number.isFinite(value)) return 0;
   return Math.min(100, Math.max(0, value));
+}
+
+function toFiniteDb(value: unknown) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
 }
 
 interface NightSoundsChartProps {
@@ -67,64 +77,100 @@ export function NightSoundsChart({
 
   const chartData = useMemo(() => {
     if (noiseSamples.length > 0) {
-      return noiseSamples.map((s) => ({
-        time: formatTime(startMs + s.minute_offset * 60000),
-        db: Number(s.avg_db),
-        minute: s.minute_offset,
-      }));
+      return noiseSamples
+        .map((s) => ({
+          time: formatTime(startMs + s.minute_offset * 60000),
+          db: toFiniteDb(s.avg_db),
+          minute: s.minute_offset,
+        }))
+        .filter((point): point is { time: string; db: number; minute: number } => point.db !== null);
     }
-    const filtered = events.filter((e) => activeFilters.has(e.event_type));
-    return filtered.map((e) => ({
-      time: formatTime(e.occurred_at),
-      db: Number(e.peak_db),
-      minute: Math.floor((new Date(e.occurred_at).getTime() - startMs) / 60000),
-    }));
+    return events
+      .filter((e) => activeFilters.has(e.event_type))
+      .map((e) => ({
+        time: formatTime(e.occurred_at),
+        db: toFiniteDb(e.peak_db),
+        minute: Math.floor((new Date(e.occurred_at).getTime() - startMs) / 60000),
+      }))
+      .filter((point): point is { time: string; db: number; minute: number } => point.db !== null);
   }, [noiseSamples, events, activeFilters, startMs]);
 
   const filteredEvents = events.filter((e) => activeFilters.has(e.event_type));
   const selected = filteredEvents.find((e) => e.id === selectedEventId) ?? filteredEvents[0];
   const SelectedIcon = selected ? EVENT_ICONS[selected.event_type] : Wind;
 
+  // Merge consecutive same-stage minutes — one bar per run (not 1 DOM node per minute).
   const stageSegments = useMemo(() => {
     const ordered = [...stages].sort((a, b) => a.minute - b.minute);
-    return ordered.map((point, index) => {
-      const nextMinute = ordered[index + 1]?.minute ?? durationMinutes;
-      const left = clampPercent((point.minute / durationMinutes) * 100);
-      const right = clampPercent((nextMinute / durationMinutes) * 100);
+    if (ordered.length === 0) return [];
 
+    const merged: { key: string; stage: SleepStage; start: number; end: number }[] = [];
+    let current = {
+      stage: ordered[0].stage,
+      start: ordered[0].minute,
+      end: ordered[0].minute + 1,
+    };
+
+    for (let i = 1; i < ordered.length; i++) {
+      const point = ordered[i];
+      if (point.stage === current.stage && point.minute <= current.end + 1) {
+        current.end = Math.max(current.end, point.minute + 1);
+      } else {
+        merged.push({
+          key: `${current.start}-${current.stage}-${merged.length}`,
+          stage: current.stage,
+          start: current.start,
+          end: current.end,
+        });
+        current = { stage: point.stage, start: point.minute, end: point.minute + 1 };
+      }
+    }
+    merged.push({
+      key: `${current.start}-${current.stage}-${merged.length}`,
+      stage: current.stage,
+      start: current.start,
+      end: current.end,
+    });
+
+    return merged.map((segment) => {
+      const left = clampPercent((segment.start / durationMinutes) * 100);
+      const right = clampPercent((segment.end / durationMinutes) * 100);
       return {
-        key: `${point.minute}-${point.stage}-${index}`,
-        stage: point.stage,
+        key: segment.key,
+        stage: segment.stage,
         left,
-        width: Math.max(1.8, right - left),
+        width: Math.max(0.8, right - left),
       };
     });
   }, [durationMinutes, stages]);
 
-  const signalPoints = useMemo(() => {
-    const ordered = [...chartData]
-      .filter((point) => Number.isFinite(point.db))
-      .sort((a, b) => a.minute - b.minute);
-    const bucketSize = Math.max(1, Math.ceil(ordered.length / 28));
-    const points = [];
+  const signalPath = useMemo(() => {
+    const ordered = [...chartData].sort((a, b) => a.minute - b.minute);
+    if (ordered.length === 0) return "";
+
+    const bucketSize = Math.max(1, Math.ceil(ordered.length / 36));
+    const points: { x: number; y: number }[] = [];
 
     for (let index = 0; index < ordered.length; index += bucketSize) {
       const bucket = ordered.slice(index, index + bucketSize);
       const peak = Math.max(...bucket.map((point) => point.db));
       const minute = bucket[0]?.minute ?? 0;
       points.push({
-        key: `${minute}-${index}`,
         x: clampPercent((minute / durationMinutes) * 100),
-        y: 86 - clampPercent(((peak - 22) / 54) * 68),
+        y: clampPercent(88 - ((peak - 20) / 55) * 70),
       });
     }
 
-    return points;
-  }, [chartData, durationMinutes]);
+    if (points.length === 1) {
+      return `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
+    }
 
-  const signalPolyline = signalPoints
-    .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
-    .join(" ");
+    return points
+      .map((point, index) =>
+        `${index === 0 ? "M" : "L"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`
+      )
+      .join(" ");
+  }, [chartData, durationMinutes]);
 
   const selectedPosition =
     selected !== undefined
@@ -133,7 +179,7 @@ export function NightSoundsChart({
         )
       : null;
 
-  const eventMarkers = filteredEvents.slice(0, 24).map((event) => ({
+  const eventMarkers = filteredEvents.slice(0, 20).map((event) => ({
     id: event.id,
     type: event.event_type,
     left: clampPercent(
@@ -168,16 +214,26 @@ export function NightSoundsChart({
       </div>
 
       {stageSegments.length > 0 && (
-        <div className="rounded-2xl border border-white/10 bg-[#071222] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.04)]">
+        <div className="rounded-2xl border border-white/10 bg-[#071222] p-4">
           <p className="mb-3 text-xs text-muted-foreground">Tahmini uyku evreleri</p>
-          <div className="relative h-24 overflow-hidden rounded-2xl border border-white/[0.06] bg-[#06101f]">
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,.035)_1px,transparent_1px)] bg-[size:25%_100%,100%_33.333%]" />
+          <div className="relative h-24 overflow-hidden rounded-xl border border-white/[0.06] bg-[#06101f]">
+            <div className="pointer-events-none absolute inset-y-0 left-0 right-0 grid grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="border-r border-white/[0.04] last:border-r-0" />
+              ))}
+            </div>
+            <div className="pointer-events-none absolute inset-x-0 top-0 bottom-0 grid grid-rows-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="border-b border-white/[0.04] last:border-b-0" />
+              ))}
+            </div>
             {stageSegments.map((segment) => (
               <span
                 key={segment.key}
                 className={cn(
-                  "absolute rounded-full transition-colors",
-                  STAGE_STYLES[segment.stage]
+                  "absolute h-[18%] rounded-md",
+                  STAGE_ROW[segment.stage],
+                  STAGE_BAR[segment.stage]
                 )}
                 style={{
                   left: `${segment.left}%`,
@@ -188,71 +244,81 @@ export function NightSoundsChart({
           </div>
           <div className="mt-2 flex gap-4 text-[10px] text-muted-foreground">
             {Object.entries(STAGE_LABELS).map(([key, label]) => (
-              <span key={key}>{label}</span>
+              <span key={key} className="inline-flex items-center gap-1.5">
+                <span
+                  className={cn(
+                    "h-2 w-2 rounded-sm",
+                    STAGE_BAR[key as SleepStage]
+                  )}
+                />
+                {label}
+              </span>
             ))}
           </div>
         </div>
       )}
 
-      <div className="relative rounded-2xl border border-white/10 bg-[#071222] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.04)]">
+      <div className="relative rounded-2xl border border-white/10 bg-[#071222] p-4">
         {selected && (
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 text-sm text-cyllene-cyan">
-            <SelectedIcon className="h-4 w-4" />
-            {formatTime(selected.occurred_at)} {EVENT_LABELS[selected.event_type]}
+          <div className="mb-3 inline-flex max-w-full items-center gap-2 rounded-full bg-black/50 px-3 py-1.5 text-sm text-cyllene-cyan">
+            <SelectedIcon className="h-4 w-4 shrink-0" />
+            <span className="truncate">
+              {formatTime(selected.occurred_at)} {EVENT_LABELS[selected.event_type]}
+            </span>
           </div>
         )}
 
-        <div className="relative isolate h-44 w-full overflow-hidden rounded-2xl border border-white/[0.06] bg-[linear-gradient(145deg,rgba(5,16,35,.96),rgba(4,10,24,.98))] px-3 pb-8 pt-4 [contain:paint]">
-          {signalPoints.length === 0 && eventMarkers.length === 0 ? (
+        <div className="relative h-44 w-full overflow-hidden rounded-xl border border-white/[0.06] bg-[#050f22]">
+          {signalPath === "" && eventMarkers.length === 0 ? (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
               Bu gece için ses verisi yok
             </div>
           ) : (
             <>
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,.026)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,.026)_1px,transparent_1px)] bg-[size:25%_100%,100%_33.333%]" />
-              <div className="absolute inset-x-4 top-1/2 h-px bg-white/[0.055]" />
-              {signalPoints.length > 1 && (
+              <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-white/[0.06]" />
+              {signalPath !== "" && (
                 <svg
-                  className="absolute inset-x-4 bottom-8 top-5 z-10 h-[calc(100%-3.25rem)] w-[calc(100%-2rem)]"
+                  className="absolute inset-x-3 bottom-7 top-4 z-10"
                   viewBox="0 0 100 100"
                   preserveAspectRatio="none"
                   aria-hidden="true"
                 >
-                  <polyline
-                    points={signalPolyline}
+                  <path
+                    d={signalPath}
                     fill="none"
-                    stroke="rgba(111,210,255,.78)"
+                    stroke="#6fd2ff"
+                    strokeWidth="1.8"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth="2.4"
                     vectorEffect="non-scaling-stroke"
+                    opacity="0.9"
                   />
                 </svg>
               )}
-              <div className="absolute inset-x-4 bottom-8 top-5 z-20">
+              <div className="absolute inset-x-3 bottom-7 top-4 z-20">
                 {eventMarkers.map((marker) => (
-                  <span
+                  <button
                     key={marker.id}
+                    type="button"
+                    onClick={() => onSelectEvent?.(marker.id)}
                     className={cn(
-                      "absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border shadow-[0_0_18px_rgba(111,210,255,.28)]",
-                      marker.selected ? "border-white bg-white" : "border-[#8dbdff]/45 bg-[#6fd2ff]"
+                      "absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border",
+                      marker.selected
+                        ? "border-white bg-white"
+                        : "border-[#8dbdff]/50 bg-[#6fd2ff]"
                     )}
-                    style={{
-                      left: `${marker.left}%`,
-                      color: EVENT_COLORS[marker.type],
-                    }}
+                    style={{ left: `${marker.left}%` }}
+                    aria-label={EVENT_LABELS[marker.type] ?? "Olay"}
                   />
                 ))}
               </div>
               {selectedPosition !== null && (
                 <span
-                  className="absolute bottom-8 top-5 z-30 w-px bg-white/35"
-                  style={{ left: `${selectedPosition}%` }}
-                >
-                  <span className="absolute -bottom-1 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-cyllene-cyan shadow-[0_0_18px_rgba(111,210,255,.65)]" />
-                </span>
+                  className="pointer-events-none absolute bottom-7 top-4 z-30 w-px bg-white/30"
+                  style={{ left: `calc(0.75rem + (100% - 1.5rem) * ${selectedPosition / 100})` }}
+                />
               )}
-              <div className="absolute inset-x-3 bottom-2 z-10 flex justify-between text-[10px] text-white/28">
+              <div className="absolute inset-x-3 bottom-2 z-10 flex justify-between text-[10px] text-white/30">
                 <span>{formatTime(startMs)}</span>
                 <span>{formatTime(startMs + durationMinutes * 60000)}</span>
               </div>
@@ -260,38 +326,40 @@ export function NightSoundsChart({
           )}
         </div>
 
-        <div className="mt-4 flex items-end justify-between gap-1 px-2">
-          {filteredEvents.slice(0, 12).map((event) => {
-            const isSelected = event.id === (selectedEventId ?? selected?.id);
-            return (
-              <button
-                key={event.id}
-                type="button"
-                onClick={() => onSelectEvent?.(event.id)}
-                className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full border transition",
-                  isSelected
-                    ? "border-white bg-white/10"
-                    : "border-transparent hover:border-white/20"
-                )}
-                aria-label={EVENT_LABELS[event.event_type]}
-              >
-                <div
-                  className="flex h-4 items-end gap-px"
-                  style={{ color: EVENT_COLORS[event.event_type] }}
+        {filteredEvents.length > 0 && (
+          <div className="mt-4 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {filteredEvents.slice(0, 16).map((event) => {
+              const isSelected = event.id === (selectedEventId ?? selected?.id);
+              return (
+                <button
+                  key={event.id}
+                  type="button"
+                  onClick={() => onSelectEvent?.(event.id)}
+                  className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition",
+                    isSelected
+                      ? "border-white/50 bg-white/10"
+                      : "border-white/10 bg-white/[0.03]"
+                  )}
+                  aria-label={EVENT_LABELS[event.event_type]}
                 >
-                  {[3, 5, 4, 6, 3].map((h, i) => (
-                    <span
-                      key={i}
-                      className="w-0.5 rounded-full bg-current"
-                      style={{ height: `${h}px` }}
-                    />
-                  ))}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                  <div
+                    className="flex h-4 items-end gap-px"
+                    style={{ color: EVENT_COLORS[event.event_type] }}
+                  >
+                    {[3, 5, 4, 6, 3].map((h, i) => (
+                      <span
+                        key={i}
+                        className="w-0.5 rounded-full bg-current"
+                        style={{ height: `${h}px` }}
+                      />
+                    ))}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
