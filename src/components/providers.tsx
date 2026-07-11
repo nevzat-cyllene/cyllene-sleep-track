@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { WelcomeGate } from "@/components/welcome/welcome-gate";
 import { InstallPWA } from "@/components/install-pwa";
+import { LocaleProvider, LocalizedTextBridge } from "@/i18n/runtime";
 import { ensureInstallPromptCapture } from "@/lib/install-prompt";
 
 function InstallPromptCapture() {
@@ -19,12 +20,15 @@ function InstallPromptCapture() {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <TooltipProvider delay={150}>
-        <InstallPromptCapture />
-        <WelcomeGate>{children}</WelcomeGate>
-        <InstallPWA variant="toast" />
-        <Toaster richColors closeButton />
-      </TooltipProvider>
+      <LocaleProvider>
+        <TooltipProvider delay={150}>
+          <InstallPromptCapture />
+          <WelcomeGate>{children}</WelcomeGate>
+          <InstallPWA variant="toast" />
+          <LocalizedTextBridge />
+          <Toaster richColors closeButton />
+        </TooltipProvider>
+      </LocaleProvider>
     </ThemeProvider>
   );
 }

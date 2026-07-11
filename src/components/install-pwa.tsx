@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { hasSeenGuestSplash } from "@/lib/guest-splash-storage";
 import { getOpenInBrowserHref, isEmbeddedBrowser } from "@/lib/browser-env";
 import { getDevicePlatform } from "@/lib/recording-device";
+import { useI18n } from "@/i18n/runtime";
 import {
   clearDeferredInstallPrompt,
   ensureInstallPromptCapture,
@@ -87,9 +88,11 @@ function AppIcon({ className, size = 36 }: { className?: string; size?: number }
 
 function TopChip({
   children,
+  closeLabel,
   onDismiss,
 }: {
   children: React.ReactNode;
+  closeLabel: string;
   onDismiss: () => void;
 }) {
   return (
@@ -100,7 +103,7 @@ function TopChip({
           type="button"
           onClick={onDismiss}
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white/35 transition hover:bg-white/5 hover:text-white/70"
-          aria-label="Kapat"
+          aria-label={closeLabel}
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -110,6 +113,7 @@ function TopChip({
 }
 
 export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
+  const { t } = useI18n();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [offer, setOffer] = useState(false);
   const [embedded, setEmbedded] = useState(false);
@@ -201,8 +205,8 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
     if (!promptEvent) {
       setInstallError(
         platform === "ios"
-          ? "Safari’de Paylaş → Ana Ekrana Ekle"
-          : "Tarayıcı menüsünden Uygulamayı yükle’yi seçin"
+          ? t("install.iosHint")
+          : t("install.browserHint")
       );
       return;
     }
@@ -210,9 +214,9 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
       await promptEvent.prompt();
       const { outcome } = await promptEvent.userChoice;
       if (outcome === "accepted") setOffer(false);
-      else setInstallError("Yükleme iptal edildi");
+      else setInstallError(t("install.cancelled"));
     } catch {
-      setInstallError("Yükleme başlatılamadı");
+      setInstallError(t("install.failed"));
     } finally {
       clearDeferredInstallPrompt();
       setDeferredPrompt(null);
@@ -226,6 +230,7 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
     if (embedded && !embedDismissed) {
       return createPortal(
         <TopChip
+          closeLabel={t("install.close")}
           onDismiss={() => {
             markDismissed(EMBED_DISMISS_KEY);
             setEmbedDismissed(true);
@@ -236,10 +241,10 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[12.5px] font-medium leading-snug text-white">
-              Cyllene’i tarayıcıda açın
+              {t("install.openInBrowserTitle")}
             </p>
             <p className="mt-0.5 text-[10.5px] leading-4 text-white/42">
-              Chrome, Safari, Yandex… hepsi olur
+              {t("install.openInBrowserBody")}
             </p>
           </div>
           <a
@@ -249,7 +254,7 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
             className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-[#1769ff] px-3 text-[11px] font-semibold text-white"
           >
             <ExternalLink className="h-3 w-3" />
-            Aç
+            {t("install.open")}
           </a>
         </TopChip>,
         document.body
@@ -260,6 +265,7 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
 
     return createPortal(
       <TopChip
+        closeLabel={t("install.close")}
         onDismiss={() => {
           markDismissed(SESSION_DISMISS_KEY);
           setDismissed(true);
@@ -270,17 +276,17 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[12.5px] font-medium leading-snug text-white">
-            Cyllene Uyku Takipçisini indirmek ister misiniz?
+            {t("install.promptTitle")}
           </p>
           <p className="mt-0.5 text-[10.5px] leading-4 text-white/42">
             {installError ??
-              (platform === "ios" ? "Paylaş → Ana Ekrana Ekle" : "İndir’e basınca yükleme başlar")}
+              (platform === "ios" ? t("install.iosHint") : t("install.androidHint"))}
           </p>
         </div>
         {platform === "ios" ? (
           <div className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-[#1769ff] px-2.5 text-[11px] font-semibold text-white">
             <Share className="h-3 w-3" />
-            İndir
+            {t("install.download")}
           </div>
         ) : (
           <button
@@ -290,7 +296,7 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
           >
             <span className="inline-flex items-center gap-1">
               <Download className="h-3 w-3" />
-              İndir
+              {t("install.download")}
             </span>
           </button>
         )}
@@ -313,10 +319,10 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
           <AppIcon />
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-medium text-white">
-              Cyllene Uyku Takipçisini indirmek ister misiniz?
+              {t("install.promptTitle")}
             </p>
             <p className="mt-0.5 text-[11px] text-white/42">
-              {platform === "ios" ? "Paylaş → Ana Ekrana Ekle" : "Tek dokunuşla yükle"}
+              {platform === "ios" ? t("install.iosHint") : t("install.oneTap")}
             </p>
           </div>
           {platform !== "ios" && (
@@ -325,7 +331,7 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
               onClick={() => void handleInstall()}
               className="h-9 shrink-0 rounded-full bg-[#1769ff] px-3 text-[12px] font-semibold text-white"
             >
-              İndir
+              {t("install.download")}
             </button>
           )}
         </div>
@@ -345,11 +351,12 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
           <AppIcon className="rounded-xl" />
           <div className="min-w-0 space-y-1">
             <p className="font-medium text-foreground">
-              Cyllene Uyku Takipçisini indirmek ister misiniz?
+              {t("install.promptTitle")}
             </p>
             <p>
-              Safari’de <Share className="mx-0.5 inline h-3.5 w-3.5 align-text-bottom" /> Paylaş →{" "}
-              <span className="text-foreground">Ana Ekrana Ekle</span>
+              {t("install.iosInstructionBefore")}{" "}
+              <Share className="mx-0.5 inline h-3.5 w-3.5 align-text-bottom" />{" "}
+              {t("common.or")} <span className="text-foreground">{t("install.addToHome")}</span>
             </p>
           </div>
         </div>
@@ -365,7 +372,7 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
       className={cn("gap-2", className)}
     >
       <Download className="h-4 w-4" />
-      İndir
+      {t("install.download")}
     </Button>
   );
 }

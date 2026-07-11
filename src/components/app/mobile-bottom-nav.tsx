@@ -1,19 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { flushSync } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, BookOpen, MoonStar, UserRound } from "lucide-react";
 import { useRecordingUI } from "@/components/app/recording-ui-context";
+import { useI18n } from "@/i18n/runtime";
 import { cn } from "@/lib/utils";
-
-const tabs = [
-  { href: "/sleep", label: "Uyku", icon: MoonStar },
-  { href: "/journal", label: "Günlük", icon: BookOpen },
-  { href: "/statistics", label: "Analiz", icon: BarChart3 },
-  { href: "/profile", label: "Profil", icon: UserRound },
-] as const;
 
 function isActivePath(pathname: string, href: string) {
   return pathname === href || (href !== "/sleep" && pathname.startsWith(href));
@@ -23,7 +17,19 @@ export function MobileBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { isRecording } = useRecordingUI();
+  const { t } = useI18n();
   const [pendingPath, setPendingPath] = useState<string | null>(null);
+
+  const tabs = useMemo(
+    () =>
+      [
+        { href: "/sleep", label: t("navigation.mobile.sleep"), icon: MoonStar },
+        { href: "/journal", label: t("navigation.mobile.journal"), icon: BookOpen },
+        { href: "/statistics", label: t("navigation.mobile.analysis"), icon: BarChart3 },
+        { href: "/profile", label: t("navigation.mobile.profile"), icon: UserRound },
+      ] as const,
+    [t]
+  );
 
   const warmRoute = useCallback(
     (href: string) => {
@@ -38,7 +44,7 @@ export function MobileBottomNav() {
 
   useEffect(() => {
     tabs.forEach(({ href }) => warmRoute(href));
-  }, [warmRoute]);
+  }, [tabs, warmRoute]);
 
   useEffect(() => {
     if (!pendingPath) return;
