@@ -33,7 +33,7 @@ export default function RootLayout({
         <link rel="icon" href="/icons/icon-512.png" type="image/png" sizes="512x512" />
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__cylleneBIP=e;});`,
+            __html: `(function(){if(window.__cylleneBIPBound)return;window.__cylleneBIPBound=1;window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();e.stopImmediatePropagation();window.__cylleneBIP=e;},true);})();`,
           }}
         />
       </head>

@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * Capture Chrome's beforeinstallprompt as early as possible and suppress the
- * white system install UI. Actual install only runs after an explicit user tap.
+ * Capture Chrome beforeinstallprompt early and suppress the white system UI.
+ * Install sheet opens only after an explicit tap on our own İndir button.
  */
 
 export interface BeforeInstallPromptEvent extends Event {
@@ -13,6 +13,7 @@ export interface BeforeInstallPromptEvent extends Event {
 declare global {
   interface Window {
     __cylleneBIP?: BeforeInstallPromptEvent | null;
+    __cylleneBIPBound?: boolean;
   }
 }
 
@@ -26,14 +27,13 @@ function notify() {
 
 function adoptPrompt(event: BeforeInstallPromptEvent | null) {
   deferredPrompt = event;
-  if (typeof window !== "undefined") {
-    window.__cylleneBIP = event;
-  }
+  if (typeof window !== "undefined") window.__cylleneBIP = event;
   notify();
 }
 
 function onBeforeInstallPrompt(event: Event) {
   event.preventDefault();
+  event.stopImmediatePropagation?.();
   adoptPrompt(event as BeforeInstallPromptEvent);
 }
 
@@ -45,12 +45,9 @@ export function ensureInstallPromptCapture() {
   if (typeof window === "undefined" || listening) return;
   listening = true;
 
-  // Inline boot script may have captured the event before React hydrated.
-  if (window.__cylleneBIP) {
-    deferredPrompt = window.__cylleneBIP;
-  }
+  if (window.__cylleneBIP) deferredPrompt = window.__cylleneBIP;
 
-  window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+  window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt, true);
   window.addEventListener("appinstalled", onAppInstalled);
   notify();
 }
@@ -67,7 +64,7 @@ export function subscribeInstallPrompt(
 }
 
 export function getDeferredInstallPrompt() {
-  return deferredPrompt;
+  return deferredPrompt ?? (typeof window !== "undefined" ? window.__cylleneBIP ?? null : null);
 }
 
 export function clearDeferredInstallPrompt() {
