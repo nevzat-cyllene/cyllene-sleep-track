@@ -87,8 +87,8 @@ export function formatElapsedParts(ms: number): { hours: string; minutes: string
   };
 }
 
-export function formatDate(date: Date | string): string {
-  return new Intl.DateTimeFormat("tr-TR", {
+export function formatDate(date: Date | string, locale = "tr-TR"): string {
+  return new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",

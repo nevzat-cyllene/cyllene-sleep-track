@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { chromeMessages } from "@/i18n/chrome-messages";
+import { kuAppMessages } from "@/i18n/ku-app-messages";
 import {
   isLocale,
   LOCALE_STORAGE_KEY,
@@ -27,6 +28,19 @@ function toMessageLocale(locale: Locale): MessageLocale {
   return locale === "ku" ? "en" : locale;
 }
 
+function localeOverlay(locale: Locale): unknown {
+  if (locale === "ku") {
+    return {
+      ...chromeMessages.ku,
+      ...kuAppMessages,
+      // Keep nested chrome navigation from chromeMessages
+      navigation: chromeMessages.ku.navigation,
+      appControl: chromeMessages.ku.appControl,
+    };
+  }
+  return chromeMessages[locale];
+}
+
 function getByPath(source: unknown, path: string): unknown {
   return path.split(".").reduce<unknown>((value, key) => {
     if (!value || typeof value !== "object") return undefined;
@@ -48,8 +62,9 @@ function translatePath(
   params?: Record<string, string | number>
 ) {
   const catalogLocale = toMessageLocale(locale);
+  const overlay = localeOverlay(locale);
   const value =
-    getByPath(chromeMessages[locale], path) ??
+    getByPath(overlay, path) ??
     getByPath(messages[catalogLocale], path) ??
     getByPath(chromeMessages.tr, path) ??
     getByPath(messages.tr, path);
@@ -60,8 +75,9 @@ function translatePath(
 
 function readMessage<T>(locale: Locale, path: string, fallback: T): T {
   const catalogLocale = toMessageLocale(locale);
+  const overlay = localeOverlay(locale);
   const value =
-    getByPath(chromeMessages[locale], path) ??
+    getByPath(overlay, path) ??
     getByPath(messages[catalogLocale], path) ??
     getByPath(chromeMessages.tr, path) ??
     getByPath(messages.tr, path);

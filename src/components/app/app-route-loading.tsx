@@ -1,6 +1,11 @@
+"use client";
+
 import { Sparkles } from "lucide-react";
+import { useI18n } from "@/i18n/runtime";
 
 export function AppRouteLoading() {
+  const { t } = useI18n();
+
   return (
     <div className="space-y-5 pb-4">
       <section className="relative overflow-hidden rounded-[1.9rem] border border-[#8dbdff]/14 bg-[linear-gradient(145deg,rgba(8,20,45,.84),rgba(4,10,24,.94))] p-5 shadow-[0_24px_90px_rgba(24,105,255,.16),inset_0_1px_0_rgba(255,255,255,.07)]">
@@ -11,9 +16,9 @@ export function AppRouteLoading() {
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-[0.24em] text-[#78b7ff]/72">
-              Cyllene Flow
+              {t("common.flowEyebrow")}
             </p>
-            <p className="mt-1 text-sm font-medium text-white/84">Ekran hazırlanıyor</p>
+            <p className="mt-1 text-sm font-medium text-white/84">{t("common.screenPreparing")}</p>
           </div>
         </div>
         <div className="relative mt-5 h-1 overflow-hidden rounded-full bg-white/[0.055]">

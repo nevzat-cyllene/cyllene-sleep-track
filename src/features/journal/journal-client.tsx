@@ -179,7 +179,9 @@ export function JournalClient({ sessions }: JournalClientProps) {
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="truncate font-medium">{formatDate(session.started_at)}</p>
+                          <p className="truncate font-medium">
+                            {formatDate(session.started_at, t("formatting.locale"))}
+                          </p>
                           <span
                             className={cn(
                               "shrink-0 rounded-full border border-white/[0.07] bg-white/[0.035] px-2 py-0.5 text-[10px]",

@@ -178,7 +178,7 @@ export function SleepPageClient() {
                   {t("sleepHub.lastNight")}
                 </p>
                 <h2 className="mt-2 text-xl font-medium tracking-[-0.03em]">
-                  {formatDate(lastSession.started_at)}
+                  {formatDate(lastSession.started_at, t("formatting.locale"))}
                 </h2>
               </div>
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.04] text-white/30 transition group-hover:bg-[#155eff]/15 group-hover:text-[#78b7ff]">

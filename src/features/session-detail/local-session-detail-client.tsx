@@ -183,7 +183,9 @@ export function LocalSessionDetailClient({
         </Link>
         <div className="flex-1">
           <h1 className="text-xl font-semibold">{t("sessionDetail.localTitle")}</h1>
-          <p className="text-sm text-muted-foreground">{formatDate(session.started_at)}</p>
+          <p className="text-sm text-muted-foreground">
+            {formatDate(session.started_at, t("formatting.locale"))}
+          </p>
         </div>
       </div>
 
