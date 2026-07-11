@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MoonStar, Plus } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { UserMenu } from "@/components/app/user-menu";
+import { AppControlMenu } from "@/components/app/app-control-menu";
 import { useRecordingUI } from "@/components/app/recording-ui-context";
 import { Button } from "@/components/ui/button";
 
@@ -49,7 +49,7 @@ export function AppTopbar() {
           <MoonStar className="h-3 w-3 text-[#72aaff]" />
           Hazır
         </div>
-        <UserMenu />
+        <AppControlMenu />
       </div>
     </header>
   );
