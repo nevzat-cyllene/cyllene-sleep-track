@@ -89,6 +89,34 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
     setExiting(true);
     markGuestSplashSeen();
     window.dispatchEvent(new Event(GUEST_SPLASH_COMPLETE_EVENT));
+    // #region agent log
+    fetch("http://127.0.0.1:7668/ingest/6ebf33a3-e317-467b-8188-4ae3fc7f8fb1", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d5fe36" },
+      body: JSON.stringify({
+        sessionId: "d5fe36",
+        runId: "pre-fix",
+        hypothesisId: "D",
+        location: "premium-entrance.tsx:finish",
+        message: "Sabaha gec pressed / splash finish",
+        data: { path: window.location.pathname },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    fetch("/api/debug-ingest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: "d5fe36",
+        runId: "pre-fix",
+        hypothesisId: "D",
+        location: "premium-entrance.tsx:finish",
+        message: "Sabaha gec pressed / splash finish",
+        data: { path: window.location.pathname },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     // Hard-stop ambience so it cannot leak into sleep recording.
     soundRef.current?.dispose();
     soundRef.current = null;

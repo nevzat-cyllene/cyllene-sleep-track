@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
@@ -15,6 +15,33 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const authError = new URLSearchParams(window.location.search).get("error");
+    if (!authError) return;
+    setError("Google ile giriş tamamlanamadı. Tekrar deneyin.");
+    // #region agent log
+    const payload = {
+      sessionId: "d5fe36",
+      runId: "pre-fix",
+      hypothesisId: "G2",
+      location: "login-form.tsx:auth-callback-error",
+      message: "landed on login with auth error",
+      data: { error: authError, href: window.location.href },
+      timestamp: Date.now(),
+    };
+    fetch("http://127.0.0.1:7668/ingest/6ebf33a3-e317-467b-8188-4ae3fc7f8fb1", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d5fe36" },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
+    fetch("/api/debug-ingest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
+    // #endregion
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,13 +62,66 @@ export function LoginForm() {
   };
 
   const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError(null);
     const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    // #region agent log
+    const gPayload = {
+      sessionId: "d5fe36",
+      runId: "pre-fix",
+      hypothesisId: "G1",
+      location: "login-form.tsx:handleGoogleLogin",
+      message: "google oauth start",
+      data: { redirectTo, origin: window.location.origin },
+      timestamp: Date.now(),
+    };
+    fetch("http://127.0.0.1:7668/ingest/6ebf33a3-e317-467b-8188-4ae3fc7f8fb1", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d5fe36" },
+      body: JSON.stringify(gPayload),
+    }).catch(() => {});
+    fetch("/api/debug-ingest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(gPayload),
+    }).catch(() => {});
+    // #endregion
+    const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo,
       },
     });
+    // #region agent log
+    const gResult = {
+      sessionId: "d5fe36",
+      runId: "pre-fix",
+      hypothesisId: "G1",
+      location: "login-form.tsx:handleGoogleLogin:result",
+      message: "google oauth result",
+      data: {
+        hasUrl: Boolean(data?.url),
+        error: oauthError?.message ?? null,
+        status: (oauthError as { status?: number } | null)?.status ?? null,
+      },
+      timestamp: Date.now(),
+    };
+    fetch("http://127.0.0.1:7668/ingest/6ebf33a3-e317-467b-8188-4ae3fc7f8fb1", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d5fe36" },
+      body: JSON.stringify(gResult),
+    }).catch(() => {});
+    fetch("/api/debug-ingest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(gResult),
+    }).catch(() => {});
+    // #endregion
+    if (oauthError) {
+      setError(oauthError.message);
+      setLoading(false);
+    }
   };
 
   return (
