@@ -10,5 +10,5 @@ export default async function JournalPage() {
 
   const sessions = await fetchUserSessionsServer(data.user.id);
 
-  return <JournalClient sessions={sessions} userId={data.user.id} />;
+  return <JournalClient sessions={sessions} />;
 }

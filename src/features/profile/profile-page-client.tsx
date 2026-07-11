@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthUser } from "@/hooks/use-auth-user";
-import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-display";
 import { ProfileClient } from "@/features/profile/profile-client";
 import type { Profile } from "@/types";
 
@@ -58,9 +57,6 @@ export function ProfilePageClient() {
     <ProfileClient
       profile={profile}
       email={user.email ?? null}
-      displayName={getUserDisplayName(user)}
-      avatarUrl={getUserAvatarUrl(user)}
-      authProvider={user.app_metadata?.provider as string | undefined}
     />
   );
 }
