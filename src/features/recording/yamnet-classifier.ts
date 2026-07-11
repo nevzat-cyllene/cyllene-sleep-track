@@ -21,15 +21,40 @@ function resolveYamnetLoadConfig(rawUrl: string): { url: string; fromTFHub: bool
 const YAMNET_LOAD = resolveYamnetLoadConfig(RAW_YAMNET_MODEL_URL);
 
 const CLASS_MAP: Record<string, SleepEventType> = {
+  // Snore family — prefer labeling real night breathing events as snore
   Snoring: "snore",
+  Breathing: "snore",
+  Wheeze: "snore",
+  Snort: "snore",
+  Gasp: "snore",
+  Pant: "snore",
+  // Cough
   Cough: "cough",
   "Throat clearing": "cough",
+  Sneeze: "cough",
+  // Speech / talk
   Speech: "talk",
+  "Child speech, kid speaking": "talk",
   Conversation: "talk",
   "Narration, monologue": "talk",
+  Babbling: "talk",
+  Whispering: "talk",
   Laughter: "talk",
   Giggle: "talk",
-  Whispering: "talk",
+  Shout: "talk",
+  Yell: "talk",
+  Humming: "talk",
+  Groan: "talk",
+  Grunt: "talk",
+  // Bed movement / body / impact → noise bucket (UI: hareket / dış ses)
+  Run: "noise",
+  Shuffle: "noise",
+  "Walk, footsteps": "noise",
+  Hands: "noise",
+  "Finger snapping": "noise",
+  Clapping: "noise",
+  Chewing: "noise",
+  "Chewing, mastication": "noise",
 };
 
 const YAMNET_CLASSES = [
@@ -106,11 +131,37 @@ function resampleTo16k(audio: Float32Array, sampleRate: number): Float32Array {
   return result;
 }
 
+/** Snore cycles are often ~0.8–3.5s — autocorrelation of the RMS envelope. */
+function envelopePeriodicity(envelope: number[]): number {
+  if (envelope.length < 12) return 0;
+
+  const mean = envelope.reduce((sum, value) => sum + value, 0) / envelope.length;
+  const centered = envelope.map((value) => value - mean);
+  const energy = centered.reduce((sum, value) => sum + value * value, 0);
+  if (energy < 1e-10) return 0;
+
+  let best = 0;
+  const minLag = 8;
+  const maxLag = Math.min(35, Math.floor(envelope.length / 2));
+
+  for (let lag = minLag; lag <= maxLag; lag++) {
+    let corr = 0;
+    const n = envelope.length - lag;
+    for (let i = 0; i < n; i++) corr += centered[i] * centered[i + lag];
+    best = Math.max(best, corr / energy);
+  }
+
+  return Math.max(0, Math.min(1, best));
+}
+
 function heuristicClassify(audio: Float32Array, sampleRate: number): {
   type: SleepEventType;
   confidence: number;
 } {
-  const chunkSize = Math.floor(sampleRate * 0.1);
+  const chunkSize = Math.max(1, Math.floor(sampleRate * 0.1));
+  const durationSec = audio.length / Math.max(1, sampleRate);
+  const envelope: number[] = [];
+
   let lowEnergy = 0;
   let midEnergy = 0;
   let highEnergy = 0;
@@ -123,20 +174,21 @@ function heuristicClassify(audio: Float32Array, sampleRate: number): {
     const chunk = audio.subarray(i, Math.min(i + chunkSize, audio.length));
     let rms = 0;
     for (let j = 0; j < chunk.length; j++) rms += chunk[j] * chunk[j];
-    rms = Math.sqrt(rms / chunk.length);
+    rms = Math.sqrt(rms / Math.max(1, chunk.length));
     peak = Math.max(peak, rms);
+    envelope.push(rms);
     chunkCount += 1;
-    if (rms > 0.012) activeChunks += 1;
-    if (rms > 0.045) loudChunks += 1;
+    if (rms > 0.01) activeChunks += 1;
+    if (rms > 0.04) loudChunks += 1;
 
-    const zeroCrossings = chunk.reduce((count, val, idx, arr) => {
-      if (idx === 0) return 0;
-      return count + (val >= 0 !== arr[idx - 1] >= 0 ? 1 : 0);
-    }, 0);
-    const zcr = zeroCrossings / chunk.length;
+    let zeroCrossings = 0;
+    for (let j = 1; j < chunk.length; j++) {
+      if (chunk[j] >= 0 !== chunk[j - 1] >= 0) zeroCrossings += 1;
+    }
+    const zcr = zeroCrossings / Math.max(1, chunk.length);
 
-    if (zcr < 0.05) lowEnergy += rms;
-    else if (zcr < 0.15) midEnergy += rms;
+    if (zcr < 0.055) lowEnergy += rms;
+    else if (zcr < 0.14) midEnergy += rms;
     else highEnergy += rms;
   }
 
@@ -146,28 +198,102 @@ function heuristicClassify(audio: Float32Array, sampleRate: number): {
   const highRatio = highEnergy / total;
   const activeRatio = activeChunks / Math.max(1, chunkCount);
   const loudRatio = loudChunks / Math.max(1, chunkCount);
+  const periodicity = envelopePeriodicity(envelope);
 
-  if ((highRatio > 0.34 || loudRatio > 0.18) && peak > 0.045) {
-    return { type: "cough", confidence: 0.64 };
+  // Short, sharp, bright burst → cough / throat clear
+  if (
+    durationSec < 2.2 &&
+    peak > 0.048 &&
+    (highRatio > 0.3 || loudRatio > 0.2) &&
+    periodicity < 0.28
+  ) {
+    return { type: "cough", confidence: 0.66 };
   }
 
-  if (lowRatio > 0.68 && highRatio < 0.22 && activeRatio > 0.42 && peak > 0.024) {
-    return { type: "snore", confidence: 0.62 };
+  // Rhythmic low-band energy → snore (even a short 1–3 burst cluster)
+  const snoreLike =
+    (periodicity > 0.2 && lowRatio > 0.48 && highRatio < 0.34 && peak > 0.014) ||
+    (lowRatio > 0.56 && highRatio < 0.26 && activeRatio > 0.3 && peak > 0.016) ||
+    (periodicity > 0.28 && lowRatio > 0.42 && highRatio < 0.38 && peak > 0.012);
+
+  if (snoreLike && midRatio < 0.55) {
+    const confidence = Math.min(0.86, 0.58 + periodicity * 0.35 + lowRatio * 0.12);
+    return { type: "snore", confidence };
   }
 
-  if (midRatio > 0.35) {
-    return { type: "talk", confidence: 0.55 };
+  // Sustained mid-band, less rhythmic → talk
+  if (
+    midRatio > 0.3 &&
+    highRatio > 0.1 &&
+    periodicity < 0.26 &&
+    durationSec > 0.55 &&
+    peak > 0.014
+  ) {
+    return { type: "talk", confidence: 0.58 };
   }
+
+  // Short irregular / broadband → bed movement or external noise
+  if (durationSec < 3.5 && periodicity < 0.18 && (highRatio > 0.22 || loudRatio > 0.12)) {
+    return { type: "noise", confidence: 0.56 };
+  }
+
+  // Soft snore fallback: quiet low-band night sound that didn't meet talk rules
+  if (lowRatio > 0.5 && highRatio < 0.3 && peak > 0.012 && midRatio < 0.42) {
+    return { type: "snore", confidence: 0.54 };
+  }
+
   return { type: "noise", confidence: 0.5 };
+}
+
+function decideFromYamnetScores(mappedScores: Record<SleepEventType, number>): {
+  type: SleepEventType;
+  confidence: number;
+} | null {
+  const { snore, cough, talk, noise } = mappedScores;
+
+  // Cough wins only when clearly stronger than snore
+  if (cough > 0.1 && cough >= snore * 0.9 && cough >= talk * 0.85) {
+    return { type: "cough", confidence: Math.min(0.99, cough) };
+  }
+
+  // Prefer snore when present — even modest scores (1–3 events should still say Horlama)
+  if (snore > 0.08 && snore >= talk * 0.75 && snore >= cough * 0.7) {
+    return { type: "snore", confidence: Math.min(0.99, Math.max(snore, 0.45)) };
+  }
+
+  if (talk > 0.12 && talk >= snore * 1.05) {
+    return { type: "talk", confidence: Math.min(0.99, talk) };
+  }
+
+  if (noise > 0.14 && noise >= Math.max(snore, talk, cough)) {
+    return { type: "noise", confidence: Math.min(0.99, noise) };
+  }
+
+  const ranked = (
+    [
+      ["snore", snore],
+      ["cough", cough],
+      ["talk", talk],
+      ["noise", noise],
+    ] as const
+  ).sort((a, b) => b[1] - a[1])[0];
+
+  if (ranked[1] > (ranked[0] === "snore" ? 0.1 : 0.13)) {
+    return { type: ranked[0], confidence: Math.min(0.99, ranked[1]) };
+  }
+
+  return null;
 }
 
 export async function classifyAudio(
   audio: Float32Array,
   sampleRate: number
 ): Promise<{ type: SleepEventType; confidence: number }> {
+  const heuristic = heuristicClassify(audio, sampleRate);
+
   // Default path: no network, no TF — recording stays responsive.
   if (!YAMNET_LOAD) {
-    return heuristicClassify(audio, sampleRate);
+    return heuristic;
   }
 
   try {
@@ -182,8 +308,6 @@ export async function classifyAudio(
     if (Array.isArray(output)) output.forEach((t) => t.dispose());
     else output.dispose();
 
-    let bestType: SleepEventType = "noise";
-    let bestScore = 0;
     const mappedScores: Record<SleepEventType, number> = {
       snore: 0,
       cough: 0,
@@ -197,22 +321,19 @@ export async function classifyAudio(
       if (mapped) {
         mappedScores[mapped] = Math.max(mappedScores[mapped], scores[i]);
       }
-      if (mapped && scores[i] > bestScore) {
-        bestScore = scores[i];
-        bestType = mapped;
+    }
+
+    const decided = decideFromYamnetScores(mappedScores);
+    if (decided) {
+      // If model is soft-noise but heuristic clearly heard snore/talk/cough, trust heuristic.
+      if (decided.type === "noise" && heuristic.type !== "noise" && heuristic.confidence >= 0.54) {
+        return heuristic;
       }
-    }
-
-    if (mappedScores.cough > 0.12 && mappedScores.cough >= mappedScores.snore * 0.82) {
-      return { type: "cough", confidence: Math.min(0.99, mappedScores.cough) };
-    }
-
-    if (bestScore > (bestType === "snore" ? 0.18 : 0.15)) {
-      return { type: bestType, confidence: Math.min(0.99, bestScore) };
+      return decided;
     }
   } catch {
     // Model load/inference failed — use heuristic
   }
 
-  return heuristicClassify(audio, sampleRate);
+  return heuristic;
 }

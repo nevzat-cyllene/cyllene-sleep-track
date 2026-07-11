@@ -15,7 +15,7 @@ const EVENT_COPY: Record<
   snore: { title: "Horlama", unit: "horlama" },
   cough: { title: "Öksürük", unit: "öksürük" },
   talk: { title: "Konuşma", unit: "konuşma" },
-  noise: { title: "Ani ses", unit: "ani ses" },
+  noise: { title: "Hareket / dış ses", unit: "hareket" },
 };
 
 const EVENT_PRIORITY: SleepEventType[] = ["snore", "cough", "talk", "noise"];

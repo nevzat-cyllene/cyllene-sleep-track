@@ -24,7 +24,7 @@ const EVENT_LABELS: Record<SleepEventType, string> = {
   snore: "Horlama",
   cough: "Öksürük",
   talk: "Konuşma",
-  noise: "Ani ses",
+  noise: "Hareket / dış ses",
 };
 
 const EVENT_TONES: Record<SleepEventType, string> = {

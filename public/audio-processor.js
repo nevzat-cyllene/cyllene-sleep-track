@@ -1,6 +1,7 @@
-const THRESHOLD_DB = 42;
-const RELEASE_DB = 36;
-const MIN_DURATION_MS = 800;
+// Slightly more sensitive so quiet snore / bed-shift bursts still become events.
+const THRESHOLD_DB = 39;
+const RELEASE_DB = 33;
+const MIN_DURATION_MS = 600;
 const MAX_DURATION_MS = 90000;
 const SILENCE_GAP_MS = 5000;
 const LEVEL_INTERVAL_MS = 100;

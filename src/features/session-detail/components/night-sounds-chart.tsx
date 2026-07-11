@@ -11,7 +11,7 @@ const EVENT_LABELS: Record<string, string> = {
   snore: "Horlama",
   cough: "Öksürük",
   talk: "Konuşma",
-  noise: "Hareket",
+  noise: "Hareket / dış ses",
 };
 
 const EVENT_COLORS: Record<string, string> = {
