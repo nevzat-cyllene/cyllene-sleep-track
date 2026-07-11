@@ -1,42 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { ProfileClient } from "@/features/profile/profile-client";
-import type { Profile } from "@/types";
 
 export function ProfilePageClient() {
   const router = useRouter();
   const { user, ready } = useAuthUser();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!ready) return;
-
-    if (!user) {
-      router.replace("/login?redirect=/profile");
-      return;
-    }
-
-    const load = async () => {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (!error) setProfile(data);
-      setLoading(false);
-    };
-
-    void load();
+    if (!user) router.replace("/login?redirect=/profile");
   }, [ready, user, router]);
 
-  if (!ready || loading) {
+  if (!ready) {
     return (
       <div className="space-y-6 pb-4" aria-busy="true">
         <div className="flex items-center gap-4">
@@ -53,10 +31,5 @@ export function ProfilePageClient() {
 
   if (!user) return null;
 
-  return (
-    <ProfileClient
-      profile={profile}
-      email={user.email ?? null}
-    />
-  );
+  return <ProfileClient userId={user.id} email={user.email ?? null} />;
 }

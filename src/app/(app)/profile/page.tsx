@@ -8,18 +8,5 @@ export default async function ProfilePage() {
   if (error) redirect("/login");
   if (!data.user) redirect("/login");
 
-  let profile = null;
-
-  try {
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", data.user.id)
-      .maybeSingle();
-    profile = profileData;
-  } catch {
-    profile = null;
-  }
-
-  return <ProfileClient profile={profile} email={data.user.email ?? null} />;
+  return <ProfileClient userId={data.user.id} email={data.user.email ?? null} />;
 }

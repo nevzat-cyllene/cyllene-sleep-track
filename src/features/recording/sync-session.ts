@@ -217,6 +217,20 @@ export async function fetchSessionEvents(sessionId: string) {
   return data ?? [];
 }
 
+export async function fetchEventsForSessions(sessionIds: string[]) {
+  if (sessionIds.length === 0) return [];
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("sleep_events")
+    .select("*")
+    .in("session_id", sessionIds)
+    .order("occurred_at", { ascending: false })
+    .limit(120);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function fetchSessionNoiseSamples(sessionId: string) {
   const supabase = createClient();
   const { data, error } = await supabase

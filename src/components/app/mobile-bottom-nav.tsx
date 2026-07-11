@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, startTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, BookOpen, MoonStar, UserRound } from "lucide-react";
@@ -58,11 +58,27 @@ export function MobileBottomNav() {
               prefetch
               scroll={false}
               aria-current={active ? "page" : undefined}
-              onClick={() => {
-                if (!isActivePath(pathname, href)) {
-                  setPendingHref(href);
-                  navigator.vibrate?.(6);
+              onPointerDown={(event) => {
+                if (event.button !== 0) return;
+                if (isActivePath(pathname, href)) return;
+                setPendingHref(href);
+                try {
+                  router.prefetch(href);
+                } catch {
+                  // ignore
                 }
+              }}
+              onClick={(event) => {
+                if (isActivePath(pathname, href)) {
+                  event.preventDefault();
+                  return;
+                }
+                setPendingHref(href);
+                navigator.vibrate?.(6);
+                event.preventDefault();
+                startTransition(() => {
+                  router.push(href, { scroll: false });
+                });
               }}
               className={cn(
                 "relative flex min-h-14 flex-1 touch-manipulation flex-col items-center justify-center gap-1 rounded-2xl text-[9px] font-medium active:scale-[0.92]",

@@ -12,12 +12,16 @@ import { SwipeAction } from "@/components/ui/swipe-action";
 import { cn } from "@/lib/utils";
 import { getSleepEventSummary } from "@/lib/sleep-event-summary";
 import { deleteRemoteSleepSession } from "@/features/recording/sync-session";
-import { warmSessionDetail, warmUserSessions, seedUserSessions } from "@/features/recording/session-prefetch-cache";
+import {
+  getCachedUserSessions,
+  loadUserSessionsCached,
+  warmSessionDetail,
+  warmUserSessions,
+} from "@/features/recording/session-prefetch-cache";
 import { useI18n } from "@/i18n/runtime";
 import type { SleepSession } from "@/types";
 
 interface JournalClientProps {
-  sessions: SleepSession[];
   userId: string;
 }
 
@@ -37,9 +41,12 @@ function scoreTone(score: number) {
   return "from-rose-400 to-orange-300 text-rose-300";
 }
 
-export function JournalClient({ sessions, userId }: JournalClientProps) {
+export function JournalClient({ userId }: JournalClientProps) {
   const router = useRouter();
   const { t } = useI18n();
+  const [sessions, setSessions] = useState<SleepSession[]>(
+    () => getCachedUserSessions(userId) ?? []
+  );
   const [deletedSessionIds, setDeletedSessionIds] = useState(() => new Set<string>());
   const [sessionToDelete, setSessionToDelete] = useState<SleepSession | null>(null);
 
@@ -51,8 +58,21 @@ export function JournalClient({ sessions, userId }: JournalClientProps) {
   );
 
   useEffect(() => {
-    seedUserSessions(userId, sessions);
+    let cancelled = false;
+    void loadUserSessionsCached(userId)
+      .then((next) => {
+        if (!cancelled) setSessions(next);
+      })
+      .catch(() => {
+        // Keep cached/empty shell; user can refresh.
+      });
     warmUserSessions(userId);
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  useEffect(() => {
     visibleSessions.slice(0, 6).forEach((session) => {
       try {
         router.prefetch(`/journal/${session.id}`);
@@ -61,7 +81,7 @@ export function JournalClient({ sessions, userId }: JournalClientProps) {
       }
       warmSessionDetail(session.id, userId);
     });
-  }, [router, sessions, userId, visibleSessions]);
+  }, [router, userId, visibleSessions]);
   const groups = useMemo(
     () => groupByMonth(visibleSessions, monthLocale),
     [visibleSessions, monthLocale]

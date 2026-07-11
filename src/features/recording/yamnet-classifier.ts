@@ -154,6 +154,18 @@ function envelopePeriodicity(envelope: number[]): number {
   return Math.max(0, Math.min(1, best));
 }
 
+function envelopeVariability(envelope: number[]): number {
+  if (envelope.length < 3) return 0;
+  const mean = envelope.reduce((sum, value) => sum + value, 0) / envelope.length;
+  if (mean < 1e-6) return 0;
+  let variance = 0;
+  for (const value of envelope) {
+    const delta = value - mean;
+    variance += delta * delta;
+  }
+  return Math.sqrt(variance / envelope.length) / mean;
+}
+
 function heuristicClassify(audio: Float32Array, sampleRate: number): {
   type: SleepEventType;
   confidence: number;
@@ -199,6 +211,7 @@ function heuristicClassify(audio: Float32Array, sampleRate: number): {
   const activeRatio = activeChunks / Math.max(1, chunkCount);
   const loudRatio = loudChunks / Math.max(1, chunkCount);
   const periodicity = envelopePeriodicity(envelope);
+  const variability = envelopeVariability(envelope);
 
   // Short, sharp, bright burst → cough / throat clear
   if (
@@ -210,26 +223,30 @@ function heuristicClassify(audio: Float32Array, sampleRate: number): {
     return { type: "cough", confidence: 0.66 };
   }
 
-  // Rhythmic low-band energy → snore (even a short 1–3 burst cluster)
-  const snoreLike =
-    (periodicity > 0.2 && lowRatio > 0.48 && highRatio < 0.34 && peak > 0.014) ||
-    (lowRatio > 0.56 && highRatio < 0.26 && activeRatio > 0.3 && peak > 0.016) ||
-    (periodicity > 0.28 && lowRatio > 0.42 && highRatio < 0.38 && peak > 0.012);
+  // Speech first: voiced speech often looks "low-band" via ZCR, but is irregular (syllables).
+  const talkLike =
+    durationSec > 0.45 &&
+    peak > 0.012 &&
+    periodicity < 0.32 &&
+    (
+      (midRatio + highRatio > 0.28 && variability > 0.35) ||
+      (midRatio > 0.22 && highRatio > 0.08 && periodicity < 0.24) ||
+      (variability > 0.55 && periodicity < 0.28 && activeRatio > 0.25) ||
+      (midRatio > 0.3 && highRatio > 0.1 && periodicity < 0.26)
+    );
 
-  if (snoreLike && midRatio < 0.55) {
-    const confidence = Math.min(0.86, 0.58 + periodicity * 0.35 + lowRatio * 0.12);
-    return { type: "snore", confidence };
+  if (talkLike) {
+    return { type: "talk", confidence: Math.min(0.78, 0.52 + variability * 0.2 + midRatio * 0.15) };
   }
 
-  // Sustained mid-band, less rhythmic → talk
-  if (
-    midRatio > 0.3 &&
-    highRatio > 0.1 &&
-    periodicity < 0.26 &&
-    durationSec > 0.55 &&
-    peak > 0.014
-  ) {
-    return { type: "talk", confidence: 0.58 };
+  // Snore needs breathing rhythm — do not classify aperiodic speech as snore.
+  const snoreLike =
+    (periodicity > 0.3 && lowRatio > 0.48 && highRatio < 0.28 && midRatio < 0.42 && peak > 0.014) ||
+    (periodicity > 0.36 && lowRatio > 0.42 && highRatio < 0.32 && midRatio < 0.45 && peak > 0.012);
+
+  if (snoreLike) {
+    const confidence = Math.min(0.86, 0.55 + periodicity * 0.4 + lowRatio * 0.1);
+    return { type: "snore", confidence };
   }
 
   // Short irregular / broadband → bed movement or external noise
@@ -237,8 +254,15 @@ function heuristicClassify(audio: Float32Array, sampleRate: number): {
     return { type: "noise", confidence: 0.56 };
   }
 
-  // Soft snore fallback: quiet low-band night sound that didn't meet talk rules
-  if (lowRatio > 0.5 && highRatio < 0.3 && peak > 0.012 && midRatio < 0.42) {
+  // Soft snore only when there is at least weak breath rhythm
+  if (
+    periodicity > 0.22 &&
+    lowRatio > 0.52 &&
+    highRatio < 0.26 &&
+    midRatio < 0.38 &&
+    peak > 0.012 &&
+    variability < 0.45
+  ) {
     return { type: "snore", confidence: 0.54 };
   }
 
@@ -256,13 +280,13 @@ function decideFromYamnetScores(mappedScores: Record<SleepEventType, number>): {
     return { type: "cough", confidence: Math.min(0.99, cough) };
   }
 
-  // Prefer snore when present — even modest scores (1–3 events should still say Horlama)
-  if (snore > 0.08 && snore >= talk * 0.75 && snore >= cough * 0.7) {
-    return { type: "snore", confidence: Math.min(0.99, Math.max(snore, 0.45)) };
+  // Speech before soft snore bias — talking often leaks into snore classes.
+  if (talk > 0.1 && talk >= snore * 0.9 && talk >= cough * 0.85) {
+    return { type: "talk", confidence: Math.min(0.99, talk) };
   }
 
-  if (talk > 0.12 && talk >= snore * 1.05) {
-    return { type: "talk", confidence: Math.min(0.99, talk) };
+  if (snore > 0.12 && snore >= talk * 1.15 && snore >= cough * 0.7) {
+    return { type: "snore", confidence: Math.min(0.99, Math.max(snore, 0.45)) };
   }
 
   if (noise > 0.14 && noise >= Math.max(snore, talk, cough)) {
@@ -271,14 +295,14 @@ function decideFromYamnetScores(mappedScores: Record<SleepEventType, number>): {
 
   const ranked = (
     [
+      ["talk", talk],
       ["snore", snore],
       ["cough", cough],
-      ["talk", talk],
       ["noise", noise],
     ] satisfies Array<[SleepEventType, number]>
   ).sort((a, b) => b[1] - a[1])[0];
 
-  if (ranked[1] > (ranked[0] === "snore" ? 0.1 : 0.13)) {
+  if (ranked[1] > (ranked[0] === "snore" ? 0.14 : 0.12)) {
     return { type: ranked[0], confidence: Math.min(0.99, ranked[1]) };
   }
 
@@ -325,8 +349,15 @@ export async function classifyAudio(
 
     const decided = decideFromYamnetScores(mappedScores);
     if (decided) {
-      // If model is soft-noise but heuristic clearly heard snore/talk/cough, trust heuristic.
+      // Soft model noise / weak snore: trust a clear heuristic talk/cough/snore.
       if (decided.type === "noise" && heuristic.type !== "noise" && heuristic.confidence >= 0.54) {
+        return heuristic;
+      }
+      if (
+        decided.type === "snore" &&
+        heuristic.type === "talk" &&
+        (decided.confidence < 0.72 || heuristic.confidence >= 0.56)
+      ) {
         return heuristic;
       }
       return decided;

@@ -14,19 +14,36 @@ import type { Profile } from "@/types";
 import { LogOut, Moon, User } from "lucide-react";
 
 interface ProfileClientProps {
-  profile: Profile | null;
+  userId: string;
   email: string | null;
 }
 
-export function ProfileClient({ profile, email }: ProfileClientProps) {
+export function ProfileClient({ userId, email }: ProfileClientProps) {
   const router = useRouter();
   const { t } = useI18n();
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [sleepProfile, setSleepProfile] = useState<{ label: string; value: string }[]>([]);
 
   useEffect(() => {
     const answers = getOnboardingAnswers();
     if (answers) setSleepProfile(formatOnboardingSummary(answers, t));
   }, [t]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+    void supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setProfile(data);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const signOut = async () => {
     const supabase = createClient();

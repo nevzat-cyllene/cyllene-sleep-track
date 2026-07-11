@@ -18,6 +18,7 @@ import { RecordSetup } from "./components/record-setup";
 import { SleepModeScreen } from "./components/sleep-mode-screen";
 import { useRecording } from "./use-recording";
 import { retryUnsyncedSessions, syncSessionToSupabase, fetchUserSessions } from "./sync-session";
+import { seedUserSessions } from "./session-prefetch-cache";
 import { useRecordingUI } from "@/components/app/recording-ui-context";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -98,6 +99,7 @@ export function SleepPageClient() {
       if (uid) void retryUnsyncedSessions(uid);
       if (uid) {
         void fetchUserSessions(uid).then((sessions) => {
+          seedUserSessions(uid, sessions);
           setLastSession(sessions[0] ?? null);
         });
       }

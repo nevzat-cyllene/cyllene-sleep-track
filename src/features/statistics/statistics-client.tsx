@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import {
   Activity,
@@ -13,12 +13,17 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { buildTrendData, formatDurationHours, type StatsPeriod } from "@/lib/sleep-analytics";
+import { fetchEventsForSessions } from "@/features/recording/sync-session";
+import {
+  getCachedUserSessions,
+  loadUserSessionsCached,
+  warmUserSessions,
+} from "@/features/recording/session-prefetch-cache";
 import { useI18n } from "@/i18n/runtime";
 import type { SleepEvent, SleepEventType, SleepSession } from "@/types";
 
 interface StatisticsClientProps {
-  sessions: SleepSession[];
-  events: SleepEvent[];
+  userId: string;
 }
 
 const EVENT_TONES: Record<SleepEventType, string> = {
@@ -37,9 +42,34 @@ function average(values: number[]) {
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
 }
 
-export function StatisticsClient({ sessions, events }: StatisticsClientProps) {
+export function StatisticsClient({ userId }: StatisticsClientProps) {
   const { t } = useI18n();
   const [period, setPeriod] = useState<StatsPeriod>("months");
+  const [sessions, setSessions] = useState<SleepSession[]>(
+    () => getCachedUserSessions(userId) ?? []
+  );
+  const [events, setEvents] = useState<SleepEvent[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadUserSessionsCached(userId)
+      .then(async (nextSessions) => {
+        if (cancelled) return;
+        setSessions(nextSessions);
+        const nextEvents = await fetchEventsForSessions(
+          nextSessions.slice(0, 12).map((session) => session.id)
+        );
+        if (!cancelled) setEvents(nextEvents);
+      })
+      .catch(() => {
+        // Keep shell with cache/empty data.
+      });
+    warmUserSessions(userId);
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
   const trend = useMemo(
     () => buildTrendData(sessions, period, t("formatting.locale")),
     [sessions, period, t]
