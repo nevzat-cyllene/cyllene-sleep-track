@@ -8,6 +8,7 @@ import {
   isPwaInstalled,
   type WakeLockStatus,
 } from "@/lib/recording-device";
+import { useI18n } from "@/i18n/runtime";
 import { cn } from "@/lib/utils";
 
 interface RecordingGuidanceBannerProps {
@@ -41,13 +42,14 @@ export function RecordingGuidanceBanner({
   variant = "light",
   className,
 }: RecordingGuidanceBannerProps) {
+  const { t } = useI18n();
   const platform = getDevicePlatform();
   const pwa = isPwaInstalled();
 
   const guidance =
     mode === "setup"
-      ? getPreRecordingGuidance(platform, pwa)
-      : getRecordingGuidance(platform, wakeLockStatus, pwa);
+      ? getPreRecordingGuidance(platform, pwa, t)
+      : getRecordingGuidance(platform, wakeLockStatus, pwa, t);
 
   if (!guidance || (mode === "setup" && guidance.status === "ok")) {
     return null;
@@ -57,13 +59,7 @@ export function RecordingGuidanceBanner({
   const Icon = styles.icon;
 
   return (
-    <div
-      className={cn(
-        "rounded-xl border p-4",
-        styles[variant],
-        className
-      )}
-    >
+    <div className={cn("rounded-xl border p-4", styles[variant], className)}>
       <div className="flex gap-3">
         <Icon className="mt-0.5 h-5 w-5 shrink-0" />
         <div className="min-w-0 space-y-2">

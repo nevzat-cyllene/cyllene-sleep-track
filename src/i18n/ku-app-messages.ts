@@ -105,6 +105,71 @@ export const kuAppMessages = {
     openInBrowserBody: "Chrome, Safari, Yandex… hemû baş in",
     iosLineStart: "Li Safariê",
   },
+  deviceGuidance: {
+    recording: {
+      active: {
+        title: "Ekran vekirî dimîne",
+        pwaMessage:
+          "{{appShortName}} ji ekrana sereke vekiriye. Ev ekrana tomarê şevê dirêj hişyar dimîne; mîkrofon bêrawestîn dixebite. Dîsa jî em pêşniyar dikin telefonê têxe şarjê.",
+        browserMessage:
+          "Ekran hişyar tê girtin. Tomar dema ev ekran vekirî be berdewam dike — telefonê nekilîne û têxe şarjê.",
+      },
+      fallback: {
+        title: "Ekran dikare bigire",
+        message:
+          "Kilîda ekranê ya tevahî nayê piştgirîkirin; rêbaza yedek tê bikaranîn. Da ku tomar neqete, van mîhengan bike:",
+      },
+      inactive: {
+        title: "Tomar dikare qut bibe",
+        message:
+          "Ekran nehat hişyar girtin. Dema telefon were kilîtkirin an ekran bigire, mîkrofon dikare raweste. Ji kerema xwe van bike:",
+      },
+    },
+    preRecording: {
+      iosInstalled: {
+        title: "Sepan hatiye sazkirin — destpêkeke baş",
+        message:
+          "Dema tomarê bidest bixî, ev ekran vekirî dimîne û kilîda ekranê çalak dibe. Li iPhoneê ekran dîsa dikare bigire; ji bo ku tomar neqete dema kilîta xweber dirêj bike:",
+      },
+      installed: {
+        title: "Sepan hatiye sazkirin — tu amade yî",
+        message:
+          "Dema tomarê bitikînî, ev ekran vekirî dimîne û mîkrofon şevê dirêj dixebite. Telefonê nêzîkî nivînê, di şarjê de û bi vê ekranê xuya bihêle.",
+      },
+      iosNeedsInstall: {
+        title: "Pêşî li ekrana sereke zêde bike",
+        message:
+          "{{appName}} li Ekrana Sereke zêde bike û jê veke; paşê ekrana tomarê dikare hişyar bimîne:",
+      },
+      androidInstallRecommended: {
+        title: "Em pêşniyar dikin li ekrana sereke zêde bikî",
+        message:
+          "Tu dikarî ji tabê gerokê tomar bike; lê gava li ekrana sereke zêde bike, hişyarbûna ekranê û mîkrofon pêbawertir dixebitin.",
+      },
+      browser: {
+        title: "Tomara ji gerokê",
+        message:
+          "Tomar dema ev tab vekirî be berdewam dike. Destûr nede ku komputer bikeve moda xewê û tabê negire.",
+      },
+    },
+    steps: {
+      iosInstall: "Li Safariê parvebike → Li Ekrana Sereke Zêde Bike bi {{appName}} saz bike",
+      iosAutoLock:
+        "Mîheng → Ekran û Ronahî → Kilîta Xweber → Qet (an dirêjtirîn dem)",
+      iosSleepFocus: "Mîheng → Focus → Moda Xewê girtî be",
+      iosDoNotLock: "Di tomarê de bişkojka hêzê nepêlje û telefonê nekilîne",
+      keepChargingAndOpen: "Telefonê têxe şarjê û vê ekranê vekirî bihêle",
+      androidScreenTimeout:
+        "Mîheng → Ekran → Dema qutbûna ekranê → 30 deqe an Qet",
+      androidBattery:
+        "Mîheng → Sepan → {{appShortName}} → Pîl → Bêsînor / Bê sînorkirin",
+      androidDoNotClose: "Di tomarê de ekranê negire an ji sepanê dernekeve",
+      keepCharging: "Telefonê têxe şarjê",
+      desktopKeepTabOpen: "Taba gerokê an pencereya sepanê vekirî bihêle",
+      desktopPreventSleep: "Destûr nede ku komputer bikeve moda xewê",
+      browserInstall: "Ji menuya gerokê Li Ekrana Sereke Zêde Bike / Sepanê daxe hilbijêre",
+    },
+  },
   profile: {
     title: "Profîl",
     subtitle: "Hesab û mîhengên sepanê",

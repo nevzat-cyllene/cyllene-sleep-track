@@ -11,6 +11,11 @@ export interface RecordingGuidance {
   steps?: string[];
 }
 
+export type GuidanceTranslate = (
+  path: string,
+  params?: Record<string, string | number>
+) => string;
+
 export function getDevicePlatform(): DevicePlatform {
   if (typeof navigator === "undefined") return "unknown";
 
@@ -34,18 +39,22 @@ export function isPwaInstalled(): boolean {
   );
 }
 
-function getPlatformSteps(platform: DevicePlatform, isPwa: boolean): string[] {
+function getPlatformSteps(
+  platform: DevicePlatform,
+  isPwa: boolean,
+  t: GuidanceTranslate
+): string[] {
   if (platform === "ios") {
     const steps = [
-      "Ayarlar → Ekran ve Parlaklık → Otomatik Kilit → Hiçbir Zaman (veya en uzun süre)",
-      "Ayarlar → Odak → Uyku Modu kapalı olsun",
-      "Kayıt sırasında güç tuşuna basıp telefonu kilitlemeyin",
-      "Telefonu şarja takın ve bu ekranı açık bırakın",
+      t("deviceGuidance.steps.iosAutoLock"),
+      t("deviceGuidance.steps.iosSleepFocus"),
+      t("deviceGuidance.steps.iosDoNotLock"),
+      t("deviceGuidance.steps.keepChargingAndOpen"),
     ];
 
     if (!isPwa) {
       steps.unshift(
-        `Safari'de paylaş → Ana Ekrana Ekle ile ${siteConfig.name}'i kurun`
+        t("deviceGuidance.steps.iosInstall", { appName: siteConfig.name })
       );
     }
 
@@ -54,83 +63,84 @@ function getPlatformSteps(platform: DevicePlatform, isPwa: boolean): string[] {
 
   if (platform === "android") {
     return [
-      "Ayarlar → Ekran → Ekran zaman aşımı → 30 dakika veya Hiçbir Zaman",
-      `Ayarlar → Uygulamalar → ${siteConfig.shortName} → Pil → Kısıtlama yok / Sınırsız`,
-      "Kayıt sırasında ekranı kapatmayın veya uygulamadan çıkmayın",
-      "Telefonu şarja takın",
+      t("deviceGuidance.steps.androidScreenTimeout"),
+      t("deviceGuidance.steps.androidBattery", { appShortName: siteConfig.shortName }),
+      t("deviceGuidance.steps.androidDoNotClose"),
+      t("deviceGuidance.steps.keepCharging"),
     ];
   }
 
   return [
-    "Tarayıcı sekmesini veya uygulama penceresini açık bırakın",
-    "Bilgisayarın uyku moduna geçmesini engelleyin",
+    t("deviceGuidance.steps.desktopKeepTabOpen"),
+    t("deviceGuidance.steps.desktopPreventSleep"),
   ];
 }
 
 export function getRecordingGuidance(
   platform: DevicePlatform,
   wakeLockStatus: WakeLockStatus,
-  isPwa: boolean
+  isPwa: boolean,
+  t: GuidanceTranslate
 ): RecordingGuidance {
   if (wakeLockStatus === "active") {
     return {
       status: "ok",
-      title: "Ekran açık kalacak",
+      title: t("deviceGuidance.recording.active.title"),
       message: isPwa
-        ? `${siteConfig.shortName} ana ekrandan açık. Bu kayıt ekranı gece boyunca uyanık kalır; mikrofon kesintisiz çalışır. Yine de telefonu şarja takmanızı öneririz.`
-        : "Ekran uyanık tutuluyor. Kayıt bu ekran açıkken devam eder — telefonu kilitlemeyin ve şarja takın.",
+        ? t("deviceGuidance.recording.active.pwaMessage", {
+            appShortName: siteConfig.shortName,
+          })
+        : t("deviceGuidance.recording.active.browserMessage"),
     };
   }
 
   if (wakeLockStatus === "fallback") {
     return {
       status: "warning",
-      title: "Ekran kapanabilir",
-      message:
-        "Tam ekran kilidi desteklenmiyor; yedek yöntem kullanılıyor. Kayıt kesilmemesi için şu ayarları yapın:",
-      steps: getPlatformSteps(platform, isPwa),
+      title: t("deviceGuidance.recording.fallback.title"),
+      message: t("deviceGuidance.recording.fallback.message"),
+      steps: getPlatformSteps(platform, isPwa, t),
     };
   }
 
   return {
     status: "critical",
-    title: "Kayıt kesilebilir",
-    message:
-      "Ekran uyanık tutulamadı. Telefon kilitlenince veya ekran kapanınca mikrofon durabilir. Lütfen şunları yapın:",
-    steps: getPlatformSteps(platform, isPwa),
+    title: t("deviceGuidance.recording.inactive.title"),
+    message: t("deviceGuidance.recording.inactive.message"),
+    steps: getPlatformSteps(platform, isPwa, t),
   };
 }
 
 export function getPreRecordingGuidance(
   platform: DevicePlatform,
-  isPwa: boolean
+  isPwa: boolean,
+  t: GuidanceTranslate
 ): RecordingGuidance {
   if (isPwa) {
     if (platform === "ios") {
       return {
         status: "warning",
-        title: "Uygulama kurulu — iyi başlangıç",
-        message:
-          "Kayda başladığınızda bu ekran açık kalır ve ekran kilidi devreye girer. iPhone'da ekran yine de kapanabilir; kayıt kesilmesin diye otomatik kilit süresini uzatın:",
-        steps: getPlatformSteps(platform, isPwa),
+        title: t("deviceGuidance.preRecording.iosInstalled.title"),
+        message: t("deviceGuidance.preRecording.iosInstalled.message"),
+        steps: getPlatformSteps(platform, isPwa, t),
       };
     }
 
     return {
       status: "ok",
-      title: "Uygulama kurulu — hazırsınız",
-      message:
-        "Kayda bastığınızda bu ekran açık kalır ve mikrofon gece boyunca çalışır. Telefonu yatağınıza yakın, şarjda ve bu ekran görünür şekilde bırakın.",
+      title: t("deviceGuidance.preRecording.installed.title"),
+      message: t("deviceGuidance.preRecording.installed.message"),
     };
   }
 
   if (platform === "ios") {
     return {
       status: "warning",
-      title: "Önce ana ekrana ekleyin",
-      message:
-        `${siteConfig.name}'i Ana Ekrana Ekleyip oradan açın; ardından kayıt ekranı uyanık kalır:`,
-      steps: getPlatformSteps(platform, isPwa),
+      title: t("deviceGuidance.preRecording.iosNeedsInstall.title"),
+      message: t("deviceGuidance.preRecording.iosNeedsInstall.message", {
+        appName: siteConfig.name,
+      }),
+      steps: getPlatformSteps(platform, isPwa, t),
     };
   }
 
@@ -138,17 +148,15 @@ export function getPreRecordingGuidance(
   if (platform === "android") {
     return {
       status: "warning",
-      title: "Ana ekrana eklemenizi öneririz",
-      message:
-        "Tarayıcı sekmesinden kayıt yapabilirsiniz; ancak ana ekrana eklediğinizde ekran uyanık kalma ve mikrofon daha güvenilir çalışır.",
-      steps: ["Tarayıcı menüsünden Ana Ekrana Ekle / Uygulamayı yükle"],
+      title: t("deviceGuidance.preRecording.androidInstallRecommended.title"),
+      message: t("deviceGuidance.preRecording.androidInstallRecommended.message"),
+      steps: [t("deviceGuidance.steps.browserInstall")],
     };
   }
 
   return {
     status: "ok",
-    title: "Tarayıcıdan kayıt",
-    message:
-      "Kayıt bu sekme açıkken devam eder. Bilgisayarın uyku moduna geçmesini engelleyin ve sekmeyi kapatmayın.",
+    title: t("deviceGuidance.preRecording.browser.title"),
+    message: t("deviceGuidance.preRecording.browser.message"),
   };
 }

@@ -510,7 +510,7 @@ export const messages = {
         active: {
           title: "Ekran açık kalacak",
           pwaMessage:
-            "Cyllene ana ekrandan açık. Bu kayıt ekranı gece boyunca uyanık kalır; mikrofon kesintisiz çalışır. Yine de telefonu şarja takmanızı öneririz.",
+            "{{appShortName}} ana ekrandan açık. Bu kayıt ekranı gece boyunca uyanık kalır; mikrofon kesintisiz çalışır. Yine de telefonu şarja takmanızı öneririz.",
           browserMessage:
             "Ekran uyanık tutuluyor. Kayıt bu ekran açıkken devam eder — telefonu kilitlemeyin ve şarja takın.",
         },
@@ -561,7 +561,7 @@ export const messages = {
         androidScreenTimeout:
           "Ayarlar → Ekran → Ekran zaman aşımı → 30 dakika veya Hiçbir Zaman",
         androidBattery:
-          "Ayarlar → Uygulamalar → Cyllene → Pil → Kısıtlama yok / Sınırsız",
+          "Ayarlar → Uygulamalar → {{appShortName}} → Pil → Kısıtlama yok / Sınırsız",
         androidDoNotClose: "Kayıt sırasında ekranı kapatmayın veya uygulamadan çıkmayın",
         keepCharging: "Telefonu şarja takın",
         desktopKeepTabOpen: "Tarayıcı sekmesini veya uygulama penceresini açık bırakın",
@@ -1282,7 +1282,7 @@ export const messages = {
         active: {
           title: "Screen will stay awake",
           pwaMessage:
-            "Cyllene is open from the home screen. This recording screen stays awake through the night, and the microphone keeps running. We still recommend keeping the phone plugged in.",
+            "{{appShortName}} is open from the home screen. This recording screen stays awake through the night, and the microphone keeps running. We still recommend keeping the phone plugged in.",
           browserMessage:
             "The screen is being kept awake. Recording continues while this screen is open — do not lock the phone, and keep it charging.",
         },
@@ -1331,7 +1331,8 @@ export const messages = {
         iosDoNotLock: "Do not press the power button or lock the phone during recording",
         keepChargingAndOpen: "Keep the phone charging and leave this screen open",
         androidScreenTimeout: "Settings → Display → Screen timeout → 30 minutes or Never",
-        androidBattery: "Settings → Apps → Cyllene → Battery → Unrestricted / No restriction",
+        androidBattery:
+          "Settings → Apps → {{appShortName}} → Battery → Unrestricted / No restriction",
         androidDoNotClose: "Do not turn off the screen or leave the app during recording",
         keepCharging: "Keep the phone charging",
         desktopKeepTabOpen: "Keep the browser tab or app window open",
