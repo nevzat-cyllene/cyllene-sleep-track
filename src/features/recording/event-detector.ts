@@ -9,9 +9,9 @@ export interface EventDetectorConfig {
 }
 
 export const DEFAULT_DETECTOR_CONFIG: EventDetectorConfig = {
-  thresholdDb: 42,
-  releaseDb: 36,
-  minDurationMs: 800,
+  thresholdDb: 39,
+  releaseDb: 33,
+  minDurationMs: 600,
   maxDurationMs: 90000,
   silenceGapMs: 5000,
 };

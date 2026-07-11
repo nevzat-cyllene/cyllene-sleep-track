@@ -65,5 +65,5 @@ export const EVENT_TYPE_LABELS: Record<string, string> = {
   snore: "Horlama",
   cough: "Öksürük",
   talk: "Konuşma",
-  noise: "Gürültü",
+  noise: "Hareket / dış ses",
 };
