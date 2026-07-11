@@ -1,0 +1,196 @@
+================================================================================
+  CYLLENE UYKU TAKİPÇİSİ — UYGULAMA BİLGİ DOSYASI
+================================================================================
+Son güncelleme : 11 Temmuz 2026
+Asıl kod dalı  : codex/modern-saas-ui  →  main (birleştirilmiş / birleştirilecek)
+Repo           : https://github.com/nevzat-cyllene/cyllene-sleep-track
+Paket adı      : cyllene-sleep-track (v0.1.0)
+
+--------------------------------------------------------------------------------
+1) ÜRÜN ÖZETİ
+--------------------------------------------------------------------------------
+Ad (TR)        : Cyllene Uyku Takipçisi
+Kısa ad        : Cyllene
+Teknik ad      : Cyllene Sleep Track
+
+Ne yapar?
+  Gece uykusunu telefon (veya tarayıcı) üzerinden ses analizi ile izler.
+  Horlama, öksürük, konuşma ve ani sesleri tespit eder; sabah özet / skor sunar.
+  Ham ses dosyaları buluta GİTMEZ — cihaz içinde (IndexedDB) kalır.
+  Buluta gidenler: oturum özeti, olay metadata, dakika gürültü örnekleri.
+
+Hedef kullanıcı:
+  Uyku kalitesini ve gece seslerini takip etmek isteyen bireyler.
+  Arayüz Türkçe (lang=tr). Mobil / PWA öncelikli.
+
+--------------------------------------------------------------------------------
+2) ANA ÖZELLİKLER
+--------------------------------------------------------------------------------
+• Uyku kaydı (/sleep)
+  - Mikrofon ile gece boyu kayıt
+  - Canlı ses seviyesi, süre, olay sayısı
+  - Ekran uyanık tutma (Wake Lock + video fallback)
+  - Platform rehberliği (iOS / Android / masaüstü)
+  - Kayıt bitince skor + senkron + günlük detayına yönlendirme
+
+• Günlük (/journal)
+  - Gece oturumları listesi (skor, süre, olay özeti)
+  - Uzak oturum: /journal/[sessionId]
+  - Yerel (senkron olmamış): /journal/local/[localSessionId]
+  - Olay listesi ve yerel WAV dinleme
+
+• İstatistik (/statistics)
+  - Trend grafikleri, dönem sekmeleri
+  - Olay dağılımı (horlama / öksürük / konuşma / ani ses)
+
+• Profil (/profile)
+  - Hesap, plan (free | premium), onboarding özeti, çıkış
+  - Mobilde “Ana ekrana ekle” kartı
+
+• PWA (Ana ekrana ekle)
+  - Manifest: start_url=/sleep, standalone, portrait
+  - Service worker (Serwist, production)
+  - İlk açılışta (ay animasyonu bittikten ~4.5 sn sonra) yükleme bildirimi
+  - iOS: Paylaş → Ana Ekrana Ekle
+  - Android: native install prompt veya menüden yükle
+  - Logo: titanium ay ikonu (icon-192 / icon-512)
+
+• Karşılama / onboarding
+  - Misafir ay animasyonu (PremiumEntrance) + ambiyans sesi
+  - Girişli kullanıcıda kısa onboarding soruları
+  - WelcomeGate tüm uygulamayı sarar
+
+• Gece sesleri / olaylar
+  - Tipler: snore, cough, talk, noise
+  - NightSoundsChart (uyku evreleri + sinyal): şimdilik SADECE masaüstü
+    (mobilde bozuk render nedeniyle gizlendi; sonra eklenecek)
+  - Olay klipleri IndexedDB’de WAV olarak saklanır
+
+--------------------------------------------------------------------------------
+3) TEKNİK YIĞIN (STACK)
+--------------------------------------------------------------------------------
+• Next.js 16 (App Router) + React 19
+• Tailwind CSS 4, shadcn/Base UI, Framer Motion, Recharts, Lucide
+• Supabase (auth + Postgres + RLS)
+• TensorFlow.js + YAMNet (opsiyonel; CORS yoksa heuristik sınıflandırma)
+• IndexedDB (idb) — yerel oturumlar ve ses klipleri
+• Serwist PWA
+• Deploy: Vercel
+• AudioWorklet: public/audio-processor.js
+
+--------------------------------------------------------------------------------
+4) ÖNEMLİ ROTALAR
+--------------------------------------------------------------------------------
+/                 Pazarlama (landing)
+/login  /signup   Giriş / kayıt
+/auth/callback    OAuth / magic link oturum
+/sleep            Ana kayıt hub (PWA başlangıç)
+/journal          Gece arşivi
+/journal/[id]     Uzak oturum detayı
+/journal/local/…  Yerel oturum detayı
+/statistics       Trendler
+/profile          Hesap
+/record           → /sleep yönlendirme
+/dashboard        → /journal yönlendirme
+
+Korunan sayfalar (middleware): sleep, journal, statistics, profile, dashboard, record
+Giriş yoksa → /login?redirect=…
+
+Navigasyon:
+  Masaüstü → sidebar
+  Mobil → alt tab bar (kayıt sırasında gizlenir)
+
+--------------------------------------------------------------------------------
+5) KAYIT AKIŞI (ÖZET)
+--------------------------------------------------------------------------------
+Mikrofon (getUserMedia)
+  → AudioContext + AudioWorklet (eşik ~42 dB)
+  → seviye örnekleri + olay tamponu
+  → classifyAudio (YAMNet veya heuristik)
+  → WAV → IndexedDB (eventClips)
+  → oturum → IndexedDB (sessions), periyodik kayıt
+  → stop → uyku skoru → Supabase senkron (metadata)
+  → /journal/... veya /journal/local/...
+
+Wake Lock:
+  navigator.wakeLock → olmazsa sessiz video fallback → olmazsa kritik uyarı
+
+Not:
+  Farklı cihaz / farklı Vercel Preview URL = farklı IndexedDB.
+  Mobilde kaydedilen klip masaüstü web’de görünmeyebilir (beklenen davranış).
+
+--------------------------------------------------------------------------------
+6) KİMLİK DOĞRULAMA (AUTH)
+--------------------------------------------------------------------------------
+• Supabase e-posta/şifre
+• Google OAuth → /auth/callback
+• Cookie tabanlı SSR oturum
+• Yeni kullanıcıda profiles kaydı (DB trigger)
+• Plan alanları: free | premium (premium UI şimdilik “yakında”)
+
+--------------------------------------------------------------------------------
+7) MOBİL vs MASAÜSTÜ FARKLARI
+--------------------------------------------------------------------------------
+• PWA kurulum bildirimi / banner → sadece mobil
+• Kaydı bitir: mobilde yukarı kaydır; web’de “Kaydı tamamla” butonu
+• Gece ses grafikleri → masaüstü açık, mobil gizli (geçici)
+• Profil PWA kartı → sadece mobil
+• Kayıt ekranı fixed overlay → portal ile body’ye (mobil kırpılma düzeltmesi)
+
+--------------------------------------------------------------------------------
+8) ORTAM DEĞİŞKENLERİ (.env)
+--------------------------------------------------------------------------------
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+# NEXT_PUBLIC_YAMNET_MODEL_URL=   (opsiyonel; tfhub CORS sorunlu olabilir)
+# GROQ_API_KEY=                   (opsiyonel, AI içgörü — planlı)
+
+--------------------------------------------------------------------------------
+9) VERİ MODELİ (KISA)
+--------------------------------------------------------------------------------
+Yerel IndexedDB:
+  cyllene-sleep-track        → oturumlar
+  cyllene-sleep-track-audio  → olay WAV klipleri
+
+Supabase tabloları:
+  profiles, sleep_sessions, sleep_events, sleep_noise_samples, subscriptions
+  (+ RLS politikaları)
+
+Migration’lar:
+  supabase/migrations/001_initial_schema.sql
+  supabase/migrations/002_noise_samples.sql
+
+--------------------------------------------------------------------------------
+10) GELİŞTİRME / DEPLOY
+--------------------------------------------------------------------------------
+Geliştirme:
+  npm install
+  npm run dev
+
+Önemli branch notu:
+  Uzun süre asıl sağlam kod codex/modern-saas-ui üzerinde geliştirildi.
+  main ile birleştirildikten sonra production hattı main olmalıdır.
+  Vercel Preview her push’ta YENİ URL üretir; eski preview linkleri eski kodu gösterir.
+  Test için her zaman en yeni Preview / Production URL’sini kullanın.
+
+Bilinen geçici kısıtlar:
+  - Mobil gece sesi / uyku evresi grafik kartları gizlendi (sonra düzeltilecek)
+  - YAMNet için CORS-safe model URL yoksa heuristik kullanılır
+  - Premium abonelik UI’si henüz tam ürün değil
+
+--------------------------------------------------------------------------------
+11) SON DÖNEMDE YAPILAN ÖNEMLİ DÜZELTMELER (ÖZET)
+--------------------------------------------------------------------------------
+• Kayıt başlangıcında TensorFlow/CORS donması giderildi
+• Welcome ses fade / auth takılması düzeltildi
+• Mobil kayıt ekranı (fixed + transform) portal ile düzeltildi
+• Masaüstü “Kaydı tamamla” + ambiyans sızıntısı kesildi
+• Main’deki ay logoları bu branch’e alındı
+• İlk açılış PWA yükleme bildirimi eklendi (animasyon sonrası gecikmeli)
+• Mobil bozuk gece grafik kartları geçici olarak kapatıldı
+
+================================================================================
+Bu dosya ürün ve teknik referans içindir. Güncel davranış için kaynak kod
+ve en son deploy edilen sürüm esas alınmalıdır.
+================================================================================

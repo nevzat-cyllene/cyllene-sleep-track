@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SwipeToStopProps {
@@ -9,99 +10,100 @@ interface SwipeToStopProps {
 }
 
 const THRESHOLD = 72;
-const TRACK_H = 80;
+
+function useIsCoarsePointer() {
+  const [coarse, setCoarse] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(pointer: coarse)");
+    const sync = () => setCoarse(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  return coarse;
+}
 
 export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
+  const isCoarsePointer = useIsCoarsePointer();
   const [dragY, setDragY] = useState(0);
-  const dragYRef = useRef(0);
   const startYRef = useRef(0);
   const draggingRef = useRef(false);
 
   const progress = Math.min(1, dragY / THRESHOLD);
 
   const onPointerDown = (e: React.PointerEvent) => {
-    if (disabled) return;
+    if (disabled || !isCoarsePointer) return;
     draggingRef.current = true;
     startYRef.current = e.clientY;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
     if (!draggingRef.current || disabled) return;
     const delta = startYRef.current - e.clientY;
-    const next = Math.max(0, Math.min(delta, THRESHOLD + 12));
-    dragYRef.current = next;
-    setDragY(next);
+    setDragY(Math.max(0, Math.min(delta, THRESHOLD + 20)));
   };
 
-  const finishDrag = () => {
+  const onPointerUp = () => {
     if (!draggingRef.current) return;
     draggingRef.current = false;
-    if (dragYRef.current >= THRESHOLD) {
-      navigator.vibrate?.(12);
+    if (dragY >= THRESHOLD) {
       onStop();
     }
-    dragYRef.current = 0;
     setDragY(0);
   };
 
-  return (
-    <div className="mx-auto w-full max-w-[340px] shrink-0 pt-2">
-      <p className="mb-4 text-center text-[13px] font-medium text-white/35">
-        {disabled ? "Gece kaydediliyor…" : "Uyanmak için yukarı kaydır"}
-      </p>
+  // Desktop / fine pointer: centered click control — swipe is a mobile gesture.
+  if (!isCoarsePointer) {
+    return (
+      <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-3 pb-4">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={onStop}
+          className={cn(
+            "flex h-14 w-full max-w-xs items-center justify-center rounded-full border border-[#8dbdff]/18 bg-[linear-gradient(135deg,rgba(143,209,255,.16),rgba(23,105,255,.28))] text-sm font-semibold text-white shadow-[0_16px_48px_rgba(23,105,255,.22),inset_0_1px_0_rgba(255,255,255,.1)] transition hover:brightness-110 active:scale-[0.98]",
+            disabled && "opacity-50"
+          )}
+        >
+          {disabled ? "Rapor hazırlanıyor…" : "Kaydı tamamla"}
+        </button>
+      </div>
+    );
+  }
 
+  return (
+    <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-3 pb-4">
+      <p className="text-xs uppercase tracking-[0.25em] text-white/40">
+        {disabled ? "Rapor hazırlanıyor…" : "Kaydı tamamlamak için yukarı kaydır"}
+      </p>
       <div
         className={cn(
-          "relative touch-none select-none overflow-hidden rounded-[28px]",
-          "border border-white/[0.1] bg-white/[0.05] backdrop-blur-2xl",
-          "shadow-[0_8px_40px_oklch(0.62_0.22_285/15%)]",
-          disabled && "pointer-events-none opacity-60"
+          "relative flex h-16 w-full touch-none select-none items-end justify-center overflow-hidden rounded-full border border-[#8dbdff]/14 bg-[linear-gradient(180deg,rgba(23,105,255,.11),rgba(255,255,255,.035))] shadow-[0_16px_60px_rgba(23,105,255,.16),inset_0_1px_0_rgba(255,255,255,.08)]",
+          disabled && "opacity-50"
         )}
-        style={{ height: TRACK_H }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={finishDrag}
-        onPointerCancel={finishDrag}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
       >
         <div
-          className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-cyllene-purple/20 via-cyllene-cyan/15 to-transparent transition-[height] duration-75"
-          style={{ height: `${32 + progress * (TRACK_H - 32)}px` }}
+          className="absolute inset-x-0 bottom-0 rounded-full bg-[linear-gradient(180deg,rgba(111,210,255,.3),rgba(23,105,255,.18))] transition-all"
+          style={{ height: `${Math.max(28, 28 + progress * 36)}px` }}
         />
-
-        <div
-          className="absolute inset-x-0 flex justify-center"
-          style={{
-            bottom: 12,
-            transform: `translateY(-${dragY}px)`,
-          }}
+        <button
+          type="button"
+          disabled={disabled}
+          className="relative z-10 mb-2 flex flex-col items-center gap-1 rounded-full px-6 py-2 text-[#bddcff]/76 transition-transform"
+          style={{ transform: `translateY(-${dragY}px)` }}
         >
-          <div
-            role="button"
-            tabIndex={disabled ? -1 : 0}
-            aria-label={disabled ? "Kayıt kaydediliyor" : "Kaydı bitir"}
-            className={cn(
-              "flex h-12 w-12 flex-col items-center justify-center gap-[5px] rounded-full",
-              "border border-white/[0.14] bg-white/[0.1] backdrop-blur-md",
-              "shadow-[0_4px_24px_rgba(0,0,0,0.35)]",
-              "transition-[border-color,background-color,box-shadow] duration-75",
-              progress > 0.5 && "border-cyllene-cyan/45 bg-cyllene-cyan/10 shadow-[0_0_20px_oklch(0.78_0.14_195/25%)]"
-            )}
-          >
-            <span
-              className={cn(
-                "block h-[2px] w-6 rounded-full",
-                progress > 0.5 ? "bg-cyllene-cyan" : "bg-white/70"
-              )}
-            />
-            <span
-              className={cn(
-                "block h-[2px] w-6 rounded-full",
-                progress > 0.5 ? "bg-cyllene-cyan/80" : "bg-white/50"
-              )}
-            />
-          </div>
-        </div>
+          <ChevronUp className={cn("h-5 w-5", progress > 0.6 && "text-cyllene-cyan")} />
+          <span className="text-[10px] uppercase tracking-widest">
+            {disabled ? "Analiz" : "Kaydı tamamla"}
+          </span>
+        </button>
       </div>
     </div>
   );

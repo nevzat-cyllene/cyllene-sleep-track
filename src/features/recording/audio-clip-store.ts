@@ -60,3 +60,8 @@ export async function deleteSessionClips(sessionId: string): Promise<void> {
     tx.done,
   ]);
 }
+
+export async function deleteEventClip(eventId: string): Promise<void> {
+  const db = await getDB();
+  await db.delete("eventClips", eventId);
+}

@@ -25,11 +25,6 @@ export function getDevicePlatform(): DevicePlatform {
   return "unknown";
 }
 
-export function isMobilePlatform(platform?: DevicePlatform): boolean {
-  const p = platform ?? getDevicePlatform();
-  return p === "ios" || p === "android";
-}
-
 export function isPwaInstalled(): boolean {
   if (typeof window === "undefined") return false;
 
@@ -109,34 +104,51 @@ export function getRecordingGuidance(
 export function getPreRecordingGuidance(
   platform: DevicePlatform,
   isPwa: boolean
-): RecordingGuidance | null {
-  if (platform === "desktop") {
-    return null;
-  }
-
+): RecordingGuidance {
   if (isPwa) {
     if (platform === "ios") {
       return {
         status: "warning",
-        title: "iPhone ekran kilidi",
+        title: "Uygulama kurulu — iyi başlangıç",
         message:
-          "Kayıt sırasında ekran açık kalır; yine de otomatik kilit süresini uzatmanızı öneririz:",
+          "Kayda başladığınızda bu ekran açık kalır ve ekran kilidi devreye girer. iPhone'da ekran yine de kapanabilir; kayıt kesilmesin diye otomatik kilit süresini uzatın:",
         steps: getPlatformSteps(platform, isPwa),
       };
     }
 
-    return null;
+    return {
+      status: "ok",
+      title: "Uygulama kurulu — hazırsınız",
+      message:
+        "Kayda bastığınızda bu ekran açık kalır ve mikrofon gece boyunca çalışır. Telefonu yatağınıza yakın, şarjda ve bu ekran görünür şekilde bırakın.",
+    };
   }
 
   if (platform === "ios") {
     return {
       status: "warning",
-      title: "Kayıt öncesi öneri",
+      title: "Önce ana ekrana ekleyin",
       message:
-        "Uzun uyku kaydı için uygulamayı ana ekrana ekleyip oradan açmanız daha güvenilirdir. İsterseniz tarayıcıdan da başlayabilirsiniz.",
+        `${siteConfig.name}'i Ana Ekrana Ekleyip oradan açın; ardından kayıt ekranı uyanık kalır:`,
       steps: getPlatformSteps(platform, isPwa),
     };
   }
 
-  return null;
+  // Install / "Ana ekrana ekle" guidance is mobile-only.
+  if (platform === "android") {
+    return {
+      status: "warning",
+      title: "Ana ekrana eklemenizi öneririz",
+      message:
+        "Tarayıcı sekmesinden kayıt yapabilirsiniz; ancak ana ekrana eklediğinizde ekran uyanık kalma ve mikrofon daha güvenilir çalışır.",
+      steps: ["Tarayıcı menüsünden Ana Ekrana Ekle / Uygulamayı yükle"],
+    };
+  }
+
+  return {
+    status: "ok",
+    title: "Tarayıcıdan kayıt",
+    message:
+      "Kayıt bu sekme açıkken devam eder. Bilgisayarın uyku moduna geçmesini engelleyin ve sekmeyi kapatmayın.",
+  };
 }

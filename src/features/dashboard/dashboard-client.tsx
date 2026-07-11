@@ -15,6 +15,7 @@ import { formatDate, formatTime } from "@/lib/sleep-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { SleepEvent, SleepSession } from "@/types";
+import { getSleepEventSummary } from "@/lib/sleep-event-summary";
 
 interface DashboardClientProps {
   initialSessions: SleepSession[];
@@ -36,10 +37,23 @@ export function DashboardClient({
 
   useEffect(() => {
     if (!activeSession) return;
-    setLoadingEvents(true);
-    void fetchSessionEvents(activeSession.id)
-      .then(setEvents)
-      .finally(() => setLoadingEvents(false));
+    let cancelled = false;
+
+    const timer = window.setTimeout(() => {
+      setLoadingEvents(true);
+      void fetchSessionEvents(activeSession.id)
+        .then((nextEvents) => {
+          if (!cancelled) setEvents(nextEvents);
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingEvents(false);
+        });
+    }, 0);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, [activeSession]);
 
   useEffect(() => {
@@ -80,6 +94,13 @@ export function DashboardClient({
     activeSession.cough_count +
     activeSession.talk_count +
     activeSession.noise_count;
+  const keyEventSummary = getSleepEventSummary(activeSession);
+  const KeyEventIcon =
+    keyEventSummary.type === "snore"
+      ? Wind
+      : keyEventSummary.type === "cough"
+        ? Activity
+        : Volume2;
 
   return (
     <div className="space-y-8">
@@ -116,10 +137,10 @@ export function DashboardClient({
             icon={Clock}
           />
           <StatCard
-            title="Horlama"
-            value={`${activeSession.snore_count}`}
-            subtitle="olay tespit edildi"
-            icon={Wind}
+            title={keyEventSummary.statTitle}
+            value={`${keyEventSummary.count}`}
+            subtitle={keyEventSummary.statSubtitle}
+            icon={KeyEventIcon}
           />
           <StatCard
             title="Toplam Olay"

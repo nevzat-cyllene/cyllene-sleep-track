@@ -7,11 +7,11 @@ import {
   getActiveSession,
   saveSession,
 } from "./session-store";
-import { saveEventClip, getEventClip } from "./audio-clip-store";
-import { float32ToWav, decodeWavBlob } from "@/lib/audio-clip-utils";
-import { findMergeTargetEvent, mergeFloat32Audio } from "@/lib/event-merge";
-import { classifyAudio, preloadYamnet } from "./yamnet-classifier";
+import { saveEventClip } from "./audio-clip-store";
+import { float32ToWav } from "@/lib/audio-clip-utils";
+import { classifyAudio } from "./yamnet-classifier";
 import { calculateSleepScore } from "@/lib/sleep-utils";
+import { stopAllAppAudio } from "@/lib/stop-app-audio";
 import type { LocalSleepEvent, LocalSleepSession, NoiseSample } from "@/types";
 
 export type RecordingStatus = "idle" | "preparing" | "recording" | "stopping";
@@ -33,6 +33,10 @@ interface WorkletEventMessage {
   peakDb: number;
   audioData: ArrayBuffer;
   sampleRate: number;
+}
+
+interface WorkletFlushedMessage {
+  type: "flushed";
 }
 
 const LIVE_WAVE_SAMPLES = 120;
@@ -60,6 +64,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
   const [error, setError] = useState<string | null>(null);
   const [wakeLockActive, setWakeLockActive] = useState(false);
   const [wakeLockMethod, setWakeLockMethod] = useState<WakeLockMethod>("none");
+  const [currentSession, setCurrentSession] = useState<LocalSleepSession | null>(null);
 
   const sessionRef = useRef<LocalSleepSession | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -70,7 +75,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
   const elapsedIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const wasHiddenRef = useRef(false);
   const eventQueueRef = useRef<Promise<void>>(Promise.resolve());
-  const stoppingRef = useRef(false);
+  const flushResolveRef = useRef<(() => void) | null>(null);
 
   const persistSession = useCallback(async () => {
     if (sessionRef.current) {
@@ -81,7 +86,7 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
   const enqueueEvent = useCallback(
     (payload: PendingEventPayload) => {
       eventQueueRef.current = eventQueueRef.current.then(async () => {
-        if (!sessionRef.current || stoppingRef.current) return;
+        if (!sessionRef.current) return;
 
         const sampleRate = payload.pendingEvent.durationMs > 0
           ? audioContextRef.current?.sampleRate ?? 44100
@@ -95,53 +100,18 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
           confidence,
         };
 
-        const mergeTarget = findMergeTargetEvent(sessionRef.current.events, classifiedEvent);
+        const wavBlob = float32ToWav(payload.audioData, sampleRate);
 
-        if (mergeTarget) {
-          const gapMs = Math.max(
-            0,
-            classifiedEvent.timestamp - (mergeTarget.timestamp + mergeTarget.durationMs)
-          );
-          const gapSamples = Math.floor((gapMs / 1000) * sampleRate);
-          const silence = gapSamples > 0 ? new Float32Array(gapSamples) : null;
+        await saveEventClip({
+          eventId: classifiedEvent.id,
+          sessionId: sessionRef.current.id,
+          occurredAt: classifiedEvent.timestamp,
+          sampleRate,
+          wavBlob,
+          durationMs: classifiedEvent.durationMs,
+        });
 
-          const existingClip = await getEventClip(mergeTarget.id);
-          const chunks: Float32Array[] = [];
-          if (existingClip) {
-            const decoded = await decodeWavBlob(existingClip.wavBlob);
-            if (decoded) chunks.push(decoded);
-          }
-          if (silence) chunks.push(silence);
-          chunks.push(payload.audioData);
-
-          const mergedAudio = mergeFloat32Audio(chunks);
-          mergeTarget.durationMs += gapMs + classifiedEvent.durationMs;
-          mergeTarget.peakDb = Math.max(mergeTarget.peakDb, classifiedEvent.peakDb);
-          mergeTarget.confidence = Math.max(mergeTarget.confidence, confidence);
-
-          await saveEventClip({
-            eventId: mergeTarget.id,
-            sessionId: sessionRef.current.id,
-            occurredAt: mergeTarget.timestamp,
-            sampleRate,
-            wavBlob: float32ToWav(mergedAudio, sampleRate),
-            durationMs: mergeTarget.durationMs,
-          });
-        } else {
-          const wavBlob = float32ToWav(payload.audioData, sampleRate);
-
-          await saveEventClip({
-            eventId: classifiedEvent.id,
-            sessionId: sessionRef.current.id,
-            occurredAt: classifiedEvent.timestamp,
-            sampleRate,
-            wavBlob,
-            durationMs: classifiedEvent.durationMs,
-          });
-
-          sessionRef.current.events.push(classifiedEvent);
-        }
-
+        sessionRef.current.events.push(classifiedEvent);
         setEventCount(sessionRef.current.events.length);
         setDetectedEvents([...sessionRef.current.events]);
         await persistSession();
@@ -152,6 +122,26 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
 
   const drainEventQueue = useCallback(async () => {
     await eventQueueRef.current;
+  }, []);
+
+  const flushActiveEvent = useCallback(async () => {
+    const worklet = workletRef.current;
+    if (!worklet) return;
+
+    await new Promise<void>((resolve) => {
+      const timeout = window.setTimeout(() => {
+        flushResolveRef.current = null;
+        resolve();
+      }, 700);
+
+      flushResolveRef.current = () => {
+        window.clearTimeout(timeout);
+        flushResolveRef.current = null;
+        resolve();
+      };
+
+      worklet.port.postMessage({ type: "flush" });
+    });
   }, []);
 
   const cleanupAudio = useCallback(async () => {
@@ -183,16 +173,16 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
   const startRecording = useCallback(async () => {
     setError(null);
     setStatus("preparing");
-    stoppingRef.current = false;
     eventQueueRef.current = Promise.resolve();
+    // Welcome MP3 / previous event clips must not leak into the night session.
+    stopAllAppAudio();
 
     try {
-      await preloadYamnet();
-
       const existing = await getActiveSession();
       const session = existing ?? createSession(userId);
       if (userId) session.userId = userId;
       sessionRef.current = session;
+      setCurrentSession(session);
 
       const sessionOffsetMs = Date.now() - session.startedAt;
 
@@ -207,6 +197,9 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
 
       const audioContext = new AudioContext();
       audioContextRef.current = audioContext;
+      if (audioContext.state === "suspended") {
+        await audioContext.resume();
+      }
 
       await audioContext.audioWorklet.addModule("/audio-processor.js");
       const source = audioContext.createMediaStreamSource(stream);
@@ -221,7 +214,13 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
       worklet.port.onmessage = (event) => {
         const data = event.data as
           | { type: "level"; db: number; elapsedMs: number }
-          | WorkletEventMessage;
+          | WorkletEventMessage
+          | WorkletFlushedMessage;
+
+        if (data.type === "flushed") {
+          flushResolveRef.current?.();
+          return;
+        }
 
         if (!sessionRef.current) return;
 
@@ -291,8 +290,8 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
 
   const stopRecording = useCallback(async () => {
     setStatus("stopping");
-    stoppingRef.current = true;
 
+    await flushActiveEvent();
     await cleanupAudio();
     await drainEventQueue();
 
@@ -319,8 +318,8 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
     setCurrentDb(0);
     setRecentDbSamples([]);
     setElapsedMs(0);
-    stoppingRef.current = false;
-  }, [cleanupAudio, drainEventQueue, onSessionComplete]);
+    setCurrentSession(null);
+  }, [cleanupAudio, drainEventQueue, flushActiveEvent, onSessionComplete]);
 
   useEffect(() => {
     const onVisibility = () => {
@@ -364,6 +363,6 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
     wakeLockMethod,
     startRecording,
     stopRecording,
-    session: sessionRef.current,
+    session: currentSession,
   };
 }

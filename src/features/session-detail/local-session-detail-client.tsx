@@ -3,16 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CloudOff } from "lucide-react";
-import { getSession } from "@/features/recording/session-store";
+import { getSession, saveSession } from "@/features/recording/session-store";
+import { deleteEventClip } from "@/features/recording/audio-clip-store";
 import { SleepScoreRing } from "@/features/dashboard/components/sleep-score-ring";
 import { DetectedEventsList } from "@/features/dashboard/components/detected-events-list";
 import { NightSoundsChart } from "@/features/session-detail/components/night-sounds-chart";
-import { formatDurationHours, formatSessionTimeRange, formatWeekdayRange } from "@/lib/sleep-analytics";
+import { formatDurationHours, formatWeekdayRange } from "@/lib/sleep-analytics";
 import { formatDate } from "@/lib/sleep-utils";
 import type { LocalSleepEvent, LocalSleepSession, SleepEvent, SleepNoiseSample, SleepSession } from "@/types";
 import { Button } from "@/components/ui/button";
+import { DeleteConfirmSheet } from "@/components/ui/delete-confirm-sheet";
 import { syncSessionToSupabase } from "@/features/recording/sync-session";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -86,26 +87,9 @@ export function LocalSessionDetailClient({
   const [local, setLocal] = useState<LocalSleepSession | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [activeFilters, setActiveFilters] = useState(
-    () => new Set(["snore", "cough", "talk", "noise"])
-  );
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    setIsMobile(window.matchMedia("(max-width: 767px)").matches);
-  }, []);
-
-  const toggleFilter = (type: string) => {
-    setActiveFilters((prev) => {
-      const next = new Set(prev);
-      if (next.has(type)) {
-        if (next.size > 1) next.delete(type);
-      } else {
-        next.add(type);
-      }
-      return next;
-    });
-  };
+  const [activeFilters] = useState(() => new Set(["snore", "cough", "talk", "noise"]));
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<SleepEvent | null>(null);
 
   useEffect(() => {
     void getSession(localSessionId).then((s) => {
@@ -124,6 +108,41 @@ export function LocalSessionDetailClient({
       router.push(`/journal/${result.id}`);
     } else {
       toast.error(result.error);
+    }
+  };
+
+  const handleDeleteLocalEvent = (event: SleepEvent) => {
+    setEventToDelete(event);
+  };
+
+  const confirmDeleteLocalEvent = async () => {
+    const event = eventToDelete;
+    if (!local || !event) return;
+
+    const previousLocal = local;
+    const previousSelectedEventId = selectedEventId;
+    const updated = {
+      ...local,
+      events: local.events.filter((item) => item.id !== event.id),
+    };
+
+    setEventToDelete(null);
+    setDeletingEventId(event.id);
+    setLocal(updated);
+    setSelectedEventId((selected) =>
+      selected === event.id ? updated.events[0]?.id ?? null : selected
+    );
+
+    try {
+      await saveSession(updated);
+      await deleteEventClip(event.id);
+      toast.success("Olay silindi.");
+    } catch (error) {
+      setLocal(previousLocal);
+      setSelectedEventId(previousSelectedEventId);
+      toast.error(error instanceof Error ? error.message : "Olay silinemedi.");
+    } finally {
+      setDeletingEventId(null);
     }
   };
 
@@ -151,7 +170,7 @@ export function LocalSessionDetailClient({
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-xl font-semibold">Uyku kaydı</h1>
+          <h1 className="text-xl font-semibold">Gece kaydı</h1>
           <p className="text-sm text-muted-foreground">{formatDate(session.started_at)}</p>
         </div>
       </div>
@@ -172,17 +191,12 @@ export function LocalSessionDetailClient({
         </div>
       )}
 
-      <div className="rounded-[22px] border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent p-5">
-        <p className="capitalize text-lg font-medium tracking-tight">
+      <div className="rounded-3xl border border-white/10 bg-[#0A1621]/90 p-5 shadow-soft">
+        <p className="mb-4 capitalize text-lg font-medium">
           {formatWeekdayRange(session.started_at, session.ended_at)}
         </p>
-        <p className="mt-1 text-[13px] text-white/45">
-          {formatSessionTimeRange(session.started_at, session.ended_at)}
-          <span className="mx-2 text-white/20">·</span>
-          {formatDurationHours(session.duration_minutes)}
-        </p>
 
-        <div className="mt-6 grid gap-6 sm:grid-cols-[auto_1fr]">
+        <div className="grid gap-6 sm:grid-cols-[auto_1fr]">
           <SleepScoreRing
             score={session.sleep_score ?? 0}
             size={140}
@@ -204,31 +218,45 @@ export function LocalSessionDetailClient({
             </div>
           </div>
         </div>
+
+        {/* Night charts are desktop-only for now — mobile SVG/stage cards still render broken. */}
+        <div className="mt-6 hidden md:block">
+          <NightSoundsChart
+            session={session}
+            events={events}
+            noiseSamples={noiseSamples}
+            selectedEventId={selectedEventId}
+            onSelectEvent={setSelectedEventId}
+            activeFilters={activeFilters}
+          />
+        </div>
       </div>
 
-      <NightSoundsChart
-        session={session}
-        events={events}
-        noiseSamples={noiseSamples}
-        selectedEventId={selectedEventId}
-        onSelectEvent={setSelectedEventId}
-        activeFilters={activeFilters}
-        onToggleFilter={toggleFilter}
-        compact={isMobile}
-      />
-
-      <div className="rounded-[22px] border border-white/[0.08] bg-white/[0.02] p-4">
-        <h2 className="mb-3 text-sm font-medium">
+      <div className="rounded-2xl border border-white/10 bg-card/40 p-4">
+        <h2 className="mb-3 text-sm font-medium text-muted-foreground">
           Tespit edilen olaylar ({events.length})
         </h2>
         <DetectedEventsList
           events={events}
           selectedEventId={selectedEventId}
           onSelectEvent={setSelectedEventId}
-          emptyMessage="Bu uyku için olay tespit edilmedi."
-          audioContext="local"
+          deletingEventId={deletingEventId}
+          onDeleteEvent={(event) => void handleDeleteLocalEvent(event as SleepEvent)}
+          emptyMessage="Bu gece olay tespit edilmedi."
         />
       </div>
+
+      <DeleteConfirmSheet
+        open={Boolean(eventToDelete)}
+        title="Bu yerel ses olayını silmek istediğinizden emin misiniz?"
+        description="Olay ve telefonda duran ses klibi cihazdan kaldırılacak."
+        confirmLabel="Olayı sil"
+        isPending={Boolean(deletingEventId)}
+        onOpenChange={(open) => {
+          if (!open) setEventToDelete(null);
+        }}
+        onConfirm={confirmDeleteLocalEvent}
+      />
     </div>
   );
 }

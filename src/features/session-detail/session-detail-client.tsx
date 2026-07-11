@@ -2,29 +2,41 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Calendar } from "lucide-react";
+import { toast } from "sonner";
+import { DeleteConfirmSheet } from "@/components/ui/delete-confirm-sheet";
 import { SleepScoreRing } from "@/features/dashboard/components/sleep-score-ring";
 import { DetectedEventsList } from "@/features/dashboard/components/detected-events-list";
 import { NightSoundsChart } from "./components/night-sounds-chart";
 import {
+  deleteRemoteSleepEvent,
   fetchSessionById,
   fetchSessionEvents,
   fetchSessionNoiseSamples,
-  fetchUserSessions,
 } from "@/features/recording/sync-session";
 import {
   formatDurationHours,
-  formatSessionTimeRange,
   formatWeekdayRange,
   getWeekSessions,
 } from "@/lib/sleep-analytics";
-import type { SleepEvent, SleepNoiseSample, SleepSession } from "@/types";
+import { fetchUserSessions } from "@/features/recording/sync-session";
+import type { SleepEvent, SleepEventType, SleepNoiseSample, SleepSession } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface SessionDetailClientProps {
   sessionId: string;
   userId: string;
 }
+
+const countKeys: Record<
+  SleepEventType,
+  "snore_count" | "cough_count" | "talk_count" | "noise_count"
+> = {
+  snore: "snore_count",
+  cough: "cough_count",
+  talk: "talk_count",
+  noise: "noise_count",
+};
 
 export function SessionDetailClient({ sessionId, userId }: SessionDetailClientProps) {
   const [session, setSession] = useState<SleepSession | null>(null);
@@ -36,11 +48,8 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
     () => new Set(["snore", "cough", "talk", "noise"])
   );
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    setIsMobile(window.matchMedia("(max-width: 767px)").matches);
-  }, []);
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<SleepEvent | null>(null);
 
   const toggleFilter = (type: string) => {
     setActiveFilters((prev) => {
@@ -55,7 +64,6 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
   };
 
   useEffect(() => {
-    setLoading(true);
     void Promise.all([
       fetchSessionById(sessionId),
       fetchSessionEvents(sessionId),
@@ -63,7 +71,6 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
       fetchUserSessions(userId),
     ])
       .then(([s, ev, noise, all]) => {
-        if (!s) return;
         setSession(s);
         setEvents(ev);
         setNoiseSamples(noise);
@@ -72,6 +79,42 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
       })
       .finally(() => setLoading(false));
   }, [sessionId, userId]);
+
+  const handleDeleteEvent = (event: SleepEvent) => {
+    setEventToDelete(event);
+  };
+
+  const confirmDeleteEvent = async () => {
+    const event = eventToDelete;
+    if (!event) return;
+
+    const previousEvents = events;
+    const previousSelectedEventId = selectedEventId;
+    const previousSession = session;
+    const nextEvents = events.filter((item) => item.id !== event.id);
+
+    setEventToDelete(null);
+    setDeletingEventId(event.id);
+    setEvents(nextEvents);
+    setSelectedEventId((selected) => (selected === event.id ? nextEvents[0]?.id ?? null : selected));
+    setSession((current) => {
+      if (!current) return current;
+      const key = countKeys[event.event_type];
+      return { ...current, [key]: Math.max(0, current[key] - 1) };
+    });
+
+    try {
+      await deleteRemoteSleepEvent(event.id, event.session_id, event.event_type);
+      toast.success("Olay silindi.");
+    } catch (error) {
+      setEvents(previousEvents);
+      setSelectedEventId(previousSelectedEventId);
+      setSession(previousSession);
+      toast.error(error instanceof Error ? error.message : "Olay silinemedi.");
+    } finally {
+      setDeletingEventId(null);
+    }
+  };
 
   if (loading || !session) {
     return (
@@ -84,28 +127,28 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
   const asleepMinutes = Math.round((session.duration_minutes ?? 0) * 0.92);
 
   return (
-    <div className="space-y-5 pb-4">
+    <div className="space-y-6 pb-4">
       <div className="flex items-center gap-3">
         <Link
           href="/journal"
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.03]"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-semibold tracking-tight">Uyku özeti</h1>
-          <p className="truncate text-sm text-muted-foreground capitalize">
-            {formatWeekdayRange(session.started_at, session.ended_at)}
-          </p>
+        <div className="flex-1">
+          <h1 className="text-xl font-semibold">Gece seslerinizi dinleyin</h1>
         </div>
+        <Calendar className="h-5 w-5 text-muted-foreground" />
       </div>
 
-      <div className="rounded-[22px] border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent p-5">
-        <p className="text-[13px] text-white/45">
-          {formatSessionTimeRange(session.started_at, session.ended_at)}
-          <span className="mx-2 text-white/20">·</span>
-          {formatDurationHours(session.duration_minutes)}
-        </p>
+      <div className="rounded-3xl border border-white/10 bg-[#0A1621]/90 p-5 shadow-soft">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-lg font-medium capitalize">
+              {formatWeekdayRange(session.started_at, session.ended_at)}
+            </p>
+          </div>
+        </div>
 
         <div className="mt-4 flex justify-center gap-2">
           {["P", "S", "Ç", "P", "C", "C", "P"].map((label, i) => {
@@ -114,10 +157,10 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
               <div
                 key={i}
                 className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full border text-[10px]",
+                  "flex h-9 w-9 items-center justify-center rounded-full border text-xs",
                   has
-                    ? "border-cyllene-cyan/40 text-cyllene-cyan"
-                    : "border-white/[0.08] text-white/25"
+                    ? "border-orange-400/60 text-orange-300"
+                    : "border-white/10 text-white/30"
                 )}
               >
                 {label}
@@ -129,51 +172,63 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
         <div className="mt-6 grid gap-6 sm:grid-cols-[auto_1fr]">
           <SleepScoreRing
             score={session.sleep_score ?? 0}
-            size={132}
+            size={140}
             label="Kalite"
             showPercent
           />
           <div className="flex flex-col justify-center gap-4">
             <div>
-              <p className="text-2xl font-semibold tabular-nums tracking-tight">
+              <p className="text-2xl font-semibold tabular-nums">
                 {formatDurationHours(session.duration_minutes)}
               </p>
               <p className="text-sm text-muted-foreground">Yatakta geçen süre</p>
             </div>
             <div>
-              <p className="text-2xl font-semibold tabular-nums tracking-tight">
+              <p className="text-2xl font-semibold tabular-nums">
                 {formatDurationHours(asleepMinutes)}
               </p>
               <p className="text-sm text-muted-foreground">Tahmini uyku süresi</p>
             </div>
           </div>
         </div>
+
+        {/* Night charts are desktop-only for now — mobile SVG/stage cards still render broken. */}
+        <div className="mt-6 hidden md:block">
+          <NightSoundsChart
+            session={session}
+            events={events}
+            noiseSamples={noiseSamples}
+            selectedEventId={selectedEventId}
+            onSelectEvent={setSelectedEventId}
+            activeFilters={activeFilters}
+            onToggleFilter={toggleFilter}
+          />
+        </div>
       </div>
 
-      <NightSoundsChart
-        session={session}
-        events={events}
-        noiseSamples={noiseSamples}
-        selectedEventId={selectedEventId}
-        onSelectEvent={setSelectedEventId}
-        activeFilters={activeFilters}
-        onToggleFilter={toggleFilter}
-        compact={isMobile}
-      />
-
-      <div className="rounded-[22px] border border-white/[0.08] bg-white/[0.02] p-4">
-        <h2 className="mb-1 text-sm font-medium">Tespit edilen olaylar</h2>
-        <p className="mb-3 text-xs text-muted-foreground">
-          Ses klipleri yalnızca kaydı yaptığınız telefonda dinlenebilir.
-        </p>
+      <div className="rounded-2xl border border-white/10 bg-card/40 p-4">
+        <h2 className="mb-3 text-sm font-medium text-muted-foreground">Tespit edilen olaylar</h2>
         <DetectedEventsList
           events={events}
           selectedEventId={selectedEventId}
           onSelectEvent={setSelectedEventId}
-          emptyMessage="Bu uyku için olay tespit edilmedi."
-          audioContext="cloud"
+          deletingEventId={deletingEventId}
+          onDeleteEvent={(event) => void handleDeleteEvent(event as SleepEvent)}
+          emptyMessage="Bu gece olay tespit edilmedi."
         />
       </div>
+
+      <DeleteConfirmSheet
+        open={Boolean(eventToDelete)}
+        title="Bu ses olayını silmek istediğinizden emin misiniz?"
+        description="Olay listeden kaldırılacak; varsa ilişkili ses klibi de temizlenecek."
+        confirmLabel="Olayı sil"
+        isPending={Boolean(deletingEventId)}
+        onOpenChange={(open) => {
+          if (!open) setEventToDelete(null);
+        }}
+        onConfirm={confirmDeleteEvent}
+      />
     </div>
   );
 }

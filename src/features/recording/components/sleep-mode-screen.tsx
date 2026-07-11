@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatElapsedParts, formatWallClockParts } from "@/lib/sleep-utils";
+import { CheckCircle2, ShieldCheck, Sparkles, Waves } from "lucide-react";
+import { formatElapsedClock, formatWallClock } from "@/lib/sleep-utils";
 import type { WakeLockMethod } from "@/features/recording/wake-lock";
 import { RecordingGuidanceBanner } from "./recording-guidance-banner";
 import { LiveSoundWave } from "./live-sound-wave";
 import { SwipeToStop } from "./swipe-to-stop";
-import { getWakeGreeting } from "@/lib/sleep-greeting";
+import { cn } from "@/lib/utils";
 
 interface SleepModeScreenProps {
   elapsedMs: number;
@@ -14,9 +15,28 @@ interface SleepModeScreenProps {
   recentDbSamples: number[];
   wakeLockActive: boolean;
   wakeLockMethod: WakeLockMethod;
+  eventCount: number;
   syncing?: boolean;
   onStop: () => void;
 }
+
+const ANALYSIS_STEPS = [
+  {
+    icon: CheckCircle2,
+    label: "Kayıt kapandı",
+    description: "Gece oturumu güvenle mühürlendi.",
+  },
+  {
+    icon: Waves,
+    label: "Ses olayları ayrıştırılıyor",
+    description: "Horlama, öksürük ve ani sesler rapor için inceleniyor.",
+  },
+  {
+    icon: ShieldCheck,
+    label: "Rapor hazırlanıyor",
+    description: "Ham ses cihazında kalır; günlüğe yalnızca özet gider.",
+  },
+] as const;
 
 function toWakeLockStatus(active: boolean, method: WakeLockMethod) {
   if (active && method === "api") return "active" as const;
@@ -24,15 +44,82 @@ function toWakeLockStatus(active: boolean, method: WakeLockMethod) {
   return "inactive" as const;
 }
 
-function ClockDisplay({ hours, minutes, seconds }: { hours: string; minutes: string; seconds: string }) {
+function AnalysisHandoffScreen({
+  elapsedMs,
+  eventCount,
+}: {
+  elapsedMs: number;
+  eventCount: number;
+}) {
   return (
-    <div className="flex items-baseline justify-center tabular-nums tracking-tight">
-      <span className="bg-gradient-to-b from-white to-white/80 bg-clip-text text-[4.25rem] font-extralight leading-none text-transparent sm:text-[5rem]">
-        {hours}
-        <span className="text-white/30">:</span>
-        {minutes}
-      </span>
-      <span className="ml-1.5 text-2xl font-light text-cyllene-cyan/80 sm:text-3xl">{seconds}</span>
+    <div className="fixed inset-0 z-[300] flex flex-col overflow-hidden bg-[#020816] text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="night-stars absolute inset-0 opacity-24" />
+        <div className="absolute left-1/2 top-[-12rem] h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-[#1769ff]/20 blur-[120px]" />
+        <div className="absolute bottom-[-14rem] right-[-10rem] h-[30rem] w-[30rem] rounded-full bg-[#6fd2ff]/12 blur-[120px]" />
+        <div className="absolute inset-x-8 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(151,199,255,.46),transparent)]" />
+      </div>
+
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6 py-10">
+        <div className="text-center">
+          <div className="relative mx-auto h-36 w-36">
+            <div className="absolute inset-0 rounded-full border border-[#8dbdff]/18 bg-[#155eff]/8 shadow-[0_0_90px_rgba(23,105,255,.28)]" />
+            <div className="absolute inset-3 animate-ping rounded-full border border-[#6fd2ff]/18" />
+            <div className="absolute inset-4 animate-[spin_5.6s_linear_infinite] rounded-full border border-transparent border-r-[#8dbdff]/24 border-t-[#6fd2ff]/70" />
+            <div className="absolute inset-9 flex items-center justify-center rounded-full border border-[#8dbdff]/16 bg-[linear-gradient(145deg,rgba(23,105,255,.28),rgba(111,210,255,.08))] shadow-[inset_0_1px_0_rgba(255,255,255,.12)]">
+              <Sparkles className="h-8 w-8 text-[#9bd5ff]" />
+            </div>
+          </div>
+
+          <p className="mt-8 text-xs font-medium uppercase tracking-[0.32em] text-[#78b7ff]">
+            Analiz hazırlanıyor
+          </p>
+          <h1 className="mt-4 text-balance text-4xl font-medium leading-tight tracking-[-0.055em]">
+            Gece kaydın rapora dönüşüyor.
+          </h1>
+          <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-white/48">
+            Cyllene ses izlerini inceliyor, olayları ayırıyor ve günlüğe hazır, sakin bir
+            sabah özeti hazırlıyor.
+          </p>
+        </div>
+
+        <div className="mt-8 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl border border-[#8dbdff]/12 bg-white/[0.035] p-4">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">Süre</p>
+            <p className="mt-2 font-mono text-2xl font-light tabular-nums">
+              {formatElapsedClock(elapsedMs)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-[#8dbdff]/12 bg-white/[0.035] p-4">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
+              İncelenen olay
+            </p>
+            <p className="mt-2 text-2xl font-medium tracking-[-0.05em]">{eventCount}</p>
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-2 rounded-[1.5rem] border border-[#8dbdff]/12 bg-[linear-gradient(145deg,rgba(8,20,45,.72),rgba(4,10,24,.82))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,.06)]">
+          {ANALYSIS_STEPS.map((step, index) => (
+            <div key={step.label} className="flex items-start gap-3 rounded-2xl bg-white/[0.025] p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#8dbdff]/12 bg-[#1769ff]/12 text-[#9bd5ff]">
+                <step.icon className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium">{step.label}</p>
+                  {index === 1 && (
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#6fd2ff] opacity-70" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#6fd2ff]" />
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-xs leading-5 text-white/38">{step.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -43,6 +130,7 @@ export function SleepModeScreen({
   recentDbSamples,
   wakeLockActive,
   wakeLockMethod,
+  eventCount,
   syncing,
   onStop,
 }: SleepModeScreenProps) {
@@ -55,83 +143,73 @@ export function SleepModeScreen({
     return () => clearInterval(interval);
   }, []);
 
-  const wall = formatWallClockParts(wallClock);
-  const elapsed = formatElapsedParts(elapsedMs);
+  if (isFinishing) {
+    return <AnalysisHandoffScreen elapsedMs={elapsedMs} eventCount={eventCount} />;
+  }
 
-  const wakeGreeting = getWakeGreeting(elapsedMs, wallClock);
-
-  const statusLabel = isFinishing
-    ? "Gece kaydediliyor"
-    : wakeLockStatus === "active"
-      ? "Kayıt aktif"
+  const statusLabel =
+    wakeLockStatus === "active"
+      ? "Kayıt devam ediyor"
       : wakeLockStatus === "fallback"
         ? "Ekran kapanabilir"
-        : "Bağlantıyı kontrol edin";
+        : "Kayıt kesilebilir";
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-[oklch(0.08_0.04_265)] text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-5%,oklch(0.62_0.22_285/18%),transparent_50%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_40%_at_80%_100%,oklch(0.78_0.14_195/10%),transparent_45%)]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[oklch(0.06_0.04_265)] to-transparent" />
+    <div className="fixed inset-0 z-[300] flex flex-col overflow-hidden bg-[#020816] text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="night-stars absolute inset-0 opacity-[0.18]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_86%_52%_at_50%_-12%,rgba(111,210,255,.16),transparent_62%),radial-gradient(circle_at_18%_22%,rgba(23,105,255,.12),transparent_34%),linear-gradient(180deg,rgba(2,8,22,.2)_0%,rgba(2,8,22,.88)_72%,rgba(1,5,14,.96)_100%)]" />
+        <div className="absolute left-1/2 top-[-13rem] h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-[#1769ff]/18 blur-[115px]" />
+        <div className="absolute bottom-[-15rem] right-[-10rem] h-[30rem] w-[30rem] rounded-full bg-[#6fd2ff]/12 blur-[120px]" />
+        <div className="absolute inset-x-8 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(151,199,255,.42),transparent)]" />
+      </div>
 
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(2.5rem,env(safe-area-inset-top))]">
-        {!isFinishing && wakeLockStatus !== "active" && (
+      <div className="relative z-10 flex flex-1 flex-col px-4 pb-8 pt-10">
+        {wakeLockStatus !== "active" && (
           <RecordingGuidanceBanner
             mode="recording"
             wakeLockStatus={wakeLockStatus}
             variant="dark"
-            className="mb-5 shrink-0"
+            className="mb-4"
           />
         )}
 
-        {isFinishing && (
-          <div className="mb-5 shrink-0 rounded-[20px] border border-cyllene-cyan/20 bg-gradient-to-br from-cyllene-purple/10 to-cyllene-cyan/5 px-5 py-4 backdrop-blur-xl">
-            <p className="text-[15px] font-medium text-white">{wakeGreeting.title}</p>
-            <p className="mt-1 text-sm font-light leading-relaxed text-white/55">
-              {wakeGreeting.message}
+        <div className="flex flex-1 flex-col items-center justify-center gap-10">
+          <div className="text-center">
+            <p className="text-[11px] uppercase tracking-[0.45em] text-[#8dbdff]/45">Şu an</p>
+            <p className="mt-2 text-5xl font-extralight tracking-wider tabular-nums text-white sm:text-6xl">
+              {formatWallClock(wallClock)}
             </p>
-          </div>
-        )}
-
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-8">
-          <div className="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-3.5 py-1.5 backdrop-blur-md">
-            {!isFinishing ? (
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyllene-cyan/50" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-cyllene-cyan" />
-              </span>
-            ) : (
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyllene-cyan" />
-            )}
-            <span className="text-[11px] font-medium tracking-wide text-white/50">{statusLabel}</span>
           </div>
 
           <div className="text-center">
-            <p className="mb-3 text-[13px] font-medium tracking-wide text-white/35">Şimdi</p>
-            <ClockDisplay hours={wall.hours} minutes={wall.minutes} seconds={wall.seconds} />
-          </div>
-
-          <div className="rounded-[22px] border border-white/[0.1] bg-white/[0.04] px-8 py-4 shadow-[0_0_40px_oklch(0.62_0.22_285/8%)] backdrop-blur-xl">
-            <p className="mb-2 text-center text-[11px] font-medium tracking-wide text-white/35">
-              {isFinishing ? "Toplam uyku" : "Uyku süresi"}
-            </p>
-            <div className="flex items-baseline justify-center gap-1 tabular-nums">
-              <span className="text-3xl font-light tracking-tight text-white/95">
-                {elapsed.hours}
-                <span className="text-cyllene-cyan/30">:</span>
-                {elapsed.minutes}
-                <span className="text-cyllene-cyan/30">:</span>
-                {elapsed.seconds}
+            <div className="mb-3 flex items-center justify-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
               </span>
+              <p className="text-[11px] uppercase tracking-[0.45em] text-white/40">
+                Uyku süresi
+              </p>
             </div>
+            <p className="font-mono text-5xl font-light tabular-nums tracking-tight text-[#eef7ff] drop-shadow-[0_0_28px_rgba(111,210,255,.14)] sm:text-6xl">
+              {formatElapsedClock(elapsedMs)}
+            </p>
           </div>
 
-          {!isFinishing && (
-            <LiveSoundWave samples={recentDbSamples} currentDb={currentDb} className="w-full max-w-md" />
-          )}
+          <LiveSoundWave samples={recentDbSamples} currentDb={currentDb} />
+
+          <p
+            className={cn(
+              "text-xs uppercase tracking-[0.2em]",
+              wakeLockStatus === "active" ? "text-[#75f2d6]/75" : "text-amber-300/75"
+            )}
+          >
+            {statusLabel}
+          </p>
         </div>
 
-        <SwipeToStop onStop={onStop} disabled={isFinishing} />
+        <SwipeToStop onStop={onStop} />
       </div>
     </div>
   );

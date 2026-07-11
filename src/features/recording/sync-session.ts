@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/client";
 import { calculateSleepScore, countEventsByType } from "@/lib/sleep-utils";
-import type { LocalSleepSession } from "@/types";
+import type { LocalSleepSession, SleepEventType } from "@/types";
 import { getUnsyncedSessions, saveSession } from "./session-store";
+import { deleteEventClip } from "./audio-clip-store";
 import { toast } from "sonner";
 
 function toMinuteBuckets(session: LocalSleepSession) {
@@ -241,4 +242,69 @@ export async function fetchSessionById(sessionId: string) {
 
   if (error) throw error;
   return data;
+}
+
+const eventCountColumns: Record<
+  SleepEventType,
+  "snore_count" | "cough_count" | "talk_count" | "noise_count"
+> = {
+  snore: "snore_count",
+  cough: "cough_count",
+  talk: "talk_count",
+  noise: "noise_count",
+};
+
+type EventCountColumn = (typeof eventCountColumns)[SleepEventType];
+type EventCountRow = Partial<Record<EventCountColumn, number | null>>;
+
+export async function deleteRemoteSleepEvent(
+  eventId: string,
+  sessionId?: string,
+  eventType?: SleepEventType
+) {
+  const supabase = createClient();
+  const { error } = await supabase.from("sleep_events").delete().eq("id", eventId);
+  if (error) throw error;
+
+  if (sessionId && eventType) {
+    const countColumn = eventCountColumns[eventType];
+    const { data } = await supabase
+      .from("sleep_sessions")
+      .select("snore_count,cough_count,talk_count,noise_count")
+      .eq("id", sessionId)
+      .maybeSingle();
+    const current = Number((data as EventCountRow | null)?.[countColumn] ?? 0);
+    await supabase
+      .from("sleep_sessions")
+      .update({ [countColumn]: Math.max(0, current - 1) })
+      .eq("id", sessionId);
+  }
+
+  await deleteEventClip(eventId);
+}
+
+export async function deleteRemoteSleepSession(sessionId: string) {
+  const supabase = createClient();
+
+  const { data: events } = await supabase
+    .from("sleep_events")
+    .select("id")
+    .eq("session_id", sessionId);
+  const eventIds = events?.map((event) => event.id) ?? [];
+
+  const noiseDelete = await supabase
+    .from("sleep_noise_samples")
+    .delete()
+    .eq("session_id", sessionId);
+  if (noiseDelete.error) {
+    console.warn("Noise samples delete skipped:", noiseDelete.error.message);
+  }
+
+  const eventsDelete = await supabase.from("sleep_events").delete().eq("session_id", sessionId);
+  if (eventsDelete.error) throw eventsDelete.error;
+
+  const sessionDelete = await supabase.from("sleep_sessions").delete().eq("id", sessionId);
+  if (sessionDelete.error) throw sessionDelete.error;
+
+  await Promise.allSettled(eventIds.map((eventId) => deleteEventClip(eventId)));
 }

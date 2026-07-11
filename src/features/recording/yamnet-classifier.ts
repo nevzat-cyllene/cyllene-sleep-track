@@ -1,8 +1,24 @@
-import * as tf from "@tensorflow/tfjs";
 import type { SleepEventType } from "@/types";
 
-const YAMNET_MODEL_URL =
-  "https://tfhub.dev/google/tfjs-model/yamnet/tfjs/1/model.json?tfjs-format=file";
+/**
+ * Optional ML classifier. Recording must never depend on this loading.
+ * Without a CORS-safe NEXT_PUBLIC_YAMNET_MODEL_URL, heuristic runs only.
+ * tfhub.dev is rejected — browsers block it with CORS.
+ */
+const RAW_YAMNET_MODEL_URL = process.env.NEXT_PUBLIC_YAMNET_MODEL_URL?.trim() ?? "";
+
+function resolveYamnetLoadConfig(rawUrl: string): { url: string; fromTFHub: boolean } | null {
+  if (!rawUrl) return null;
+  if (rawUrl.includes("tfhub.dev")) return null;
+
+  const hasModelJson = /model\.json(\?|$)/.test(rawUrl);
+  return {
+    url: rawUrl,
+    fromTFHub: !hasModelJson,
+  };
+}
+
+const YAMNET_LOAD = resolveYamnetLoadConfig(RAW_YAMNET_MODEL_URL);
 
 const CLASS_MAP: Record<string, SleepEventType> = {
   Snoring: "snore",
@@ -31,17 +47,42 @@ const YAMNET_CLASSES = [
   "Heart murmur", "Cheering", "Applause", "Chatter", "Crowd", "Hubbub, speech noise, speech babble",
 ];
 
-let model: tf.GraphModel | null = null;
-let loading: Promise<tf.GraphModel> | null = null;
+// Lazy TF types — no static @tensorflow/tfjs import on the recording critical path.
+type TfModule = typeof import("@tensorflow/tfjs");
+type GraphModel = import("@tensorflow/tfjs").GraphModel;
 
-export async function loadYamnetModel(): Promise<tf.GraphModel> {
+let tfModule: TfModule | null = null;
+let model: GraphModel | null = null;
+let loading: Promise<GraphModel> | null = null;
+
+async function getTf(): Promise<TfModule> {
+  if (tfModule) return tfModule;
+  tfModule = await import("@tensorflow/tfjs");
+  return tfModule;
+}
+
+async function loadYamnetModel(): Promise<GraphModel> {
+  if (!YAMNET_LOAD) {
+    throw new Error("YAMNet model URL is not configured; heuristic classifier is active.");
+  }
+
   if (model) return model;
   if (loading) return loading;
 
-  loading = tf.loadGraphModel(YAMNET_MODEL_URL, { fromTFHub: true }).then((m) => {
-    model = m;
-    return m;
-  });
+  loading = (async () => {
+    const tf = await getTf();
+    try {
+      const loaded = await tf.loadGraphModel(
+        YAMNET_LOAD.url,
+        YAMNET_LOAD.fromTFHub ? { fromTFHub: true } : undefined
+      );
+      model = loaded;
+      return loaded;
+    } catch (error) {
+      loading = null;
+      throw error;
+    }
+  })();
 
   return loading;
 }
@@ -74,6 +115,9 @@ function heuristicClassify(audio: Float32Array, sampleRate: number): {
   let midEnergy = 0;
   let highEnergy = 0;
   let peak = 0;
+  let activeChunks = 0;
+  let loudChunks = 0;
+  let chunkCount = 0;
 
   for (let i = 0; i < audio.length; i += chunkSize) {
     const chunk = audio.subarray(i, Math.min(i + chunkSize, audio.length));
@@ -81,6 +125,9 @@ function heuristicClassify(audio: Float32Array, sampleRate: number): {
     for (let j = 0; j < chunk.length; j++) rms += chunk[j] * chunk[j];
     rms = Math.sqrt(rms / chunk.length);
     peak = Math.max(peak, rms);
+    chunkCount += 1;
+    if (rms > 0.012) activeChunks += 1;
+    if (rms > 0.045) loudChunks += 1;
 
     const zeroCrossings = chunk.reduce((count, val, idx, arr) => {
       if (idx === 0) return 0;
@@ -94,14 +141,21 @@ function heuristicClassify(audio: Float32Array, sampleRate: number): {
   }
 
   const total = lowEnergy + midEnergy + highEnergy || 1;
+  const lowRatio = lowEnergy / total;
+  const midRatio = midEnergy / total;
+  const highRatio = highEnergy / total;
+  const activeRatio = activeChunks / Math.max(1, chunkCount);
+  const loudRatio = loudChunks / Math.max(1, chunkCount);
 
-  if (lowEnergy / total > 0.55 && peak > 0.02) {
-    return { type: "snore", confidence: 0.65 };
+  if ((highRatio > 0.34 || loudRatio > 0.18) && peak > 0.045) {
+    return { type: "cough", confidence: 0.64 };
   }
-  if (highEnergy / total > 0.4 && peak > 0.05) {
-    return { type: "cough", confidence: 0.6 };
+
+  if (lowRatio > 0.68 && highRatio < 0.22 && activeRatio > 0.42 && peak > 0.024) {
+    return { type: "snore", confidence: 0.62 };
   }
-  if (midEnergy / total > 0.35) {
+
+  if (midRatio > 0.35) {
     return { type: "talk", confidence: 0.55 };
   }
   return { type: "noise", confidence: 0.5 };
@@ -111,11 +165,17 @@ export async function classifyAudio(
   audio: Float32Array,
   sampleRate: number
 ): Promise<{ type: SleepEventType; confidence: number }> {
+  // Default path: no network, no TF — recording stays responsive.
+  if (!YAMNET_LOAD) {
+    return heuristicClassify(audio, sampleRate);
+  }
+
   try {
+    const tf = await getTf();
     const yamnet = await loadYamnetModel();
     const waveform = resampleTo16k(audio, sampleRate);
     const input = tf.tensor1d(waveform);
-    const output = yamnet.execute(input) as tf.Tensor | tf.Tensor[];
+    const output = yamnet.execute(input) as import("@tensorflow/tfjs").Tensor | import("@tensorflow/tfjs").Tensor[];
     const scores = Array.isArray(output) ? await output[0].data() : await output.data();
 
     input.dispose();
@@ -124,17 +184,30 @@ export async function classifyAudio(
 
     let bestType: SleepEventType = "noise";
     let bestScore = 0;
+    const mappedScores: Record<SleepEventType, number> = {
+      snore: 0,
+      cough: 0,
+      talk: 0,
+      noise: 0,
+    };
 
     for (let i = 0; i < Math.min(scores.length, YAMNET_CLASSES.length); i++) {
       const className = YAMNET_CLASSES[i];
       const mapped = CLASS_MAP[className];
+      if (mapped) {
+        mappedScores[mapped] = Math.max(mappedScores[mapped], scores[i]);
+      }
       if (mapped && scores[i] > bestScore) {
         bestScore = scores[i];
         bestType = mapped;
       }
     }
 
-    if (bestScore > 0.15) {
+    if (mappedScores.cough > 0.12 && mappedScores.cough >= mappedScores.snore * 0.82) {
+      return { type: "cough", confidence: Math.min(0.99, mappedScores.cough) };
+    }
+
+    if (bestScore > (bestType === "snore" ? 0.18 : 0.15)) {
       return { type: bestType, confidence: Math.min(0.99, bestScore) };
     }
   } catch {
@@ -142,12 +215,4 @@ export async function classifyAudio(
   }
 
   return heuristicClassify(audio, sampleRate);
-}
-
-export async function preloadYamnet(): Promise<void> {
-  try {
-    await loadYamnetModel();
-  } catch {
-    // Heuristic fallback will be used
-  }
 }

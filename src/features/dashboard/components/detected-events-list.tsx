@@ -2,6 +2,7 @@
 
 import { Wind, Mic, MessageCircle, Volume2 } from "lucide-react";
 import { EventAudioPlayer } from "./event-audio-player";
+import { SwipeAction } from "@/components/ui/swipe-action";
 import { formatEventTime, EVENT_TYPE_LABELS } from "@/lib/audio-clip-utils";
 import { cn } from "@/lib/utils";
 import type { LocalSleepEvent, SleepEvent, SleepEventType } from "@/types";
@@ -23,14 +24,13 @@ const EVENT_COLORS: Record<SleepEventType, string> = {
 interface DetectedEventItemProps {
   event: LocalSleepEvent | SleepEvent;
   variant?: "dark" | "light";
-  audioContext?: "local" | "cloud";
 }
 
 function isSleepEvent(event: LocalSleepEvent | SleepEvent): event is SleepEvent {
   return "occurred_at" in event;
 }
 
-export function DetectedEventItem({ event, variant = "light", audioContext = "local" }: DetectedEventItemProps) {
+export function DetectedEventItem({ event, variant = "light" }: DetectedEventItemProps) {
   const type = isSleepEvent(event) ? event.event_type : event.type;
   const timestamp = isSleepEvent(event)
     ? new Date(event.occurred_at).getTime()
@@ -46,19 +46,19 @@ export function DetectedEventItem({ event, variant = "light", audioContext = "lo
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-xl border p-3",
+        "flex items-center gap-3 rounded-xl border p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,.035)]",
         isDark
-          ? "border-white/10 bg-white/5"
-          : "border-white/10 bg-card/50"
+          ? "border-white/10 bg-[#071222]"
+          : "border-white/10 bg-[#071222]"
       )}
     >
       <div
         className={cn(
-          "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border",
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border",
           colorClass
         )}
       >
-        <Icon className="h-5 w-5" />
+        <Icon className="h-4.5 w-4.5" />
       </div>
 
       <div className="min-w-0 flex-1">
@@ -79,9 +79,7 @@ export function DetectedEventItem({ event, variant = "light", audioContext = "lo
         </p>
       </div>
 
-      <div onClick={(e) => e.stopPropagation()}>
-        <EventAudioPlayer eventId={eventId} compact audioContext={audioContext} />
-      </div>
+      <EventAudioPlayer eventId={eventId} compact />
     </div>
   );
 }
@@ -92,7 +90,8 @@ interface DetectedEventsListProps {
   emptyMessage?: string;
   selectedEventId?: string | null;
   onSelectEvent?: (id: string) => void;
-  audioContext?: "local" | "cloud";
+  deletingEventId?: string | null;
+  onDeleteEvent?: (event: LocalSleepEvent | SleepEvent) => void | Promise<void>;
 }
 
 export function DetectedEventsList({
@@ -101,7 +100,8 @@ export function DetectedEventsList({
   emptyMessage = "Henüz olay tespit edilmedi.",
   selectedEventId,
   onSelectEvent,
-  audioContext = "local",
+  deletingEventId,
+  onDeleteEvent,
 }: DetectedEventsListProps) {
   if (events.length === 0) {
     return (
@@ -117,25 +117,41 @@ export function DetectedEventsList({
 
   return (
     <div className="space-y-2">
-      {sorted.map((event) => (
-        <div
-          key={event.id}
-          role={onSelectEvent ? "button" : undefined}
-          tabIndex={onSelectEvent ? 0 : undefined}
-          onClick={() => onSelectEvent?.(event.id)}
-          onKeyDown={(e) => {
-            if (onSelectEvent && (e.key === "Enter" || e.key === " ")) {
-              onSelectEvent(event.id);
-            }
-          }}
-          className={cn(
-            onSelectEvent && "cursor-pointer",
-            selectedEventId === event.id && "ring-1 ring-cyllene-cyan/50 rounded-xl"
-          )}
-        >
-          <DetectedEventItem event={event} variant={variant} audioContext={audioContext} />
-        </div>
-      ))}
+      {sorted.map((event) => {
+        const card = (
+          <div
+            role={onSelectEvent ? "button" : undefined}
+            tabIndex={onSelectEvent ? 0 : undefined}
+            onClick={() => onSelectEvent?.(event.id)}
+            onKeyDown={(e) => {
+              if (onSelectEvent && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault();
+                onSelectEvent(event.id);
+              }
+            }}
+            className={cn(
+              onSelectEvent && "cursor-pointer",
+              selectedEventId === event.id && "rounded-xl ring-1 ring-cyllene-cyan/50"
+            )}
+          >
+            <DetectedEventItem event={event} variant={variant} />
+          </div>
+        );
+
+        if (!onDeleteEvent) {
+          return <div key={event.id}>{card}</div>;
+        }
+
+        return (
+          <SwipeAction
+            key={event.id}
+            actionDisabled={deletingEventId === event.id}
+            onAction={() => void onDeleteEvent(event)}
+          >
+            {card}
+          </SwipeAction>
+        );
+      })}
     </div>
   );
 }

@@ -58,7 +58,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     id: "ready",
-    title: "Hazırsınız",
-    subtitle: "İlk gece kaydınızı başlattığınızda kişisel raporunuz oluşacak.",
+    title: "Profiliniz hazır",
+    subtitle: "İlk gece kaydınızı başlattığınızda rapor dili ve öncelikleriniz buna göre şekillenecek.",
   },
 ];

@@ -1,11 +1,11 @@
 const THRESHOLD_DB = 42;
 const RELEASE_DB = 36;
 const MIN_DURATION_MS = 800;
-const MAX_DURATION_MS = 30000;
-const SILENCE_GAP_MS = 2800;
+const MAX_DURATION_MS = 90000;
+const SILENCE_GAP_MS = 5000;
 const LEVEL_INTERVAL_MS = 100;
-const MAX_BUFFER_SECONDS = 10;
-const MAX_CLIP_SECONDS = 30;
+const MAX_BUFFER_SECONDS = 2;
+const MAX_CLIP_SECONDS = 90;
 
 class AudioLevelProcessor extends AudioWorkletProcessor {
   constructor(options) {
@@ -24,6 +24,14 @@ class AudioLevelProcessor extends AudioWorkletProcessor {
     this._lastActiveElapsed = 0;
     this._peakDb = 0;
     this._eventSamples = [];
+
+    this.port.onmessage = (event) => {
+      if (event.data?.type !== "flush") return;
+      if (this._active) {
+        this._finalizeEvent(this._elapsedMs);
+      }
+      this.port.postMessage({ type: "flushed", elapsedMs: this._elapsedMs });
+    };
   }
 
   _rmsToDb(rms) {
@@ -107,6 +115,11 @@ class AudioLevelProcessor extends AudioWorkletProcessor {
       }
       this._lastActiveElapsed = elapsedMs;
     } else if (this._active && db < RELEASE_DB) {
+      if (chunk) this._eventSamples.push(chunk);
+      if (elapsedMs - this._eventStartElapsed >= MAX_DURATION_MS) {
+        this._finalizeEvent(elapsedMs);
+        return;
+      }
       if (elapsedMs - this._lastActiveElapsed >= SILENCE_GAP_MS) {
         this._finalizeEvent(elapsedMs);
       }
