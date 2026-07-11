@@ -70,7 +70,7 @@ export const chromeMessages = {
       language: "Ziman",
       active: "Çalak",
       ready: "Amade",
-      privacySection: "Taybetî",
+      privacySection: "Nepenî",
       privacyTitle: "Dengê xav li ser amûrê dimîne",
       privacyBody: "Tenê rapor û metrikên kurte bi hesabê te re tên hevdemkirin.",
     },
@@ -125,7 +125,7 @@ export const chromeMessages = {
           calendar: { label: "Salname", description: "Rîtma heftane", badge: "Plan" },
         },
         trustItems: {
-          privacy: { label: "Taybetî", description: "Dengê xav nayê barkirin" },
+          privacy: { label: "Nepenî", description: "Dengê xav nayê barkirin" },
           localAnalysis: { label: "Analîza herêmî", description: "Klîp li ser amûrê dimîne" },
           accountLock: { label: "Kilîda hesabê", description: "Danişîna ewle" },
         },

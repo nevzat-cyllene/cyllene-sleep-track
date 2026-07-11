@@ -396,7 +396,7 @@ export const messages = {
       title: "İyi geceler.",
       greetings: {
         morning: "Günaydın.",
-        afternoon: "Tünaydın.",
+        afternoon: "İyi günler.",
         evening: "İyi akşamlar.",
         night: "İyi geceler.",
       },
