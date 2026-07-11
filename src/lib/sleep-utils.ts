@@ -71,6 +71,11 @@ export function formatWallClockParts(date: Date): { hours: string; minutes: stri
   return { hours: get("hour"), minutes: get("minute"), seconds: get("second") };
 }
 
+export function formatWallClock(date: Date): string {
+  const { hours, minutes, seconds } = formatWallClockParts(date);
+  return `${hours}:${minutes}:${seconds}`;
+}
+
 export function formatElapsedParts(ms: number): { hours: string; minutes: string; seconds: string } {
   const hours = Math.floor(ms / 3600000);
   const minutes = Math.floor((ms % 3600000) / 60000);
