@@ -219,7 +219,8 @@ export function LocalSessionDetailClient({
           </div>
         </div>
 
-        <div className="mt-6">
+        {/* Night charts are desktop-only for now — mobile SVG/stage cards still render broken. */}
+        <div className="mt-6 hidden md:block">
           <NightSoundsChart
             session={session}
             events={events}
