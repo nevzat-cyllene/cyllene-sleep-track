@@ -18,7 +18,6 @@ import { RecordSetup } from "./components/record-setup";
 import { SleepModeScreen } from "./components/sleep-mode-screen";
 import { useRecording } from "./use-recording";
 import { retryUnsyncedSessions, syncSessionToSupabase, fetchUserSessions } from "./sync-session";
-import { InstallPWA } from "@/components/install-pwa";
 import { useRecordingUI } from "@/components/app/recording-ui-context";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -151,8 +150,6 @@ export function SleepPageClient() {
           </p>
         </div>
       </div>
-
-      <InstallPWA variant="banner" className="md:hidden" />
 
       <RecordSetup
         onStart={() => void startRecording()}
