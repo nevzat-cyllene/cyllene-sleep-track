@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CylleneTechMark } from "@/components/brand/cyllene-tech-mark";
 import { InstallPWA } from "@/components/install-pwa";
 import { getOnboardingAnswers } from "@/lib/onboarding-storage";
 import { formatOnboardingSummary } from "@/lib/onboarding-summary";
@@ -96,6 +97,8 @@ export function ProfileClient({ profile, email }: ProfileClientProps) {
         <LogOut className="mr-2 h-4 w-4" />
         Çıkış yap
       </Button>
+
+      <CylleneTechMark className="pt-4" size="sm" />
     </div>
   );
 }
