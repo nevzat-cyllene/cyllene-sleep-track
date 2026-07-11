@@ -1,11 +1,11 @@
-export const catalogLocales = ["tr", "en"] as const;
+export const locales = ["tr", "en"] as const;
 
-export type CatalogLocale = (typeof catalogLocales)[number];
+export type Locale = (typeof locales)[number];
 
 /**
- * Ana TR/EN metin kataloğu.
- * Aktif uygulama dilleri ve URL değiştirmeyen runtime seçim mantığı
- * `src/i18n/runtime.tsx` içinde yönetilir.
+ * Hazırlık kataloğu: şu an uygulamaya bağlı değil.
+ * URL yapısı, Supabase akışı, kayıt ve senkronizasyon mantığı değişmeden
+ * sonraki turda provider/hook üzerinden ekrana bağlanabilir.
  */
 export const messages = {
   tr: {
@@ -1475,6 +1475,6 @@ export const messages = {
         "Tracks night sleep through audio analysis on a phone or browser, then presents a morning summary and score.",
     },
   },
-} as const satisfies Record<CatalogLocale, Record<string, unknown>>;
+} as const satisfies Record<Locale, Record<string, unknown>>;
 
 export type Messages = (typeof messages)["tr"];

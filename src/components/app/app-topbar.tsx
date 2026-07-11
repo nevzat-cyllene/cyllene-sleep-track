@@ -7,37 +7,19 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { AppControlMenu } from "@/components/app/app-control-menu";
 import { useRecordingUI } from "@/components/app/recording-ui-context";
 import { Button } from "@/components/ui/button";
-import { useI18n } from "@/i18n/runtime";
+
+const titles = [
+  { path: "/sleep", eyebrow: "Bu gece", title: "Uyku alanı" },
+  { path: "/journal", eyebrow: "Arşivin", title: "Uyku günlüğü" },
+  { path: "/statistics", eyebrow: "İçgörüler", title: "İstatistikler" },
+  { path: "/profile", eyebrow: "Hesabın", title: "Profil ve ayarlar" },
+] as const;
 
 export function AppTopbar() {
   const pathname = usePathname();
   const { isRecording } = useRecordingUI();
-  const { t } = useI18n();
 
   if (isRecording) return null;
-
-  const titles = [
-    {
-      path: "/sleep",
-      eyebrow: t("navigation.topbar.sleep.eyebrow"),
-      title: t("navigation.topbar.sleep.title"),
-    },
-    {
-      path: "/journal",
-      eyebrow: t("navigation.topbar.journal.eyebrow"),
-      title: t("navigation.topbar.journal.title"),
-    },
-    {
-      path: "/statistics",
-      eyebrow: t("navigation.topbar.statistics.eyebrow"),
-      title: t("navigation.topbar.statistics.title"),
-    },
-    {
-      path: "/profile",
-      eyebrow: t("navigation.topbar.profile.eyebrow"),
-      title: t("navigation.topbar.profile.title"),
-    },
-  ] as const;
 
   const active = titles.find((item) => pathname.startsWith(item.path)) ?? titles[0];
 
@@ -60,12 +42,12 @@ export function AppTopbar() {
             render={<Link href="/sleep" />}
           >
             <Plus className="h-3.5 w-3.5" />
-            {t("navigation.topbar.newNight")}
+            Yeni gece
           </Button>
         )}
         <div className="hidden items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.025] px-3 py-1.5 text-[10px] text-white/35 sm:flex">
           <MoonStar className="h-3 w-3 text-[#72aaff]" />
-          {t("navigation.topbar.ready")}
+          Hazır
         </div>
         <AppControlMenu />
       </div>

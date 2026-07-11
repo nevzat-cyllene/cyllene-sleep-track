@@ -3,7 +3,6 @@
 import { BatteryCharging, LockKeyhole, Mic2, MoonStar, Smartphone, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useI18n } from "@/i18n/runtime";
 import { RecordingGuidanceBanner } from "./recording-guidance-banner";
 
 interface RecordSetupProps {
@@ -37,8 +36,6 @@ const tips = [
 ];
 
 export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordSetupProps) {
-  const { t } = useI18n();
-
   if (compact) {
     return (
       <div className="space-y-4 -translate-y-2 sm:translate-y-0">
@@ -62,7 +59,7 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
               </h2>
               <p className="mt-3 max-w-md text-sm leading-6 text-white/45">
                 Telefonunu yakınına koy. Sesler cihazında analiz edilir ve ham kayıtların buluta
-                gönderilmez. {t("recordingPermission.note")}
+                gönderilmez.
               </p>
 
               <div className="mt-5 flex flex-wrap gap-2">
@@ -73,10 +70,6 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
                 <span className="flex items-center gap-1.5 rounded-full border border-[#8dbdff]/10 bg-white/[0.025] px-3 py-1.5 text-[10px] text-white/42">
                   <LockKeyhole className="h-3 w-3 text-emerald-300" />
                   Cihazında kalır
-                </span>
-                <span className="flex items-center gap-1.5 rounded-full border border-[#8dbdff]/10 bg-white/[0.025] px-3 py-1.5 text-[10px] text-white/42">
-                  <Mic2 className="h-3 w-3 text-[#78b7ff]" />
-                  {t("recordingPermission.chip")}
                 </span>
               </div>
             </div>
@@ -106,8 +99,7 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-semibold tracking-tight">Gece kaydını başlat</h1>
         <p className="text-muted-foreground">
-          Ses analizi telefonunuzda yapılır. Hiçbir ham ses kaydı sunucuya gönderilmez.{" "}
-          {t("recordingPermission.note")}
+          Ses analizi telefonunuzda yapılır. Hiçbir ham ses kaydı sunucuya gönderilmez.
         </p>
       </div>
 
