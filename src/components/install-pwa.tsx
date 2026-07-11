@@ -7,8 +7,8 @@ import { hasSeenGuestSplash } from "@/lib/guest-splash-storage";
 import { getDevicePlatform } from "@/lib/recording-device";
 import { cn } from "@/lib/utils";
 
-/** After moon entrance finishes, wait a beat then show install prompt. */
-const TOAST_DELAY_MS = 2800;
+/** Short beat after "Sabaha geç" so homepage is visible first. */
+const TOAST_DELAY_MS = 900;
 export const GUEST_SPLASH_COMPLETE_EVENT = "cyllene:guest-splash-complete";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -27,15 +27,7 @@ interface InstallPWAProps {
 
 const INSTALL_STORAGE_KEY = "cyllene-pwa-installed";
 const DISMISS_STORAGE_KEY = "cyllene-pwa-prompt-dismissed-at";
-const DISMISS_COOLDOWN_MS = 1000 * 60 * 60 * 12; // 12 saat
-
-function hasStoredInstallFlag() {
-  try {
-    return window.localStorage.getItem(INSTALL_STORAGE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
+const DISMISS_COOLDOWN_MS = 1000 * 60 * 60 * 12;
 
 function storeInstallFlag() {
   try {
@@ -78,10 +70,40 @@ function isStandaloneDisplayMode() {
   }
 }
 
+/** Phones often request "desktop site" — don't rely on UA alone. */
 function isMobileInstallTarget() {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
   const platform = getDevicePlatform();
-  return platform === "ios" || platform === "android";
+  if (platform === "ios" || platform === "android") return true;
+  const coarse = window.matchMedia?.("(pointer: coarse)")?.matches === true;
+  const narrow = window.matchMedia?.("(max-width: 900px)")?.matches === true;
+  const touch = navigator.maxTouchPoints > 0;
+  return (coarse && touch) || (narrow && touch);
 }
+
+// #region agent log
+function dbgInstall(hypothesisId: string, message: string, data: Record<string, unknown>) {
+  const payload = {
+    sessionId: "d5fe36",
+    runId: "post-fix",
+    hypothesisId,
+    location: "install-pwa.tsx",
+    message,
+    data,
+    timestamp: Date.now(),
+  };
+  fetch("http://127.0.0.1:7668/ingest/6ebf33a3-e317-467b-8188-4ae3fc7f8fb1", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d5fe36" },
+    body: JSON.stringify(payload),
+  }).catch(() => {});
+  fetch("/api/debug-ingest", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  }).catch(() => {});
+}
+// #endregion
 
 function AppIcon({ className, size = 40 }: { className?: string; size?: number }) {
   return (
@@ -108,16 +130,32 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
 
   useEffect(() => {
     const device = getDevicePlatform();
-    setIsMobile(isMobileInstallTarget());
+    const mobile = isMobileInstallTarget();
+    const standalone = isStandaloneDisplayMode();
+    const recentDismiss = isPromptDismissedRecently();
+    setIsMobile(mobile);
     setPlatform(device === "ios" || device === "android" ? device : "other");
-    setInstalled(isStandaloneDisplayMode() || hasStoredInstallFlag());
-    setDismissed(isPromptDismissedRecently());
+    // Only real standalone PWA — do NOT trust localStorage install flag (blocked toast after tests).
+    setInstalled(standalone);
+    setDismissed(recentDismiss);
+    // #region agent log
+    dbgInstall("A", "install init flags", {
+      device,
+      mobile,
+      standalone,
+      recentDismiss,
+      coarse: window.matchMedia?.("(pointer: coarse)")?.matches ?? null,
+      narrow: window.matchMedia?.("(max-width: 900px)")?.matches ?? null,
+      touchPoints: navigator.maxTouchPoints,
+      ua: navigator.userAgent.slice(0, 120),
+      path: window.location.pathname,
+    });
+    // #endregion
   }, []);
 
   useEffect(() => {
     const onRecording = (event: Event) => {
-      const detail = (event as CustomEvent<boolean>).detail;
-      setRecording(Boolean(detail));
+      setRecording(Boolean((event as CustomEvent<boolean>).detail));
     };
     window.addEventListener("cyllene:recording-ui", onRecording);
     return () => window.removeEventListener("cyllene:recording-ui", onRecording);
@@ -130,16 +168,21 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
       storeInstallFlag();
       setInstalled(true);
       setDeferredPrompt(null);
+      // #region agent log
+      dbgInstall("B", "appinstalled fired", {});
+      // #endregion
     };
 
     const installPromptHandler = (event: Event) => {
       event.preventDefault();
       setDeferredPrompt(event as BeforeInstallPromptEvent);
+      // #region agent log
+      dbgInstall("B", "beforeinstallprompt captured", {});
+      // #endregion
     };
 
     window.addEventListener("beforeinstallprompt", installPromptHandler);
     window.addEventListener("appinstalled", markInstalled);
-
     return () => {
       window.removeEventListener("beforeinstallprompt", installPromptHandler);
       window.removeEventListener("appinstalled", markInstalled);
@@ -147,7 +190,30 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
   }, [installed, isMobile]);
 
   useEffect(() => {
-    if (variant !== "toast" || installed || !isMobile || dismissed) return;
+    // #region agent log
+    dbgInstall("C", "toast arm effect enter", {
+      variant,
+      installed,
+      isMobile,
+      dismissed,
+      splashSeen: hasSeenGuestSplash(),
+    });
+    // #endregion
+    if (variant !== "toast" || installed || !isMobile || dismissed) {
+      // #region agent log
+      dbgInstall("C", "toast arm aborted", {
+        reason:
+          variant !== "toast"
+            ? "not-toast"
+            : installed
+              ? "installed"
+              : !isMobile
+                ? "not-mobile"
+                : "dismissed",
+      });
+      // #endregion
+      return;
+    }
 
     let cancelled = false;
     let delayTimer: number | undefined;
@@ -156,18 +222,25 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
     const showAfterDelay = () => {
       if (delayTimer) window.clearTimeout(delayTimer);
       delayTimer = window.setTimeout(() => {
-        if (!cancelled) setToastReady(true);
+        if (cancelled) return;
+        setToastReady(true);
+        // #region agent log
+        dbgInstall("D", "toastReady set true", {
+          path: window.location.pathname,
+          splashSeen: hasSeenGuestSplash(),
+        });
+        // #endregion
       }, TOAST_DELAY_MS);
     };
 
-    const arm = () => {
-      if (hasSeenGuestSplash()) showAfterDelay();
+    if (hasSeenGuestSplash()) showAfterDelay();
+
+    const onSplashComplete = () => {
+      // #region agent log
+      dbgInstall("D", "guest splash complete event", { path: window.location.pathname });
+      // #endregion
+      showAfterDelay();
     };
-
-    arm();
-
-    // First visit: splash marks storage + fires event when finished.
-    const onSplashComplete = () => showAfterDelay();
     window.addEventListener(GUEST_SPLASH_COMPLETE_EVENT, onSplashComplete);
 
     if (!hasSeenGuestSplash()) {
@@ -176,7 +249,7 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
         window.clearInterval(pollTimer);
         pollTimer = undefined;
         showAfterDelay();
-      }, 350);
+      }, 300);
     }
 
     return () => {
@@ -186,6 +259,22 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
       window.removeEventListener(GUEST_SPLASH_COMPLETE_EVENT, onSplashComplete);
     };
   }, [variant, installed, isMobile, dismissed]);
+
+  // #region agent log
+  useEffect(() => {
+    dbgInstall("E", "render gate", {
+      isMobile,
+      installed,
+      dismissed,
+      toastReady,
+      recording,
+      willRenderToast: isMobile && !installed && !dismissed && toastReady && !recording,
+      hasDeferredPrompt: Boolean(deferredPrompt),
+      platform,
+      path: typeof window !== "undefined" ? window.location.pathname : "",
+    });
+  }, [isMobile, installed, dismissed, toastReady, recording, deferredPrompt, platform]);
+  // #endregion
 
   if (!isMobile || installed) return null;
   if (variant === "toast" && (dismissed || !toastReady || recording)) return null;
@@ -212,17 +301,16 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
 
   const subtitle =
     platform === "ios"
-      ? "Paylaş → Ana Ekrana Ekle ile Cyllene ikonunu ekleyin."
-      : deferredPrompt
-        ? "Gece kaydı daha stabil çalışır."
-        : "Menü → Ana ekrana ekle / Uygulamayı yükle";
+      ? "Safari Paylaş menüsünden uygulamayı yükleyin."
+      : "Tek dokunuşla Cyllene’i telefonuna yükle.";
 
   if (variant === "toast") {
     return (
       <div
         className={cn(
-          "pointer-events-none fixed inset-x-3 z-[220] md:hidden",
-          "bottom-[calc(6.4rem+env(safe-area-inset-bottom))]",
+          // No md:hidden — desktop-site mode on phones was hiding the popup entirely.
+          "pointer-events-none fixed inset-x-3 z-[320]",
+          "bottom-[max(1rem,env(safe-area-inset-bottom))]",
           className
         )}
       >
@@ -241,7 +329,7 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
               <AppIcon size={44} className="rounded-2xl" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-medium text-white">Cyllene’i yükle</p>
+              <p className="text-[13px] font-medium text-white">Uygulamayı yükle</p>
               <p className="mt-0.5 text-[11px] leading-4 text-white/45">{subtitle}</p>
             </div>
           </div>
@@ -256,21 +344,20 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
             {platform === "ios" ? (
               <div className="flex h-10 flex-[1.35] items-center justify-center gap-1.5 rounded-full bg-[#1769ff] px-3 text-[12px] font-semibold text-white shadow-[0_12px_28px_rgba(24,105,255,.28)]">
                 <Share className="h-3.5 w-3.5" />
-                Paylaş → Ekle
+                Yükle
               </div>
-            ) : deferredPrompt ? (
+            ) : (
               <button
                 type="button"
                 onClick={() => void handleInstall()}
-                className="h-10 flex-[1.35] rounded-full bg-[#1769ff] px-3 text-[12px] font-semibold text-white shadow-[0_12px_28px_rgba(24,105,255,.28)] transition active:scale-[0.98]"
+                disabled={!deferredPrompt}
+                className="h-10 flex-[1.35] rounded-full bg-[#1769ff] px-3 text-[12px] font-semibold text-white shadow-[0_12px_28px_rgba(24,105,255,.28)] transition active:scale-[0.98] disabled:opacity-60"
               >
-                Uygulamayı yükle
+                <span className="inline-flex items-center gap-1.5">
+                  <Download className="h-3.5 w-3.5" />
+                  {deferredPrompt ? "Yükle" : "Hazırlanıyor…"}
+                </span>
               </button>
-            ) : (
-              <div className="flex h-10 flex-[1.35] items-center justify-center gap-1.5 rounded-full bg-[#1769ff] px-3 text-[12px] font-semibold text-white shadow-[0_12px_28px_rgba(24,105,255,.28)]">
-                <Download className="h-3.5 w-3.5" />
-                Menüden yükle
-              </div>
             )}
           </div>
         </div>
@@ -286,32 +373,28 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
           className
         )}
       >
-        <div className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-[#155eff]/22 blur-[42px]" />
         <div className="relative flex items-center gap-3">
-          <div className="shrink-0 overflow-hidden rounded-2xl border border-[#78b7ff]/12 shadow-[0_8px_24px_rgba(0,0,0,.35)]">
+          <div className="shrink-0 overflow-hidden rounded-2xl border border-[#78b7ff]/12">
             <AppIcon />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-medium text-white">Cyllene’i ana ekrana ekle</p>
+            <p className="text-[13px] font-medium text-white">Uygulamayı yükle</p>
             <p className="mt-0.5 text-[11px] leading-4 text-white/42">{subtitle}</p>
           </div>
           {platform === "ios" ? (
-            <div className="flex h-9 shrink-0 items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-3 text-[11px] text-white/70">
+            <div className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-[#1769ff] px-3 text-[11px] font-semibold text-white">
               <Share className="h-3.5 w-3.5" />
-              Paylaş
+              Yükle
             </div>
-          ) : deferredPrompt ? (
+          ) : (
             <button
               type="button"
               onClick={() => void handleInstall()}
-              className="h-9 shrink-0 rounded-full bg-[#1769ff] px-3 text-[12px] font-semibold text-white shadow-[0_12px_28px_rgba(24,105,255,.28)] transition duration-100 active:scale-[0.97]"
+              disabled={!deferredPrompt}
+              className="h-9 shrink-0 rounded-full bg-[#1769ff] px-3 text-[12px] font-semibold text-white disabled:opacity-60"
             >
               Yükle
             </button>
-          ) : (
-            <div className="flex h-9 shrink-0 items-center rounded-full border border-white/10 bg-white/[0.04] px-3 text-[11px] text-white/70">
-              Menü
-            </div>
           )}
         </div>
       </div>
@@ -320,18 +403,11 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
 
   if (platform === "ios") {
     return (
-      <div
-        className={cn(
-          "rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-muted-foreground",
-          className
-        )}
-      >
+      <div className={cn("rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-muted-foreground", className)}>
         <div className="flex items-start gap-3">
-          <div className="shrink-0 overflow-hidden rounded-xl border border-white/10">
-            <AppIcon className="rounded-xl" />
-          </div>
+          <AppIcon className="rounded-xl" />
           <div className="min-w-0 space-y-1">
-            <p className="font-medium text-foreground">Ana ekrana ekle</p>
+            <p className="font-medium text-foreground">Uygulamayı yükle</p>
             <p>
               Safari’de <Share className="mx-0.5 inline h-3.5 w-3.5 align-text-bottom" /> Paylaş →{" "}
               <span className="text-foreground">Ana Ekrana Ekle</span>
@@ -342,34 +418,10 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
     );
   }
 
-  if (!deferredPrompt) {
-    return (
-      <div
-        className={cn(
-          "rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-muted-foreground",
-          className
-        )}
-      >
-        <div className="flex items-start gap-3">
-          <div className="shrink-0 overflow-hidden rounded-xl border border-white/10">
-            <AppIcon className="rounded-xl" />
-          </div>
-          <div className="min-w-0 space-y-1">
-            <p className="font-medium text-foreground">Uygulamayı yükle</p>
-            <p>Tarayıcı menüsünden Ana ekrana ekle / Uygulamayı yükle.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (!deferredPrompt) return null;
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => void handleInstall()}
-      className={cn("gap-2", className)}
-    >
+    <Button variant="outline" size="sm" onClick={() => void handleInstall()} className={cn("gap-2", className)}>
       <Download className="h-4 w-4" />
       Uygulamayı yükle
     </Button>

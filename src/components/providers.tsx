@@ -11,11 +11,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <TooltipProvider delay={150}>
-        <WelcomeGate>
-          {children}
-          {/* Global mobile install toast — also on landing after moon entrance */}
-          <InstallPWA variant="toast" />
-        </WelcomeGate>
+        <WelcomeGate>{children}</WelcomeGate>
+        {/* Outside WelcomeGate so toast stays mounted during splash/loading. */}
+        <InstallPWA variant="toast" />
         <Toaster richColors closeButton />
       </TooltipProvider>
     </ThemeProvider>
