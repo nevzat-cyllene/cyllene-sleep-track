@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Smartphone } from "lucide-react";
+import Image from "next/image";
+import { Download, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getDevicePlatform } from "@/lib/recording-device";
 import { cn } from "@/lib/utils";
@@ -58,13 +59,29 @@ function isMobileInstallTarget() {
   return platform === "ios" || platform === "android";
 }
 
+function AppIcon({ className }: { className?: string }) {
+  return (
+    <Image
+      src="/icons/icon-192.png"
+      alt="Cyllene"
+      width={40}
+      height={40}
+      className={cn("rounded-[0.7rem]", className)}
+      priority={false}
+    />
+  );
+}
+
 export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(isStandaloneDisplayMode);
   const [isMobile, setIsMobile] = useState(false);
+  const [platform, setPlatform] = useState<"ios" | "android" | "other">("other");
 
   useEffect(() => {
+    const device = getDevicePlatform();
     setIsMobile(isMobileInstallTarget());
+    setPlatform(device === "ios" || device === "android" ? device : "other");
   }, []);
 
   useEffect(() => {
@@ -103,9 +120,13 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
     };
   }, [installed, isMobile]);
 
-  if (!isMobile || installed || !deferredPrompt) return null;
+  // Android: native install prompt. iOS: Share → Ana Ekrana Ekle rehberi.
+  const canShowAndroid = platform === "android" && Boolean(deferredPrompt);
+  const canShowIos = platform === "ios";
+  if (!isMobile || installed || (!canShowAndroid && !canShowIos)) return null;
 
   const handleInstall = async () => {
+    if (!deferredPrompt) return;
     try {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -128,22 +149,55 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
       >
         <div className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-[#155eff]/22 blur-[42px]" />
         <div className="relative flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#78b7ff]/12 bg-[#155eff]/12 text-[#9bd5ff]">
-            <Smartphone className="h-4.5 w-4.5" />
+          <div className="shrink-0 overflow-hidden rounded-2xl border border-[#78b7ff]/12 shadow-[0_8px_24px_rgba(0,0,0,.35)]">
+            <AppIcon />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-medium text-white">Cyllene’i ana ekrana ekle</p>
             <p className="mt-0.5 text-[11px] leading-4 text-white/42">
-              Gece kaydı daha stabil, erişim daha hızlı olur.
+              {platform === "ios"
+                ? "Paylaş → Ana Ekrana Ekle ile ekleyin."
+                : "Gece kaydı daha stabil, erişim daha hızlı olur."}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => void handleInstall()}
-            className="h-9 shrink-0 rounded-full bg-[#1769ff] px-3 text-[12px] font-semibold text-white shadow-[0_12px_28px_rgba(24,105,255,.28)] transition duration-100 active:scale-[0.97]"
-          >
-            Yükle
-          </button>
+          {platform === "ios" ? (
+            <div className="flex h-9 shrink-0 items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-3 text-[11px] text-white/70">
+              <Share className="h-3.5 w-3.5" />
+              Paylaş
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void handleInstall()}
+              className="h-9 shrink-0 rounded-full bg-[#1769ff] px-3 text-[12px] font-semibold text-white shadow-[0_12px_28px_rgba(24,105,255,.28)] transition duration-100 active:scale-[0.97]"
+            >
+              Yükle
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (platform === "ios") {
+    return (
+      <div
+        className={cn(
+          "rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-muted-foreground",
+          className
+        )}
+      >
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 overflow-hidden rounded-xl border border-white/10">
+            <AppIcon className="rounded-xl" />
+          </div>
+          <div className="min-w-0 space-y-1">
+            <p className="font-medium text-foreground">Ana ekrana ekle</p>
+            <p>
+              Safari’de <Share className="mx-0.5 inline h-3.5 w-3.5 align-text-bottom" /> Paylaş →{" "}
+              <span className="text-foreground">Ana Ekrana Ekle</span>
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -157,7 +211,7 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
       className={cn("gap-2", className)}
     >
       <Download className="h-4 w-4" />
-      Uygulamayı yükle
+      Ana ekrana ekle
     </Button>
   );
 }

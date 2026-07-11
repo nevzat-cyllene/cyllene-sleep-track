@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: siteConfig.description,
     start_url: "/sleep",
     display: "standalone",
-    background_color: "#0f0a1a",
-    theme_color: "#0f0a1a",
+    background_color: "#05080d",
+    theme_color: "#05080d",
     orientation: "portrait",
     categories: ["health", "lifestyle", "medical"],
     icons: [
