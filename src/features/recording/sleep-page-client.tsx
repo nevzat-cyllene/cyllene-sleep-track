@@ -26,6 +26,7 @@ import { formatDate } from "@/lib/sleep-utils";
 import { formatDurationHours } from "@/lib/sleep-analytics";
 import { getSleepEventSummary } from "@/lib/sleep-event-summary";
 import { useI18n } from "@/i18n/runtime";
+import { getDaypart, type Daypart } from "@/lib/daypart";
 import type { LocalSleepSession, SleepSession } from "@/types";
 
 const REPORT_HANDOFF_MIN_MS = 1400;
@@ -40,9 +41,11 @@ export function SleepPageClient() {
   const [userId, setUserId] = useState<string | undefined>();
   const [lastSession, setLastSession] = useState<SleepSession | null>(null);
   const [portalReady, setPortalReady] = useState(false);
+  const [daypart, setDaypart] = useState<Daypart>("night");
 
   useEffect(() => {
     setPortalReady(true);
+    setDaypart(getDaypart());
   }, []);
 
   const onSessionComplete = useCallback(
@@ -128,10 +131,10 @@ export function SleepPageClient() {
     return screen;
   }
 
-  const lastSessionEventSummary = lastSession ? getSleepEventSummary(lastSession) : null;
+  const lastSessionEventSummary = lastSession ? getSleepEventSummary(lastSession, t) : null;
 
   return (
-    <div className="space-y-5 pb-[calc(7.25rem+env(safe-area-inset-bottom))] sm:space-y-8 sm:pb-3">
+    <div className="space-y-5 pb-2 sm:space-y-8 sm:pb-3">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -145,7 +148,7 @@ export function SleepPageClient() {
             </span>
           </div>
           <h1 className="text-4xl font-medium tracking-[-0.055em] sm:text-5xl">
-            {t("sleepHub.title")}
+            {t(`sleepHub.greetings.${daypart}`)}
           </h1>
           <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">
             {t("sleepHub.body")}
@@ -192,7 +195,7 @@ export function SleepPageClient() {
                 <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3">
                   <Clock3 className="mb-2 h-3.5 w-3.5 text-[#78b7ff]" />
                   <p className="text-sm font-medium">
-                    {formatDurationHours(lastSession.duration_minutes)}
+                    {formatDurationHours(lastSession.duration_minutes, t)}
                   </p>
                   <p className="mt-0.5 text-[10px] text-white/30">{t("sleepHub.totalSleep")}</p>
                 </div>

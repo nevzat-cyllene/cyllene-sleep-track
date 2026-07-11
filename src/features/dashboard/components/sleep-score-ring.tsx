@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n/runtime";
 
 interface SleepScoreRingProps {
   score: number;
@@ -14,9 +15,11 @@ export function SleepScoreRing({
   score,
   size = 160,
   className,
-  label = "Uyku Skoru",
+  label,
   showPercent = false,
 }: SleepScoreRingProps) {
+  const { t } = useI18n();
+  const resolvedLabel = label ?? t("dashboard.sleepScore");
   const stroke = 10;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -69,7 +72,7 @@ export function SleepScoreRing({
         </span>
       </div>
       <span className="max-w-[8rem] text-center text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-        {label}
+        {resolvedLabel}
       </span>
     </div>
   );

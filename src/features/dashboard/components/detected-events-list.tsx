@@ -3,8 +3,9 @@
 import { Wind, Mic, MessageCircle, Volume2 } from "lucide-react";
 import { EventAudioPlayer } from "./event-audio-player";
 import { SwipeAction } from "@/components/ui/swipe-action";
-import { formatEventTime, EVENT_TYPE_LABELS } from "@/lib/audio-clip-utils";
+import { formatEventTime } from "@/lib/audio-clip-utils";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n/runtime";
 import type { LocalSleepEvent, SleepEvent, SleepEventType } from "@/types";
 
 const EVENT_ICONS: Record<SleepEventType, typeof Wind> = {
@@ -31,6 +32,7 @@ function isSleepEvent(event: LocalSleepEvent | SleepEvent): event is SleepEvent 
 }
 
 export function DetectedEventItem({ event, variant = "light" }: DetectedEventItemProps) {
+  const { t } = useI18n();
   const type = isSleepEvent(event) ? event.event_type : event.type;
   const timestamp = isSleepEvent(event)
     ? new Date(event.occurred_at).getTime()
@@ -64,7 +66,7 @@ export function DetectedEventItem({ event, variant = "light" }: DetectedEventIte
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <p className={cn("font-medium", isDark ? "text-white" : "text-foreground")}>
-            {EVENT_TYPE_LABELS[type]}
+            {t(`events.types.${type}.title`)}
           </p>
           {confidence > 0 && (
             <span className="text-xs text-muted-foreground">
@@ -73,9 +75,9 @@ export function DetectedEventItem({ event, variant = "light" }: DetectedEventIte
           )}
         </div>
         <p className={cn("text-sm tabular-nums", isDark ? "text-white/60" : "text-muted-foreground")}>
-          {formatEventTime(timestamp)}
-          <span className="mx-1.5">·</span>
-          {Math.round(durationMs / 1000)} sn
+          {formatEventTime(timestamp, t("formatting.locale"))}
+          <span className="mx-1.5">{t("formatting.eventDurationSeparator")}</span>
+          {Math.round(durationMs / 1000)} {t("common.secondsShort")}
         </p>
       </div>
 
@@ -97,15 +99,18 @@ interface DetectedEventsListProps {
 export function DetectedEventsList({
   events,
   variant = "light",
-  emptyMessage = "Henüz olay tespit edilmedi.",
+  emptyMessage,
   selectedEventId,
   onSelectEvent,
   deletingEventId,
   onDeleteEvent,
 }: DetectedEventsListProps) {
+  const { t } = useI18n();
+  const resolvedEmpty = emptyMessage ?? t("events.noEventsDetected");
+
   if (events.length === 0) {
     return (
-      <p className="text-center text-sm text-muted-foreground py-6">{emptyMessage}</p>
+      <p className="text-center text-sm text-muted-foreground py-6">{resolvedEmpty}</p>
     );
   }
 
@@ -145,6 +150,7 @@ export function DetectedEventsList({
         return (
           <SwipeAction
             key={event.id}
+            actionLabel={t("common.delete")}
             actionDisabled={deletingEventId === event.id}
             onAction={() => void onDeleteEvent(event)}
           >

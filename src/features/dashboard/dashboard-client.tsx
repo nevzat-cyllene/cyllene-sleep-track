@@ -15,6 +15,7 @@ import { formatDate, formatTime } from "@/lib/sleep-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { SleepEvent, SleepSession } from "@/types";
+import { useI18n } from "@/i18n/runtime";
 import { getSleepEventSummary } from "@/lib/sleep-event-summary";
 
 interface DashboardClientProps {
@@ -28,6 +29,7 @@ export function DashboardClient({
   userId,
   selectedSessionId,
 }: DashboardClientProps) {
+  const { t } = useI18n();
   const [sessions, setSessions] = useState(initialSessions);
   const [events, setEvents] = useState<SleepEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
@@ -94,7 +96,7 @@ export function DashboardClient({
     activeSession.cough_count +
     activeSession.talk_count +
     activeSession.noise_count;
-  const keyEventSummary = getSleepEventSummary(activeSession);
+  const keyEventSummary = getSleepEventSummary(activeSession, t);
   const KeyEventIcon =
     keyEventSummary.type === "snore"
       ? Wind

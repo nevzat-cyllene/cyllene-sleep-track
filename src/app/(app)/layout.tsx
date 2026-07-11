@@ -18,10 +18,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             aria-hidden="true"
             className="pointer-events-none absolute right-[-12rem] top-[-8rem] h-[32rem] w-[32rem] rounded-full bg-[#175fff]/8 blur-[120px]"
           />
-          <Container className="relative pb-28 pt-6 md:py-8">
+          <Container className="relative pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-6 md:py-8">
             <AppContentFrame>{children}</AppContentFrame>
           </Container>
           <MobileBottomNav />
+          {/* Catches any content that would otherwise peek under the floating tab bar */}
+          <div
+            aria-hidden
+            className="pointer-events-none fixed inset-x-0 bottom-0 z-40 h-[calc(5.75rem+env(safe-area-inset-bottom))] bg-[#050a16] md:hidden"
+          />
         </RecordingUIProvider>
       </SidebarInset>
     </SidebarProvider>

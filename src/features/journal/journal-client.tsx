@@ -154,10 +154,11 @@ export function JournalClient({ sessions }: JournalClientProps) {
             {monthSessions.map((session) => {
               const score = session.sleep_score ?? 0;
               const hasScore = session.sleep_score !== null && session.sleep_score !== undefined;
-              const eventSummary = getSleepEventSummary(session);
+              const eventSummary = getSleepEventSummary(session, t);
               return (
                 <SwipeAction
                   key={session.id}
+                  actionLabel={t("common.delete")}
                   actionDisabled={deletingSessionId === session.id}
                   onAction={() => void handleDeleteSession(session)}
                 >

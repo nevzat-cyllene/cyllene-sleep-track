@@ -4,6 +4,7 @@ import * as React from "react";
 import { chromeMessages } from "@/i18n/chrome-messages";
 import { kuAppMessages } from "@/i18n/ku-app-messages";
 import {
+  detectLocaleFromNavigator,
   isLocale,
   LOCALE_STORAGE_KEY,
   parseLocale,
@@ -106,15 +107,17 @@ export function LocaleProvider({
   }, []);
 
   React.useEffect(() => {
-    // Cookie (server) is source of truth. Only promote localStorage when cookie is absent.
+    // Cookie is source of truth once set. Without it, prefer localStorage, else device language.
     try {
       const hasCookie = document.cookie
         .split(";")
         .some((part) => part.trim().startsWith("cyllene.locale="));
       const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
-      if (!hasCookie && isLocale(stored)) {
-        writeLocaleCookie(stored);
-        setLocaleState(stored);
+      if (!hasCookie) {
+        const next = isLocale(stored) ? stored : detectLocaleFromNavigator();
+        writeLocaleCookie(next);
+        if (next !== locale) setLocaleState(next);
+        window.localStorage.setItem(LOCALE_STORAGE_KEY, next);
         return;
       }
       window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);

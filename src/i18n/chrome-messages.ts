@@ -51,7 +51,7 @@ export const chromeMessages = {
     },
     navigation: {
       primary: {
-        sleep: { label: "Xew", description: "Dest bi şevê bike" },
+        sleep: { label: "Xew", description: "Dest bi îşevê bike" },
         journal: { label: "Rojnivîsk", description: "Arşîva raporê" },
         statistics: { label: "Statîstîk", description: "Meylên xewê" },
         profile: { label: "Profîl", description: "Hesab û amûr" },
@@ -63,7 +63,7 @@ export const chromeMessages = {
         profile: "Profîl",
       },
       topbar: {
-        sleep: { eyebrow: "Vê şevê", title: "Qada xewê" },
+        sleep: { eyebrow: "Îşev", title: "Qada xewê" },
         journal: { eyebrow: "Arşîva te", title: "Rojnivîska xewê" },
         statistics: { eyebrow: "Têgihiştin", title: "Statîstîk" },
         profile: { eyebrow: "Hesabê te", title: "Profîl û mîheng" },
@@ -77,7 +77,7 @@ export const chromeMessages = {
         nightFlowReady: "Herikîna şevê amade ye",
         upcoming: "Di nêzîk de",
         trustLayer: "Tebeqeya baweriyê",
-        tonightReady: "Vê şevê amade",
+        tonightReady: "Îşev amade",
         syncedReportHint:
           "Dengê xav li ser amûrê dimîne. Rapora sibehê bi hesabê te re hevdem xuya dibe.",
         commandTiles: {

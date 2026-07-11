@@ -5,22 +5,11 @@ type SessionEventCounts = Pick<
   "snore_count" | "cough_count" | "talk_count" | "noise_count"
 >;
 
-const EVENT_COPY: Record<
-  SleepEventType,
-  {
-    title: string;
-    unit: string;
-  }
-> = {
-  snore: { title: "Horlama", unit: "horlama" },
-  cough: { title: "Öksürük", unit: "öksürük" },
-  talk: { title: "Konuşma", unit: "konuşma" },
-  noise: { title: "Hareket / dış ses", unit: "hareket" },
-};
+type Translate = (path: string, params?: Record<string, string | number>) => string;
 
 const EVENT_PRIORITY: SleepEventType[] = ["snore", "cough", "talk", "noise"];
 
-export function getSleepEventSummary(session: SessionEventCounts) {
+export function getSleepEventSummary(session: SessionEventCounts, t: Translate) {
   const counts: Record<SleepEventType, number> = {
     snore: session.snore_count,
     cough: session.cough_count,
@@ -39,21 +28,19 @@ export function getSleepEventSummary(session: SessionEventCounts) {
     return {
       type: "noise" as SleepEventType,
       count: 0,
-      title: "Ses olayı",
-      compactLabel: "0 olay",
-      statTitle: "Ses olayı",
-      statSubtitle: "olay tespit edilmedi",
+      title: t("events.types.generic.title"),
+      compactLabel: t("events.zeroEvents"),
+      statTitle: t("events.types.generic.title"),
+      statSubtitle: t("events.notDetected"),
     };
   }
-
-  const copy = EVENT_COPY[type];
 
   return {
     type,
     count,
-    title: copy.title,
-    compactLabel: `${count} ${copy.unit}`,
-    statTitle: copy.title,
-    statSubtitle: "olay tespit edildi",
+    title: t(`events.types.${type}.title`),
+    compactLabel: `${count} ${t(`events.types.${type}.unit`)}`,
+    statTitle: t(`events.types.${type}.title`),
+    statSubtitle: t("events.detected"),
   };
 }

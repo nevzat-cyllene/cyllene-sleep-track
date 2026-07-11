@@ -6,13 +6,7 @@ import { estimateSleepStages, type SleepStage } from "@/lib/sleep-analytics";
 import type { SleepEvent, SleepNoiseSample, SleepSession } from "@/types";
 import { cn } from "@/lib/utils";
 import { Wind, MessageCircle, Activity, Volume2 } from "lucide-react";
-
-const EVENT_LABELS: Record<string, string> = {
-  snore: "Horlama",
-  cough: "Öksürük",
-  talk: "Konuşma",
-  noise: "Hareket / dış ses",
-};
+import { useI18n } from "@/i18n/runtime";
 
 const EVENT_COLORS: Record<string, string> = {
   snore: "#fbbf24",
@@ -23,7 +17,6 @@ const EVENT_COLORS: Record<string, string> = {
 
 const EVENT_ICONS = { snore: Wind, cough: Activity, talk: MessageCircle, noise: Volume2 };
 
-const STAGE_LABELS = { awake: "Uyanık", light: "Uyku", deep: "Derin uyku" };
 const STAGE_BAR: Record<SleepStage, string> = {
   awake: "bg-[#7dd3fc]/80",
   light: "bg-[#3b82f6]/85",
@@ -64,6 +57,15 @@ export function NightSoundsChart({
   activeFilters,
   onToggleFilter,
 }: NightSoundsChartProps) {
+  const { t } = useI18n();
+  const locale = t("formatting.locale");
+  const eventLabel = (type: string) => t(`events.types.${type}.title`);
+  const stageLabels = {
+    awake: t("sessionDetail.stages.awake"),
+    light: t("sessionDetail.stages.light"),
+    deep: t("sessionDetail.stages.deep"),
+  } as const;
+
   const startMs = new Date(session.started_at).getTime();
   const stages = estimateSleepStages(session, noiseSamples);
   const durationMinutes = Math.max(
@@ -75,11 +77,12 @@ export function NightSoundsChart({
     )
   );
 
+
   const chartData = useMemo(() => {
     if (noiseSamples.length > 0) {
       return noiseSamples
         .map((s) => ({
-          time: formatTime(startMs + s.minute_offset * 60000),
+          time: formatTime(startMs + s.minute_offset * 60000, locale),
           db: toFiniteDb(s.avg_db),
           minute: s.minute_offset,
         }))
@@ -88,12 +91,12 @@ export function NightSoundsChart({
     return events
       .filter((e) => activeFilters.has(e.event_type))
       .map((e) => ({
-        time: formatTime(e.occurred_at),
+        time: formatTime(e.occurred_at, locale),
         db: toFiniteDb(e.peak_db),
         minute: Math.floor((new Date(e.occurred_at).getTime() - startMs) / 60000),
       }))
       .filter((point): point is { time: string; db: number; minute: number } => point.db !== null);
-  }, [noiseSamples, events, activeFilters, startMs]);
+  }, [noiseSamples, events, activeFilters, startMs, locale]);
 
   const filteredEvents = events.filter((e) => activeFilters.has(e.event_type));
   const selected = filteredEvents.find((e) => e.id === selectedEventId) ?? filteredEvents[0];
@@ -207,7 +210,7 @@ export function NightSoundsChart({
               )}
             >
               <Icon className="h-3.5 w-3.5" />
-              {EVENT_LABELS[type]}
+              {eventLabel(type)}
             </button>
           );
         })}
@@ -215,7 +218,7 @@ export function NightSoundsChart({
 
       {stageSegments.length > 0 && (
         <div className="rounded-2xl border border-white/10 bg-[#071222] p-4">
-          <p className="mb-3 text-xs text-muted-foreground">Tahmini uyku evreleri</p>
+          <p className="mb-3 text-xs text-muted-foreground">{t("sessionDetail.estimatedStages")}</p>
           <div className="relative h-24 overflow-hidden rounded-xl border border-white/[0.06] bg-[#06101f]">
             <div className="pointer-events-none absolute inset-y-0 left-0 right-0 grid grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -243,7 +246,7 @@ export function NightSoundsChart({
             ))}
           </div>
           <div className="mt-2 flex gap-4 text-[10px] text-muted-foreground">
-            {Object.entries(STAGE_LABELS).map(([key, label]) => (
+            {Object.entries(stageLabels).map(([key, label]) => (
               <span key={key} className="inline-flex items-center gap-1.5">
                 <span
                   className={cn(
@@ -263,7 +266,7 @@ export function NightSoundsChart({
           <div className="mb-3 inline-flex max-w-full items-center gap-2 rounded-full bg-black/50 px-3 py-1.5 text-sm text-cyllene-cyan">
             <SelectedIcon className="h-4 w-4 shrink-0" />
             <span className="truncate">
-              {formatTime(selected.occurred_at)} {EVENT_LABELS[selected.event_type]}
+              {formatTime(selected.occurred_at, locale)} {eventLabel(selected.event_type)}
             </span>
           </div>
         )}
@@ -271,7 +274,7 @@ export function NightSoundsChart({
         <div className="relative h-44 w-full overflow-hidden rounded-xl border border-white/[0.06] bg-[#050f22]">
           {signalPath === "" && eventMarkers.length === 0 ? (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              Bu gece için ses verisi yok
+              {t("sessionDetail.noSoundData")}
             </div>
           ) : (
             <>
@@ -308,7 +311,7 @@ export function NightSoundsChart({
                         : "border-[#8dbdff]/50 bg-[#6fd2ff]"
                     )}
                     style={{ left: `${marker.left}%` }}
-                    aria-label={EVENT_LABELS[marker.type] ?? "Olay"}
+                    aria-label={eventLabel(marker.type) || t("common.event")}
                   />
                 ))}
               </div>
@@ -319,8 +322,8 @@ export function NightSoundsChart({
                 />
               )}
               <div className="absolute inset-x-3 bottom-2 z-10 flex justify-between text-[10px] text-white/30">
-                <span>{formatTime(startMs)}</span>
-                <span>{formatTime(startMs + durationMinutes * 60000)}</span>
+                <span>{formatTime(startMs, locale)}</span>
+                <span>{formatTime(startMs + durationMinutes * 60000, locale)}</span>
               </div>
             </>
           )}
@@ -341,7 +344,7 @@ export function NightSoundsChart({
                       ? "border-white/50 bg-white/10"
                       : "border-white/10 bg-white/[0.03]"
                   )}
-                  aria-label={EVENT_LABELS[event.event_type]}
+                  aria-label={eventLabel(event.event_type)}
                 >
                   <div
                     className="flex h-4 items-end gap-px"

@@ -40,7 +40,10 @@ function average(values: number[]) {
 export function StatisticsClient({ sessions, events }: StatisticsClientProps) {
   const { t } = useI18n();
   const [period, setPeriod] = useState<StatsPeriod>("months");
-  const trend = useMemo(() => buildTrendData(sessions, period), [sessions, period]);
+  const trend = useMemo(
+    () => buildTrendData(sessions, period, t("formatting.locale")),
+    [sessions, period, t]
+  );
 
   const signature = useMemo(() => {
     const scored = sessions
@@ -74,7 +77,7 @@ export function StatisticsClient({ sessions, events }: StatisticsClientProps) {
   );
 
   return (
-    <div className="space-y-6 pb-[calc(7.25rem+env(safe-area-inset-bottom))] sm:pb-4">
+    <div className="space-y-6 pb-2 sm:pb-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.22em] text-[#78b7ff]">
@@ -190,7 +193,7 @@ function SleepSignatureCard({
           label={t("statistics.signature.duration")}
           value={
             signature.avgDuration
-              ? formatDurationHours(signature.avgDuration)
+              ? formatDurationHours(signature.avgDuration, t)
               : t("common.emDash")
           }
           detail={t("common.average")}

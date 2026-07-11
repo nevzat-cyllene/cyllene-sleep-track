@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n/runtime";
 
 interface SwipeActionProps {
   children: ReactNode;
@@ -18,11 +19,13 @@ const SWIPE_OPEN_EVENT = "cyllene:swipe-action-open";
 
 export function SwipeAction({
   children,
-  actionLabel = "Sil",
+  actionLabel,
   actionDisabled,
   className,
   onAction,
 }: SwipeActionProps) {
+  const { t } = useI18n();
+  const resolvedLabel = actionLabel ?? t("common.delete");
   const id = useId();
   const startX = useRef(0);
   const startY = useRef(0);
@@ -76,10 +79,10 @@ export function SwipeAction({
             close();
           }}
           className="my-1 flex w-[76px] flex-col items-center justify-center gap-1 rounded-2xl border border-rose-200/18 bg-[linear-gradient(145deg,rgba(255,72,108,.96),rgba(206,42,78,.94))] text-[10px] font-semibold text-white shadow-[0_14px_36px_rgba(244,63,94,.32),inset_0_1px_0_rgba(255,255,255,.16)] transition duration-75 active:scale-[0.97] disabled:opacity-55"
-          aria-label={actionLabel}
+          aria-label={resolvedLabel}
         >
           <Trash2 className="h-4 w-4" />
-          {actionDisabled ? "..." : actionLabel}
+          {actionDisabled ? "..." : resolvedLabel}
         </button>
       </div>
 
@@ -91,7 +94,6 @@ export function SwipeAction({
         style={{ transform: `translateX(${offset}px)` }}
         onPointerDown={(event) => {
           if (actionDisabled) return;
-          // Mouse/pen on desktop: do not hijack clicks (play button must work).
           if (event.pointerType !== "touch") return;
 
           swipeActive.current = true;

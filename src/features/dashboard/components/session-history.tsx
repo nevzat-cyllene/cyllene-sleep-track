@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/sleep-utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSleepEventSummary } from "@/lib/sleep-event-summary";
+import { useI18n } from "@/i18n/runtime";
 import type { SleepSession } from "@/types";
 
 interface SessionHistoryProps {
@@ -13,14 +14,16 @@ interface SessionHistoryProps {
 }
 
 export function SessionHistory({ sessions }: SessionHistoryProps) {
+  const { t } = useI18n();
+
   if (sessions.length === 0) {
     return (
       <Card className="glass border-white/10 shadow-soft">
         <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
           <Moon className="h-10 w-10 text-muted-foreground" />
-          <p className="text-muted-foreground">Henüz kayıtlı gece yok.</p>
+          <p className="text-muted-foreground">{t("dashboard.noSavedNights")}</p>
           <Link href="/sleep" className="text-sm text-primary hover:underline">
-            İlk gece kaydınızı başlatın →
+            {t("dashboard.startFirstNight")}
           </Link>
         </CardContent>
       </Card>
@@ -30,16 +33,19 @@ export function SessionHistory({ sessions }: SessionHistoryProps) {
   return (
     <div className="space-y-3">
       {sessions.map((session) => {
-        const eventSummary = getSleepEventSummary(session);
+        const eventSummary = getSleepEventSummary(session, t);
 
         return (
           <Link key={session.id} href={`/journal/${session.id}`}>
             <Card className="glass border-white/10 shadow-soft transition hover:border-white/20">
               <CardContent className="flex items-center justify-between py-4">
                 <div>
-                  <p className="font-medium">{formatDate(session.started_at)}</p>
+                  <p className="font-medium">
+                    {formatDate(session.started_at, t("formatting.locale"))}
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    {session.duration_minutes ?? "—"} dk · {eventSummary.compactLabel}
+                    {session.duration_minutes ?? t("common.emDash")} {t("common.minutesShort")}{" "}
+                    · {eventSummary.compactLabel}
                   </p>
                 </div>
                 <Badge
@@ -52,7 +58,7 @@ export function SessionHistory({ sessions }: SessionHistoryProps) {
                         : "bg-red-500/10 text-red-400"
                   }
                 >
-                  {session.sleep_score ?? "—"}
+                  {session.sleep_score ?? t("common.emDash")}
                 </Badge>
               </CardContent>
             </Card>

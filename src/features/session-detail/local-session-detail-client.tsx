@@ -205,7 +205,7 @@ export function LocalSessionDetailClient({
 
       <div className="rounded-3xl border border-white/10 bg-[#0A1621]/90 p-5 shadow-soft">
         <p className="mb-4 capitalize text-lg font-medium">
-          {formatWeekdayRange(session.started_at, session.ended_at)}
+          {formatWeekdayRange(session.started_at, session.ended_at, t("formatting.locale"))}
         </p>
 
         <div className="grid gap-6 sm:grid-cols-[auto_1fr]">
@@ -218,13 +218,13 @@ export function LocalSessionDetailClient({
           <div className="flex flex-col justify-center gap-4">
             <div>
               <p className="text-2xl font-semibold tabular-nums">
-                {formatDurationHours(session.duration_minutes)}
+                {formatDurationHours(session.duration_minutes, t)}
               </p>
               <p className="text-sm text-muted-foreground">{t("sessionDetail.timeInBed")}</p>
             </div>
             <div>
               <p className="text-2xl font-semibold tabular-nums">
-                {formatDurationHours(asleepMinutes)}
+                {formatDurationHours(asleepMinutes, t)}
               </p>
               <p className="text-sm text-muted-foreground">
                 {t("sessionDetail.estimatedSleep")}

@@ -40,7 +40,7 @@ export function ProfileClient({ profile, email }: ProfileClientProps) {
     plan === "premium" ? t("common.premium") : plan === "free" ? t("common.free") : plan;
 
   return (
-    <div className="space-y-6 pb-[calc(8rem+env(safe-area-inset-bottom))] md:pb-4">
+    <div className="space-y-6 pb-2 md:pb-4">
       <div>
         <h1 className="text-2xl font-semibold">{t("profile.title")}</h1>
         <p className="text-sm text-muted-foreground">{t("profile.subtitle")}</p>

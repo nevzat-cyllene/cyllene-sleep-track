@@ -72,6 +72,9 @@ export const messages = {
       manifestDescription:
         "Uykunuzu telefonunuzda ses analizi ile izleyin. Horlama, öksürük ve gürültü olaylarını sabah raporunda görün.",
     },
+    brand: {
+      developerCredit: "Cyllene Uyku Takipçisi geliştirici",
+    },
     navigation: {
       primary: {
         sleep: { label: "Uyku", description: "Geceyi başlat" },
@@ -391,6 +394,12 @@ export const messages = {
       eyebrow: "Uyku ritmin hazır",
       trustBadge: "Cihaz içi analiz",
       title: "İyi geceler.",
+      greetings: {
+        morning: "Günaydın.",
+        afternoon: "Tünaydın.",
+        evening: "İyi akşamlar.",
+        night: "İyi geceler.",
+      },
       body: "Telefonunu yakınına koy; Cyllene gece sinyallerini sabah raporuna dönüştürsün.",
       startTonight: "Bu geceyi başlat",
       lastNight: "Son gece",
@@ -545,7 +554,7 @@ export const messages = {
         snore: { title: "Horlama", unit: "horlama" },
         cough: { title: "Öksürük", unit: "öksürük" },
         talk: { title: "Konuşma", unit: "konuşma" },
-        noise: { title: "Ani ses", unit: "ani ses" },
+        noise: { title: "Hareket / dış ses", unit: "hareket" },
         generic: { title: "Ses olayı", unit: "olay" },
         noiseLegacy: "Gürültü",
       },
@@ -616,6 +625,13 @@ export const messages = {
       detectedEventsWithCount: "Tespit edilen olaylar ({{count}})",
       noEvents: "Bu gece olay tespit edilmedi.",
       quality: "Kalite",
+      estimatedStages: "Tahmini uyku evreleri",
+      noSoundData: "Bu gece için ses verisi yok",
+      stages: {
+        awake: "Uyanık",
+        light: "Uyku",
+        deep: "Derin uyku",
+      },
       weekdayLabels: ["P", "S", "Ç", "P", "C", "C", "P"],
     },
     dashboard: {
@@ -809,6 +825,9 @@ export const messages = {
       appleTitle: "Cyllene",
       manifestDescription:
         "Track your sleep with on-device audio analysis. See snoring, coughing, and noise events in your morning report.",
+    },
+    brand: {
+      developerCredit: "Cyllene Sleep Tracker developer",
     },
     navigation: {
       primary: {
@@ -1129,6 +1148,12 @@ export const messages = {
       eyebrow: "Your sleep rhythm is ready",
       trustBadge: "On-device analysis",
       title: "Good night.",
+      greetings: {
+        morning: "Good morning.",
+        afternoon: "Good afternoon.",
+        evening: "Good evening.",
+        night: "Good night.",
+      },
       body: "Place your phone nearby; let Cyllene turn night signals into a morning report.",
       startTonight: "Start tonight",
       lastNight: "Last night",
@@ -1279,7 +1304,7 @@ export const messages = {
         snore: { title: "Snoring", unit: "snore" },
         cough: { title: "Coughing", unit: "cough" },
         talk: { title: "Talking", unit: "speech" },
-        noise: { title: "Sudden noise", unit: "sudden noise" },
+        noise: { title: "Movement / ambient", unit: "movement" },
         generic: { title: "Sound event", unit: "event" },
         noiseLegacy: "Noise",
       },
@@ -1350,6 +1375,13 @@ export const messages = {
       detectedEventsWithCount: "Detected events ({{count}})",
       noEvents: "No events were detected tonight.",
       quality: "Quality",
+      estimatedStages: "Estimated sleep stages",
+      noSoundData: "No sound data for tonight",
+      stages: {
+        awake: "Awake",
+        light: "Sleep",
+        deep: "Deep sleep",
+      },
       weekdayLabels: ["M", "T", "W", "T", "F", "S", "S"],
     },
     dashboard: {

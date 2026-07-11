@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { defaultMetadata, defaultViewport } from "@/lib/site-config";
 import { Providers } from "@/components/providers";
-import { parseLocale } from "@/i18n/locales";
+import { detectLocaleFromAcceptLanguage, isLocale } from "@/i18n/locales";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,7 +25,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
-  const initialLocale = parseLocale(cookieStore.get("cyllene.locale")?.value);
+  const headerStore = await headers();
+  const cookieLocale = cookieStore.get("cyllene.locale")?.value;
+  const initialLocale = isLocale(cookieLocale)
+    ? cookieLocale
+    : detectLocaleFromAcceptLanguage(headerStore.get("accept-language"));
 
   return (
     <html

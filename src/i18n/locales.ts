@@ -19,6 +19,43 @@ export function parseLocale(value: string | null | undefined, fallback: Locale =
   return isLocale(value) ? value : fallback;
 }
 
+export function detectLocaleFromLanguageTag(language: string): Locale | null {
+  const normalized = language.toLowerCase();
+  if (normalized.startsWith("tr")) return "tr";
+  if (normalized.startsWith("en")) return "en";
+  if (
+    normalized.startsWith("ku") ||
+    normalized.startsWith("ckb") ||
+    normalized.startsWith("kmr")
+  ) {
+    return "ku";
+  }
+  return null;
+}
+
+export function detectLocaleFromAcceptLanguage(header: string | null | undefined): Locale {
+  if (!header) return "tr";
+  const parts = header.split(",").map((part) => part.trim().split(";")[0] ?? "");
+  for (const part of parts) {
+    const detected = detectLocaleFromLanguageTag(part);
+    if (detected) return detected;
+  }
+  return "tr";
+}
+
+export function detectLocaleFromNavigator(): Locale {
+  if (typeof navigator === "undefined") return "tr";
+  const preferred =
+    navigator.languages && navigator.languages.length > 0
+      ? navigator.languages
+      : [navigator.language];
+  for (const language of preferred) {
+    const detected = detectLocaleFromLanguageTag(language ?? "");
+    if (detected) return detected;
+  }
+  return "tr";
+}
+
 /** Write cookie readable by the Next.js server layout (no flicker). */
 export function writeLocaleCookie(locale: Locale) {
   if (typeof document === "undefined") return;

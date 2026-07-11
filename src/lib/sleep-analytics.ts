@@ -104,30 +104,48 @@ export function estimateSleepStages(
   });
 }
 
-export function formatDurationHours(minutes: number | null): string {
-  if (!minutes) return "—";
+export function formatDurationHours(
+  minutes: number | null,
+  t?: (path: string, params?: Record<string, string | number>) => string
+): string {
+  if (!minutes) return t ? t("common.emDash") : "—";
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  if (h > 0) return `${h}s ${m}dk`;
-  return `${m}dk`;
+  if (h > 0) {
+    return t
+      ? t("formatting.durationHourMinute", { hours: h, minutes: m })
+      : `${h}s ${m}dk`;
+  }
+  return t ? t("formatting.durationMinute", { minutes: m }) : `${m}dk`;
 }
 
-export function formatWeekdayRange(startedAt: string, endedAt: string | null): string {
+export function formatWeekdayRange(
+  startedAt: string,
+  endedAt: string | null,
+  locale = "tr-TR"
+): string {
   const start = new Date(startedAt);
   const end = endedAt ? new Date(endedAt) : start;
-  const weekday = new Intl.DateTimeFormat("tr-TR", { weekday: "long" }).format(start);
-  const dayFmt = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long" });
+  const weekday = new Intl.DateTimeFormat(locale, { weekday: "long" }).format(start);
+  const month = new Intl.DateTimeFormat(locale, { month: "long" }).format(start);
   const startDay = start.getDate();
   const endDay = end.getDate();
-  const month = dayFmt.format(start).split(" ")[1] ?? "";
-  if (startDay === endDay) return `${weekday} ${startDay} ${month}`;
+  const sameDay =
+    startDay === endDay &&
+    start.getMonth() === end.getMonth() &&
+    start.getFullYear() === end.getFullYear();
+  if (sameDay) return `${weekday} ${startDay} ${month}`;
   return `${weekday} ${startDay}–${endDay} ${month}`;
 }
 
-export function formatSessionTimeRange(startedAt: string, endedAt: string | null): string {
+export function formatSessionTimeRange(
+  startedAt: string,
+  endedAt: string | null,
+  locale = "tr-TR"
+): string {
   const start = new Date(startedAt);
   const end = endedAt ? new Date(endedAt) : start;
-  const fmt = new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-digit" });
+  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" });
   return `${fmt.format(start)} – ${fmt.format(end)}`;
 }
 
@@ -147,7 +165,8 @@ function bedtimeHour(iso: string) {
 
 export function buildTrendData(
   sessions: SleepSession[],
-  period: StatsPeriod
+  period: StatsPeriod,
+  locale = "tr-TR"
 ): TrendPoint[] {
   if (sessions.length === 0) return [];
 
@@ -168,7 +187,7 @@ export function buildTrendData(
     const regularity = Math.round(Math.max(40, 100 - deviation * 12));
 
     return {
-      label: new Intl.DateTimeFormat("tr-TR", {
+      label: new Intl.DateTimeFormat(locale, {
         day: "numeric",
         month: "short",
       }).format(new Date(session.started_at)),

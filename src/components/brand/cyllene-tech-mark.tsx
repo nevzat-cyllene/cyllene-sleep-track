@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n/runtime";
 
 interface CylleneTechMarkProps {
   className?: string;
@@ -11,8 +14,10 @@ interface CylleneTechMarkProps {
 export function CylleneTechMark({
   className,
   size = "sm",
-  caption = "Cyllene Uyku Takipçisi geliştirici",
+  caption,
 }: CylleneTechMarkProps) {
+  const { t } = useI18n();
+  const resolvedCaption = caption ?? t("brand.developerCredit");
   const width = size === "md" ? 128 : 104;
 
   return (
@@ -23,7 +28,7 @@ export function CylleneTechMark({
       )}
     >
       <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-white/28">
-        {caption}
+        {resolvedCaption}
       </p>
       <Image
         src="/brand/cyllene-tech.webp"

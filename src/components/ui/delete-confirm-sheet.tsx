@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 import { ShieldAlert, Trash2, X } from "lucide-react";
+import { useI18n } from "@/i18n/runtime";
 
 interface DeleteConfirmSheetProps {
   open: boolean;
@@ -17,13 +18,15 @@ export function DeleteConfirmSheet({
   open,
   title,
   description,
-  confirmLabel = "Sil",
+  confirmLabel,
   isPending,
   onOpenChange,
   onConfirm,
 }: DeleteConfirmSheetProps) {
+  const { t } = useI18n();
   const titleId = useId();
   const descriptionId = useId();
+  const resolvedConfirm = confirmLabel ?? t("deleteConfirm.defaultConfirm");
 
   if (!open) return null;
 
@@ -41,7 +44,7 @@ export function DeleteConfirmSheet({
     >
       <button
         type="button"
-        aria-label="Silme onayını kapat"
+        aria-label={t("deleteConfirm.closeAria")}
         className="absolute inset-0 cursor-default bg-[#02050d]/72 backdrop-blur-md"
         disabled={isPending}
         onClick={close}
@@ -62,7 +65,7 @@ export function DeleteConfirmSheet({
               disabled={isPending}
               onClick={close}
               className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.035] text-white/45 transition duration-100 hover:bg-white/[0.07] hover:text-white disabled:opacity-50"
-              aria-label="Vazgeç"
+              aria-label={t("deleteConfirm.cancelAria")}
             >
               <X className="h-4 w-4" />
             </button>
@@ -83,7 +86,7 @@ export function DeleteConfirmSheet({
             className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,rgba(255,86,118,.98),rgba(214,43,83,.98))] text-sm font-semibold text-white shadow-[0_16px_42px_rgba(244,63,94,.3),inset_0_1px_0_rgba(255,255,255,.2)] transition duration-100 active:scale-[0.985] disabled:opacity-65"
           >
             <Trash2 className="h-4 w-4" />
-            {isPending ? "Siliniyor..." : confirmLabel}
+            {isPending ? t("deleteConfirm.pending") : resolvedConfirm}
           </button>
           <button
             type="button"
@@ -91,7 +94,7 @@ export function DeleteConfirmSheet({
             onClick={close}
             className="h-11 rounded-2xl border border-white/[0.08] bg-white/[0.035] text-sm font-medium text-white/70 transition duration-100 hover:bg-white/[0.06] hover:text-white active:scale-[0.985] disabled:opacity-55"
           >
-            Vazgeç
+            {t("deleteConfirm.cancel")}
           </button>
         </div>
       </div>

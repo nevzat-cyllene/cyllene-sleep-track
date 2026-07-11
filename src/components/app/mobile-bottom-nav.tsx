@@ -38,7 +38,7 @@ export function MobileBottomNav() {
   if (isRecording) return null;
 
   return (
-    <nav className="fixed inset-x-3 bottom-[max(.75rem,env(safe-area-inset-bottom))] z-50 overflow-hidden rounded-[1.35rem] border border-white/[0.09] bg-[#081122]/94 p-1.5 shadow-[0_16px_48px_rgba(0,4,18,.5),inset_0_1px_0_rgba(255,255,255,.06)] backdrop-blur-xl transition-[border-color,background-color,box-shadow,transform] duration-75 ease-out [transform:translateZ(0)] md:hidden">
+    <nav className="fixed inset-x-3 bottom-[max(.75rem,env(safe-area-inset-bottom))] z-50 overflow-hidden rounded-[1.35rem] border border-white/[0.09] bg-[#071122] p-1.5 shadow-[0_16px_48px_rgba(0,4,18,.72),inset_0_1px_0_rgba(255,255,255,.06)] transition-[border-color,background-color,box-shadow,transform] duration-75 ease-out [transform:translateZ(0)] md:hidden">
       <div className="mx-auto flex max-w-lg items-stretch justify-around">
         {tabs.map(({ href, key, icon: Icon }) => {
           const active = isActivePath(pathname, href);

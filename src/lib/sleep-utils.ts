@@ -51,9 +51,9 @@ export function formatElapsedClock(ms: number): string {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-export function formatTime(date: Date | number | string): string {
+export function formatTime(date: Date | number | string, locale = "tr-TR"): string {
   const d = typeof date === "string" ? new Date(date) : typeof date === "number" ? new Date(date) : date;
-  return new Intl.DateTimeFormat("tr-TR", {
+  return new Intl.DateTimeFormat(locale, {
     hour: "2-digit",
     minute: "2-digit",
   }).format(d);
