@@ -24,6 +24,7 @@ interface UseRecordingOptions {
 interface PendingEventPayload {
   audioData: Float32Array;
   pendingEvent: LocalSleepEvent;
+  sampleRate: number;
 }
 
 interface WorkletEventMessage {
@@ -88,9 +89,10 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
       eventQueueRef.current = eventQueueRef.current.then(async () => {
         if (!sessionRef.current) return;
 
-        const sampleRate = payload.pendingEvent.durationMs > 0
-          ? audioContextRef.current?.sampleRate ?? 44100
-          : 44100;
+        const sampleRate =
+          payload.sampleRate > 0
+            ? payload.sampleRate
+            : audioContextRef.current?.sampleRate ?? 44100;
 
         const { type, confidence } = await classifyAudio(payload.audioData, sampleRate);
 
@@ -250,7 +252,11 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
             type: "noise",
             confidence: 0,
           };
-          enqueueEvent({ audioData, pendingEvent });
+          enqueueEvent({
+            audioData,
+            pendingEvent,
+            sampleRate: data.sampleRate || audioContextRef.current?.sampleRate || 44100,
+          });
         }
       };
 
@@ -292,8 +298,9 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
     setStatus("stopping");
 
     await flushActiveEvent();
-    await cleanupAudio();
+    // Drain clips while AudioContext sampleRate is still available as fallback.
     await drainEventQueue();
+    await cleanupAudio();
 
     if (sessionRef.current) {
       bucketNoiseSamples(sessionRef.current);

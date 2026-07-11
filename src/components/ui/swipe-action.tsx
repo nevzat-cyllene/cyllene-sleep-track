@@ -28,6 +28,7 @@ export function SwipeAction({
   const currentOffset = useRef(0);
   const dragged = useRef(false);
   const blockClick = useRef(false);
+  const swipeActive = useRef(false);
   const [offset, setOffset] = useState(0);
   const [dragging, setDragging] = useState(false);
 
@@ -66,11 +67,15 @@ export function SwipeAction({
       <div
         className={cn(
           "relative z-10 touch-pan-y rounded-[inherit] bg-[#071222]",
-          dragging ? "transition-none" : "transition-transform duration-100 ease-out will-change-transform"
+          dragging ? "transition-none" : "transition-transform duration-100 ease-out"
         )}
         style={{ transform: `translateX(${offset}px)` }}
         onPointerDown={(event) => {
           if (actionDisabled) return;
+          // Mouse/pen on desktop: do not hijack clicks (play button must work).
+          if (event.pointerType !== "touch") return;
+
+          swipeActive.current = true;
           startX.current = event.clientX;
           startY.current = event.clientY;
           startOffset.current = offset;
@@ -84,7 +89,7 @@ export function SwipeAction({
           }
         }}
         onPointerMove={(event) => {
-          if (!dragging || actionDisabled) return;
+          if (!swipeActive.current || !dragging || actionDisabled) return;
 
           const dx = event.clientX - startX.current;
           const dy = event.clientY - startY.current;
@@ -100,7 +105,8 @@ export function SwipeAction({
           setOffset(next);
         }}
         onPointerUp={(event) => {
-          if (actionDisabled) return;
+          if (!swipeActive.current || actionDisabled) return;
+          swipeActive.current = false;
           setDragging(false);
           const next = currentOffset.current <= -OPEN_THRESHOLD ? -ACTION_WIDTH : 0;
           if (next < 0 && currentOffset.current > -ACTION_WIDTH) {
@@ -118,6 +124,7 @@ export function SwipeAction({
           }, 0);
         }}
         onPointerCancel={() => {
+          swipeActive.current = false;
           setDragging(false);
           currentOffset.current = 0;
           setOffset(0);

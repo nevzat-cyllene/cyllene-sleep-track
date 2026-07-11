@@ -135,11 +135,15 @@
       0 1px 0 oklch(1 0 0 / 7%) inset;
   }
   .surface-panel {
-    @apply border border-white/[0.075] bg-[linear-gradient(145deg,rgba(18,30,58,.82),rgba(7,14,31,.88))] shadow-[0_24px_80px_rgba(0,5,20,.32),inset_0_1px_0_rgba(255,255,255,.055)] backdrop-blur-2xl;
+    @apply border border-white/[0.075] bg-[linear-gradient(145deg,rgba(18,30,58,.82),rgba(7,14,31,.88))] shadow-[0_24px_80px_rgba(0,5,20,.32),inset_0_1px_0_rgba(255,255,255,.055)];
+  }
+  @media (max-width: 767px) {
+    .surface-panel {
+      @apply backdrop-blur-2xl;
+    }
   }
   .cyllene-route-frame {
-    /* Opacity-only: transform/filter here traps position:fixed children (sleep screen). */
-    animation: cyllene-route-enter 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    /* Keep empty of transform/filter so position:fixed children (sleep screen) work. */
   }
   .night-stars {
     background-image:
