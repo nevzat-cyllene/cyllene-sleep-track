@@ -31,6 +31,11 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
         <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192" />
         <link rel="icon" href="/icons/icon-512.png" type="image/png" sizes="512x512" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__cylleneBIP=e;});`,
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>

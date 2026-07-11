@@ -5,16 +5,15 @@ import { Download, Share, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { hasSeenGuestSplash } from "@/lib/guest-splash-storage";
 import { getDevicePlatform } from "@/lib/recording-device";
+import {
+  clearDeferredInstallPrompt,
+  ensureInstallPromptCapture,
+  subscribeInstallPrompt,
+  type BeforeInstallPromptEvent,
+} from "@/lib/install-prompt";
 import { cn } from "@/lib/utils";
 
-/** Short beat after "Sabaha geç" so homepage is visible first. */
-const TOAST_DELAY_MS = 900;
 export const GUEST_SPLASH_COMPLETE_EVENT = "cyllene:guest-splash-complete";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
 
 interface InstallPWANavigator extends Navigator {
   standalone?: boolean;
@@ -25,25 +24,15 @@ interface InstallPWAProps {
   className?: string;
 }
 
-const INSTALL_STORAGE_KEY = "cyllene-pwa-installed";
 const DISMISS_STORAGE_KEY = "cyllene-pwa-prompt-dismissed-at";
-const DISMISS_COOLDOWN_MS = 1000 * 60 * 60 * 12;
-
-function storeInstallFlag() {
-  try {
-    window.localStorage.setItem(INSTALL_STORAGE_KEY, "1");
-  } catch {
-    // ignore
-  }
-}
+const DISMISS_COOLDOWN_MS = 1000 * 60 * 60 * 24;
 
 function isPromptDismissedRecently() {
   try {
     const raw = window.localStorage.getItem(DISMISS_STORAGE_KEY);
     if (!raw) return false;
     const dismissedAt = Number(raw);
-    if (!Number.isFinite(dismissedAt)) return false;
-    return Date.now() - dismissedAt < DISMISS_COOLDOWN_MS;
+    return Number.isFinite(dismissedAt) && Date.now() - dismissedAt < DISMISS_COOLDOWN_MS;
   } catch {
     return false;
   }
@@ -60,60 +49,34 @@ function storePromptDismissed() {
 function isStandaloneDisplayMode() {
   if (typeof window === "undefined") return false;
   try {
-    const navigatorWithInstall = window.navigator as InstallPWANavigator;
+    const nav = window.navigator as InstallPWANavigator;
     return (
       window.matchMedia?.("(display-mode: standalone)").matches === true ||
-      navigatorWithInstall.standalone === true
+      nav.standalone === true
     );
   } catch {
     return false;
   }
 }
 
-/** Phones often request "desktop site" — don't rely on UA alone. */
 function isMobileInstallTarget() {
   if (typeof window === "undefined" || typeof navigator === "undefined") return false;
   const platform = getDevicePlatform();
   if (platform === "ios" || platform === "android") return true;
   const coarse = window.matchMedia?.("(pointer: coarse)")?.matches === true;
   const narrow = window.matchMedia?.("(max-width: 900px)")?.matches === true;
-  const touch = navigator.maxTouchPoints > 0;
-  return (coarse && touch) || (narrow && touch);
+  return (coarse || narrow) && navigator.maxTouchPoints > 0;
 }
 
-// #region agent log
-function dbgInstall(hypothesisId: string, message: string, data: Record<string, unknown>) {
-  const payload = {
-    sessionId: "d5fe36",
-    runId: "post-fix",
-    hypothesisId,
-    location: "install-pwa.tsx",
-    message,
-    data,
-    timestamp: Date.now(),
-  };
-  fetch("http://127.0.0.1:7668/ingest/6ebf33a3-e317-467b-8188-4ae3fc7f8fb1", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d5fe36" },
-    body: JSON.stringify(payload),
-  }).catch(() => {});
-  fetch("/api/debug-ingest", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  }).catch(() => {});
-}
-// #endregion
-
-function AppIcon({ className, size = 40 }: { className?: string; size?: number }) {
+function AppIcon({ className, size = 36 }: { className?: string; size?: number }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src="/icons/icon-192.png"
-      alt="Cyllene"
+      alt=""
       width={size}
       height={size}
-      className={cn("rounded-[0.7rem] object-cover", className)}
+      className={cn("rounded-[0.65rem] object-cover", className)}
       decoding="async"
     />
   );
@@ -125,241 +88,143 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [platform, setPlatform] = useState<"ios" | "android" | "other">("other");
   const [dismissed, setDismissed] = useState(false);
-  const [toastReady, setToastReady] = useState(false);
+  const [ready, setReady] = useState(false);
   const [recording, setRecording] = useState(false);
 
   useEffect(() => {
+    ensureInstallPromptCapture();
     const device = getDevicePlatform();
-    const mobile = isMobileInstallTarget();
-    const standalone = isStandaloneDisplayMode();
-    const recentDismiss = isPromptDismissedRecently();
-    setIsMobile(mobile);
+    setIsMobile(isMobileInstallTarget());
     setPlatform(device === "ios" || device === "android" ? device : "other");
-    // Only real standalone PWA — do NOT trust localStorage install flag (blocked toast after tests).
-    setInstalled(standalone);
-    setDismissed(recentDismiss);
-    // #region agent log
-    dbgInstall("A", "install init flags", {
-      device,
-      mobile,
-      standalone,
-      recentDismiss,
-      coarse: window.matchMedia?.("(pointer: coarse)")?.matches ?? null,
-      narrow: window.matchMedia?.("(max-width: 900px)")?.matches ?? null,
-      touchPoints: navigator.maxTouchPoints,
-      ua: navigator.userAgent.slice(0, 120),
-      path: window.location.pathname,
-    });
-    // #endregion
+    setInstalled(isStandaloneDisplayMode());
+    setDismissed(isPromptDismissedRecently());
+  }, []);
+
+  useEffect(() => {
+    return subscribeInstallPrompt((event) => setDeferredPrompt(event));
   }, []);
 
   useEffect(() => {
     const onRecording = (event: Event) => {
       setRecording(Boolean((event as CustomEvent<boolean>).detail));
     };
+    const onInstalled = () => {
+      setInstalled(true);
+      clearDeferredInstallPrompt();
+    };
     window.addEventListener("cyllene:recording-ui", onRecording);
-    return () => window.removeEventListener("cyllene:recording-ui", onRecording);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("cyllene:recording-ui", onRecording);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
   }, []);
 
   useEffect(() => {
-    if (installed || !isMobile) return;
-
-    const markInstalled = () => {
-      storeInstallFlag();
-      setInstalled(true);
-      setDeferredPrompt(null);
-      // #region agent log
-      dbgInstall("B", "appinstalled fired", {});
-      // #endregion
-    };
-
-    const installPromptHandler = (event: Event) => {
-      event.preventDefault();
-      setDeferredPrompt(event as BeforeInstallPromptEvent);
-      // #region agent log
-      dbgInstall("B", "beforeinstallprompt captured", {});
-      // #endregion
-    };
-
-    window.addEventListener("beforeinstallprompt", installPromptHandler);
-    window.addEventListener("appinstalled", markInstalled);
-    return () => {
-      window.removeEventListener("beforeinstallprompt", installPromptHandler);
-      window.removeEventListener("appinstalled", markInstalled);
-    };
-  }, [installed, isMobile]);
-
-  useEffect(() => {
-    // #region agent log
-    dbgInstall("C", "toast arm effect enter", {
-      variant,
-      installed,
-      isMobile,
-      dismissed,
-      splashSeen: hasSeenGuestSplash(),
-    });
-    // #endregion
-    if (variant !== "toast" || installed || !isMobile || dismissed) {
-      // #region agent log
-      dbgInstall("C", "toast arm aborted", {
-        reason:
-          variant !== "toast"
-            ? "not-toast"
-            : installed
-              ? "installed"
-              : !isMobile
-                ? "not-mobile"
-                : "dismissed",
-      });
-      // #endregion
-      return;
-    }
+    // Top invite only after moon entrance — never during splash / first white flash.
+    if (variant !== "toast" || installed || !isMobile || dismissed) return;
 
     let cancelled = false;
-    let delayTimer: number | undefined;
-    let pollTimer: number | undefined;
+    let timer: number | undefined;
+    let poll: number | undefined;
 
-    const showAfterDelay = () => {
-      if (delayTimer) window.clearTimeout(delayTimer);
-      delayTimer = window.setTimeout(() => {
-        if (cancelled) return;
-        setToastReady(true);
-        // #region agent log
-        dbgInstall("D", "toastReady set true", {
-          path: window.location.pathname,
-          splashSeen: hasSeenGuestSplash(),
-        });
-        // #endregion
-      }, TOAST_DELAY_MS);
+    const arm = () => {
+      if (cancelled || !hasSeenGuestSplash()) return;
+      timer = window.setTimeout(() => {
+        if (!cancelled) setReady(true);
+      }, 700);
     };
 
-    if (hasSeenGuestSplash()) showAfterDelay();
+    if (hasSeenGuestSplash()) arm();
 
-    const onSplashComplete = () => {
-      // #region agent log
-      dbgInstall("D", "guest splash complete event", { path: window.location.pathname });
-      // #endregion
-      showAfterDelay();
-    };
+    const onSplashComplete = () => arm();
     window.addEventListener(GUEST_SPLASH_COMPLETE_EVENT, onSplashComplete);
 
     if (!hasSeenGuestSplash()) {
-      pollTimer = window.setInterval(() => {
+      poll = window.setInterval(() => {
         if (!hasSeenGuestSplash()) return;
-        window.clearInterval(pollTimer);
-        pollTimer = undefined;
-        showAfterDelay();
+        window.clearInterval(poll);
+        poll = undefined;
+        arm();
       }, 300);
     }
 
     return () => {
       cancelled = true;
-      if (delayTimer) window.clearTimeout(delayTimer);
-      if (pollTimer) window.clearInterval(pollTimer);
+      if (timer) window.clearTimeout(timer);
+      if (poll) window.clearInterval(poll);
       window.removeEventListener(GUEST_SPLASH_COMPLETE_EVENT, onSplashComplete);
     };
   }, [variant, installed, isMobile, dismissed]);
 
-  // #region agent log
-  useEffect(() => {
-    dbgInstall("E", "render gate", {
-      isMobile,
-      installed,
-      dismissed,
-      toastReady,
-      recording,
-      willRenderToast: isMobile && !installed && !dismissed && toastReady && !recording,
-      hasDeferredPrompt: Boolean(deferredPrompt),
-      platform,
-      path: typeof window !== "undefined" ? window.location.pathname : "",
-    });
-  }, [isMobile, installed, dismissed, toastReady, recording, deferredPrompt, platform]);
-  // #endregion
-
   if (!isMobile || installed) return null;
-  if (variant === "toast" && (dismissed || !toastReady || recording)) return null;
+  if (variant === "toast" && (dismissed || !ready || recording)) return null;
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
     try {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === "accepted") {
-        storeInstallFlag();
-        setInstalled(true);
-      }
+      if (outcome === "accepted") setInstalled(true);
     } finally {
-      setDeferredPrompt(null);
+      clearDeferredInstallPrompt();
     }
   };
 
   const handleDismiss = () => {
     storePromptDismissed();
     setDismissed(true);
-    setToastReady(false);
+    setReady(false);
   };
-
-  const subtitle =
-    platform === "ios"
-      ? "Safari Paylaş menüsünden uygulamayı yükleyin."
-      : "Tek dokunuşla Cyllene’i telefonuna yükle.";
 
   if (variant === "toast") {
     return (
       <div
         className={cn(
-          // No md:hidden — desktop-site mode on phones was hiding the popup entirely.
-          "pointer-events-none fixed inset-x-3 z-[320]",
-          "bottom-[max(1rem,env(safe-area-inset-bottom))]",
+          "pointer-events-none fixed inset-x-0 top-0 z-[320] px-3 pt-[max(0.65rem,env(safe-area-inset-top))]",
           className
         )}
       >
-        <div className="pointer-events-auto relative overflow-hidden rounded-[1.35rem] border border-[#78b7ff]/18 bg-[#071627]/96 p-3.5 shadow-[0_20px_60px_rgba(0,8,24,.55),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-xl">
-          <div className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-[#155eff]/22 blur-[42px]" />
+        <div className="pointer-events-auto mx-auto flex max-w-lg items-center gap-3 overflow-hidden rounded-2xl border border-[#78b7ff]/16 bg-[#071627]/92 px-3 py-2.5 shadow-[0_18px_50px_rgba(0,8,24,.45),inset_0_1px_0_rgba(255,255,255,.07)] backdrop-blur-xl">
+          <div className="shrink-0 overflow-hidden rounded-xl border border-[#78b7ff]/12">
+            <AppIcon size={38} className="rounded-xl" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[12.5px] font-medium leading-snug text-white">
+              Cyllene Uyku Takipçisini indirmek ister misiniz?
+            </p>
+            <p className="mt-0.5 text-[10.5px] leading-4 text-white/42">
+              {platform === "ios"
+                ? "Paylaş → Ana Ekrana Ekle"
+                : "Gece kaydı için daha stabil erişim"}
+            </p>
+          </div>
+          {platform === "ios" ? (
+            <div className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-[#1769ff] px-2.5 text-[11px] font-semibold text-white">
+              <Share className="h-3 w-3" />
+              İndir
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void handleInstall()}
+              disabled={!deferredPrompt}
+              className="h-8 shrink-0 rounded-full bg-[#1769ff] px-3 text-[11px] font-semibold text-white transition active:scale-[0.97] disabled:opacity-55"
+            >
+              <span className="inline-flex items-center gap-1">
+                <Download className="h-3 w-3" />
+                İndir
+              </span>
+            </button>
+          )}
           <button
             type="button"
             onClick={handleDismiss}
-            className="absolute right-2.5 top-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full text-white/40 transition hover:bg-white/5 hover:text-white/70"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white/35 transition hover:bg-white/5 hover:text-white/70"
             aria-label="Kapat"
           >
             <X className="h-3.5 w-3.5" />
           </button>
-          <div className="relative flex items-center gap-3 pr-6">
-            <div className="shrink-0 overflow-hidden rounded-2xl border border-[#78b7ff]/12 shadow-[0_8px_24px_rgba(0,0,0,.35)]">
-              <AppIcon size={44} className="rounded-2xl" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-medium text-white">Uygulamayı yükle</p>
-              <p className="mt-0.5 text-[11px] leading-4 text-white/45">{subtitle}</p>
-            </div>
-          </div>
-          <div className="relative mt-3 flex gap-2">
-            <button
-              type="button"
-              onClick={handleDismiss}
-              className="h-10 flex-1 rounded-full border border-white/10 bg-white/[0.03] text-[12px] font-medium text-white/55 transition active:scale-[0.98]"
-            >
-              Sonra
-            </button>
-            {platform === "ios" ? (
-              <div className="flex h-10 flex-[1.35] items-center justify-center gap-1.5 rounded-full bg-[#1769ff] px-3 text-[12px] font-semibold text-white shadow-[0_12px_28px_rgba(24,105,255,.28)]">
-                <Share className="h-3.5 w-3.5" />
-                Yükle
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void handleInstall()}
-                disabled={!deferredPrompt}
-                className="h-10 flex-[1.35] rounded-full bg-[#1769ff] px-3 text-[12px] font-semibold text-white shadow-[0_12px_28px_rgba(24,105,255,.28)] transition active:scale-[0.98] disabled:opacity-60"
-              >
-                <span className="inline-flex items-center gap-1.5">
-                  <Download className="h-3.5 w-3.5" />
-                  {deferredPrompt ? "Yükle" : "Hazırlanıyor…"}
-                </span>
-              </button>
-            )}
-          </div>
         </div>
       </div>
     );
@@ -369,31 +234,28 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
     return (
       <div
         className={cn(
-          "relative overflow-hidden rounded-[1.35rem] border border-[#78b7ff]/14 bg-[#071627]/82 p-3 shadow-[0_18px_60px_rgba(11,75,180,.18),inset_0_1px_0_rgba(255,255,255,.07)]",
+          "relative overflow-hidden rounded-2xl border border-[#78b7ff]/14 bg-[#071627]/82 p-3",
           className
         )}
       >
         <div className="relative flex items-center gap-3">
-          <div className="shrink-0 overflow-hidden rounded-2xl border border-[#78b7ff]/12">
-            <AppIcon />
-          </div>
+          <AppIcon />
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-medium text-white">Uygulamayı yükle</p>
-            <p className="mt-0.5 text-[11px] leading-4 text-white/42">{subtitle}</p>
+            <p className="text-[13px] font-medium text-white">
+              Cyllene Uyku Takipçisini indirmek ister misiniz?
+            </p>
+            <p className="mt-0.5 text-[11px] text-white/42">
+              {platform === "ios" ? "Paylaş → Ana Ekrana Ekle" : "Tek dokunuşla yükle"}
+            </p>
           </div>
-          {platform === "ios" ? (
-            <div className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-[#1769ff] px-3 text-[11px] font-semibold text-white">
-              <Share className="h-3.5 w-3.5" />
-              Yükle
-            </div>
-          ) : (
+          {platform !== "ios" && (
             <button
               type="button"
               onClick={() => void handleInstall()}
               disabled={!deferredPrompt}
-              className="h-9 shrink-0 rounded-full bg-[#1769ff] px-3 text-[12px] font-semibold text-white disabled:opacity-60"
+              className="h-9 shrink-0 rounded-full bg-[#1769ff] px-3 text-[12px] font-semibold text-white disabled:opacity-55"
             >
-              Yükle
+              İndir
             </button>
           )}
         </div>
@@ -403,11 +265,18 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
 
   if (platform === "ios") {
     return (
-      <div className={cn("rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-muted-foreground", className)}>
+      <div
+        className={cn(
+          "rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-muted-foreground",
+          className
+        )}
+      >
         <div className="flex items-start gap-3">
           <AppIcon className="rounded-xl" />
           <div className="min-w-0 space-y-1">
-            <p className="font-medium text-foreground">Uygulamayı yükle</p>
+            <p className="font-medium text-foreground">
+              Cyllene Uyku Takipçisini indirmek ister misiniz?
+            </p>
             <p>
               Safari’de <Share className="mx-0.5 inline h-3.5 w-3.5 align-text-bottom" /> Paylaş →{" "}
               <span className="text-foreground">Ana Ekrana Ekle</span>
@@ -421,9 +290,14 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
   if (!deferredPrompt) return null;
 
   return (
-    <Button variant="outline" size="sm" onClick={() => void handleInstall()} className={cn("gap-2", className)}>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => void handleInstall()}
+      className={cn("gap-2", className)}
+    >
       <Download className="h-4 w-4" />
-      Uygulamayı yükle
+      İndir
     </Button>
   );
 }
