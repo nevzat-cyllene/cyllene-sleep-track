@@ -76,6 +76,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     if (step.id === "satisfaction") return t("onboarding.questions.satisfaction.title");
     if (step.id === "sleep_hours") return t("onboarding.questions.sleepHours.title");
     if (step.id === "night_waking") return t("onboarding.questions.nightWaking.title");
+    if (step.id === "ready") return t("onboarding.questions.ready.title");
     return step.title;
   }, [step.id, step.title, t]);
 

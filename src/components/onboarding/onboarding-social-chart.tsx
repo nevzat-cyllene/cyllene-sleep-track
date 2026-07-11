@@ -1,6 +1,9 @@
 "use client";
 
+import { useI18n } from "@/i18n/runtime";
+
 export function OnboardingSocialChart() {
+  const { t } = useI18n();
   const points = [
     { x: 0, y: 35 },
     { x: 1, y: 42 },
@@ -58,9 +61,7 @@ export function OnboardingSocialChart() {
           strokeLinecap="round"
         />
       </svg>
-      <p className="mt-2 text-center text-xs text-white/40">
-        İdeal uykunuza 3 günde yaklaşın
-      </p>
+      <p className="mt-2 text-center text-xs text-white/40">{t("onboarding.socialChart.title")}</p>
     </div>
   );
 }

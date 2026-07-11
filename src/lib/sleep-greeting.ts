@@ -1,3 +1,5 @@
+import { translateClient } from "@/i18n/lookup";
+
 export interface WakeGreeting {
   title: string;
   message: string;
@@ -9,23 +11,24 @@ export function getWakeGreeting(elapsedMs: number, now = new Date()): WakeGreeti
   const sleptMinutes = elapsedMs / 60000;
   const isMorning = hour >= 5 && hour < 12;
   const longSleep = sleptMinutes >= 180;
+  const t = translateClient;
 
   if (isMorning && longSleep) {
     return {
-      title: "Günaydın",
-      message: "Uyku kaydınız tamamlandı. Analiz edilip günlüğe ekleniyor.",
+      title: t("wakeGreeting.morningTitle"),
+      message: t("wakeGreeting.morningMessage"),
     };
   }
 
   if (longSleep) {
     return {
-      title: "Uyandınız",
-      message: "Uyku kaydınız tamamlandı. Analiz edilip günlüğe ekleniyor.",
+      title: t("wakeGreeting.wokeTitle"),
+      message: t("wakeGreeting.wokeMessage"),
     };
   }
 
   return {
-    title: "Kayıt tamamlandı",
-    message: "Kısa kayıt analiz edilip günlüğe ekleniyor.",
+    title: t("wakeGreeting.doneTitle"),
+    message: t("wakeGreeting.doneMessage"),
   };
 }

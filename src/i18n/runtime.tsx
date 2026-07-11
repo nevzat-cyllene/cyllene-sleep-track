@@ -1,8 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { chromeMessages } from "@/i18n/chrome-messages";
-import { kuAppMessages } from "@/i18n/ku-app-messages";
 import {
   detectLocaleFromDevice,
   isLocale,
@@ -12,9 +10,10 @@ import {
   type Locale,
   localeOptions,
 } from "@/i18n/locales";
-import { messages, type MessageLocale } from "@/i18n/messages";
+import { readMessage, translatePath } from "@/i18n/lookup";
 
 export { localeOptions, type Locale };
+export { translateClient } from "@/i18n/lookup";
 
 type I18nContextValue = {
   locale: Locale;
@@ -24,69 +23,6 @@ type I18nContextValue = {
 };
 
 const I18nContext = React.createContext<I18nContextValue | null>(null);
-
-function toMessageLocale(locale: Locale): MessageLocale {
-  return locale === "ku" ? "en" : locale;
-}
-
-function localeOverlay(locale: Locale): unknown {
-  if (locale === "ku") {
-    return {
-      ...chromeMessages.ku,
-      ...kuAppMessages,
-      // Keep nested chrome navigation / control strings from chromeMessages
-      navigation: chromeMessages.ku.navigation,
-      appControl: chromeMessages.ku.appControl,
-      nightPicker: chromeMessages.ku.nightPicker,
-      privacyLegal: chromeMessages.ku.privacyLegal,
-    };
-  }
-  return chromeMessages[locale];
-}
-
-function getByPath(source: unknown, path: string): unknown {
-  return path.split(".").reduce<unknown>((value, key) => {
-    if (!value || typeof value !== "object") return undefined;
-    return (value as Record<string, unknown>)[key];
-  }, source);
-}
-
-function interpolate(value: string, params?: Record<string, string | number>) {
-  if (!params) return value;
-  return Object.entries(params).reduce(
-    (text, [key, replacement]) => text.replaceAll(`{{${key}}}`, String(replacement)),
-    value
-  );
-}
-
-function translatePath(
-  locale: Locale,
-  path: string,
-  params?: Record<string, string | number>
-) {
-  const catalogLocale = toMessageLocale(locale);
-  const overlay = localeOverlay(locale);
-  const value =
-    getByPath(overlay, path) ??
-    getByPath(messages[catalogLocale], path) ??
-    getByPath(chromeMessages.tr, path) ??
-    getByPath(messages.tr, path);
-
-  if (typeof value !== "string") return path;
-  return interpolate(value, params);
-}
-
-function readMessage<T>(locale: Locale, path: string, fallback: T): T {
-  const catalogLocale = toMessageLocale(locale);
-  const overlay = localeOverlay(locale);
-  const value =
-    getByPath(overlay, path) ??
-    getByPath(messages[catalogLocale], path) ??
-    getByPath(chromeMessages.tr, path) ??
-    getByPath(messages.tr, path);
-
-  return value === undefined ? fallback : (value as T);
-}
 
 export function LocaleProvider({
   children,

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { SleepSession } from "@/types";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n/runtime";
 
 const REVEAL_WIDTH = 76;
 const SWIPE_OPEN = 40;
@@ -29,6 +30,7 @@ interface JournalSessionRowProps {
 }
 
 export function JournalSessionRow({ session, onDelete, deleting }: JournalSessionRowProps) {
+  const { t } = useI18n();
   const [offset, setOffset] = useState(0);
   const [dragging, setDragging] = useState(false);
   const startRef = useRef({ x: 0, y: 0 });
@@ -83,10 +85,12 @@ export function JournalSessionRow({ session, onDelete, deleting }: JournalSessio
           isRevealed ? "opacity-100" : "pointer-events-none opacity-0",
           deleting && "opacity-60"
         )}
-        aria-label="Uyku kaydını sil"
+        aria-label={t("journal.deleteSwipeLabel")}
       >
         <Trash2 className="h-5 w-5" />
-        <span className="text-[10px] font-semibold uppercase tracking-wide">Sil</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wide">
+          {t("common.delete")}
+        </span>
       </button>
 
       <div

@@ -75,6 +75,34 @@ export const messages = {
     brand: {
       developerCredit: "Cyllene Uyku Takipçisi geliştirici",
     },
+    theme: {
+      label: "Tema",
+      aria: "Tema",
+      dark: "Karanlık",
+      light: "Aydınlık",
+      system: "Sistem",
+    },
+    sync: {
+      unknownError: "Bilinmeyen hata",
+      noiseTableMissing:
+        "{{context}}: sleep_noise_samples tablosu eksik. Supabase'de 002_noise_samples.sql migration'ını çalıştırın.",
+      profileMissingContext:
+        "{{context}}: Kullanıcı profili bulunamadı. Çıkış yapıp tekrar giriş yapın.",
+      profileMissing:
+        "Kullanıcı profili bulunamadı. Çıkış yapıp tekrar giriş yapın veya hesabınızı yeniden oluşturun.",
+      sessionUpdateFailed: "Oturum güncellenemedi",
+      sessionSaveFailed: "Oturum kaydedilemedi",
+      eventsSaveFailed: "Olaylar kaydedilemedi",
+      genericWithContext: "{{context}}: {{message}}",
+    },
+    wakeGreeting: {
+      morningTitle: "Günaydın",
+      morningMessage: "Uyku kaydınız tamamlandı. Analiz edilip günlüğe ekleniyor.",
+      wokeTitle: "Uyandınız",
+      wokeMessage: "Uyku kaydınız tamamlandı. Analiz edilip günlüğe ekleniyor.",
+      doneTitle: "Kayıt tamamlandı",
+      doneMessage: "Kısa kayıt analiz edilip günlüğe ekleniyor.",
+    },
     navigation: {
       primary: {
         sleep: { label: "Uyku", description: "Geceyi başlat" },
@@ -848,6 +876,34 @@ export const messages = {
     },
     brand: {
       developerCredit: "Cyllene Sleep Tracker developer",
+    },
+    theme: {
+      label: "Theme",
+      aria: "Theme",
+      dark: "Dark",
+      light: "Light",
+      system: "System",
+    },
+    sync: {
+      unknownError: "Unknown error",
+      noiseTableMissing:
+        "{{context}}: sleep_noise_samples table is missing. Run the 002_noise_samples.sql migration in Supabase.",
+      profileMissingContext:
+        "{{context}}: User profile not found. Sign out and sign in again.",
+      profileMissing:
+        "User profile not found. Sign out and sign in again, or recreate your account.",
+      sessionUpdateFailed: "Could not update the session",
+      sessionSaveFailed: "Could not save the session",
+      eventsSaveFailed: "Could not save events",
+      genericWithContext: "{{context}}: {{message}}",
+    },
+    wakeGreeting: {
+      morningTitle: "Good morning",
+      morningMessage: "Your sleep recording is complete. It is being analyzed and added to your journal.",
+      wokeTitle: "You’re awake",
+      wokeMessage: "Your sleep recording is complete. It is being analyzed and added to your journal.",
+      doneTitle: "Recording complete",
+      doneMessage: "The short recording is being analyzed and added to your journal.",
     },
     navigation: {
       primary: {

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { deleteSessionClips } from "@/features/recording/audio-clip-store";
 import { deleteSession, getAllSessions } from "@/features/recording/session-store";
+import { translateClient } from "@/i18n/lookup";
 
 function matchesStartedAt(localStartedMs: number, remoteStartedIso: string) {
   return Math.abs(localStartedMs - new Date(remoteStartedIso).getTime()) < 3000;
@@ -34,7 +35,7 @@ export async function deleteSleepSession(
     return { error: fetchError.message };
   }
   if (!session || session.user_id !== userId) {
-    return { error: "Kayıt bulunamadı." };
+    return { error: translateClient("journal.notFound") };
   }
 
   const { error: deleteError } = await supabase

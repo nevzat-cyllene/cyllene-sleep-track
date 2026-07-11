@@ -80,10 +80,8 @@ export function DashboardClient({
     return (
       <div className="space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">Sabah Raporu</h1>
-          <p className="mt-2 text-muted-foreground">
-            İlk gece kaydınızı tamamladığınızda raporunuz burada görünecek.
-          </p>
+          <h1 className="text-3xl font-bold">{t("dashboard.morningReport")}</h1>
+          <p className="mt-2 text-muted-foreground">{t("dashboard.emptyReport")}</p>
         </div>
         <SessionHistory sessions={[]} />
         <PremiumPlaceholder />
@@ -109,20 +107,26 @@ export function DashboardClient({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight">Sabah Raporu</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">
+              {t("dashboard.morningReport")}
+            </h1>
             <span className="hidden sm:inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-muted-foreground">
-              {formatDate(activeSession.started_at)}
+              {formatDate(activeSession.started_at, t("formatting.locale"))}
             </span>
           </div>
-          <p className="text-muted-foreground">{formatDate(activeSession.started_at)}</p>
+          <p className="text-muted-foreground">
+            {formatDate(activeSession.started_at, t("formatting.locale"))}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <p className="hidden text-sm text-muted-foreground sm:block">
-            {formatTime(activeSession.started_at)} —{" "}
-            {activeSession.ended_at ? formatTime(activeSession.ended_at) : "devam ediyor"}
+            {formatTime(activeSession.started_at, t("formatting.locale"))} —{" "}
+            {activeSession.ended_at
+              ? formatTime(activeSession.ended_at, t("formatting.locale"))
+              : t("dashboard.ongoing")}
           </p>
           <Button size="sm" className="rounded-xl" render={<Link href="/record" />}>
-            Bu gece kayda başla
+            {t("dashboard.startTonight")}
           </Button>
         </div>
       </div>
@@ -134,8 +138,8 @@ export function DashboardClient({
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            title="Toplam Uyku"
-            value={`${activeSession.duration_minutes ?? 0} dk`}
+            title={t("dashboard.totalSleep")}
+            value={`${activeSession.duration_minutes ?? 0} ${t("common.minutesShort")}`}
             icon={Clock}
           />
           <StatCard
@@ -145,13 +149,13 @@ export function DashboardClient({
             icon={KeyEventIcon}
           />
           <StatCard
-            title="Toplam Olay"
+            title={t("dashboard.totalEvents")}
             value={`${totalEvents}`}
             icon={Activity}
           />
           <StatCard
-            title="En Yüksek Ses"
-            value={`${activeSession.peak_db?.toFixed(0) ?? "—"} dB`}
+            title={t("dashboard.peakSound")}
+            value={`${activeSession.peak_db?.toFixed(0) ?? t("common.emDash")} ${t("common.decibel")}`}
             icon={Volume2}
           />
         </div>
@@ -161,18 +165,18 @@ export function DashboardClient({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Wind className="h-5 w-5 text-primary" />
-            Tespit Edilen Olaylar
+            {t("dashboard.detectedEvents")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loadingEvents ? (
             <div className="flex h-32 items-center justify-center text-muted-foreground">
-              Yükleniyor...
+              {t("common.loadingDots")}
             </div>
           ) : (
             <DetectedEventsList
               events={events}
-              emptyMessage="Bu gece için tespit edilen olay yok."
+              emptyMessage={t("dashboard.noDetectedEventsTonight")}
             />
           )}
         </CardContent>
@@ -182,13 +186,13 @@ export function DashboardClient({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Moon className="h-5 w-5 text-primary" />
-            Gece Zaman Çizelgesi
+            {t("dashboard.timeline")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loadingEvents ? (
             <div className="flex h-64 items-center justify-center text-muted-foreground">
-              Yükleniyor...
+              {t("common.loadingDots")}
             </div>
           ) : (
             <NightTimelineChart
@@ -201,7 +205,7 @@ export function DashboardClient({
       </Card>
 
       <div>
-        <h2 className="mb-4 text-xl font-semibold">Geçmiş Geceler</h2>
+        <h2 className="mb-4 text-xl font-semibold">{t("dashboard.pastNights")}</h2>
         <SessionHistory sessions={sessions} />
       </div>
 

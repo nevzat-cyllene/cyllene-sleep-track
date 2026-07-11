@@ -24,6 +24,34 @@ export const kuAppMessages = {
   brand: {
     developerCredit: "Pêşvebirê Cyllene Şopandina Xewê",
   },
+  theme: {
+    label: "Tema",
+    aria: "Tema",
+    dark: "Tarî",
+    light: "Ronî",
+    system: "Pergal",
+  },
+  sync: {
+    unknownError: "Çewtiya nenas",
+    noiseTableMissing:
+      "{{context}}: tabloya sleep_noise_samples kêm e. Li Supabaseê migrationa 002_noise_samples.sql bixebitîne.",
+    profileMissingContext:
+      "{{context}}: Profîla bikarhêner nehat dîtin. Derkeve û dîsa têkeve.",
+    profileMissing:
+      "Profîla bikarhêner nehat dîtin. Derkeve û dîsa têkeve, an hesabê xwe ji nû ve çêbike.",
+    sessionUpdateFailed: "Oturum nehat nûkirin",
+    sessionSaveFailed: "Oturum nehat tomarkirin",
+    eventsSaveFailed: "Bûyer nehatin tomarkirin",
+    genericWithContext: "{{context}}: {{message}}",
+  },
+  wakeGreeting: {
+    morningTitle: "Sibeh baş",
+    morningMessage: "Tomara xewê temam bû. Tê analîzkirin û li rojnivîskê tê zêdekirin.",
+    wokeTitle: "Tu hişyar bûyî",
+    wokeMessage: "Tomara xewê temam bû. Tê analîzkirin û li rojnivîskê tê zêdekirin.",
+    doneTitle: "Tomar temam bû",
+    doneMessage: "Tomara kurt tê analîzkirin û li rojnivîskê tê zêdekirin.",
+  },
   formatting: {
     locale: "ku",
     durationHourMinute: "{{hours}}d {{minutes}}dq",
@@ -42,6 +70,35 @@ export const kuAppMessages = {
     sleepScore: "Skora Xewê",
     noSavedNights: "Hîn şeva tomarî tune.",
     startFirstNight: "Tomara şeva yekem dest pê bike →",
+    morningReport: "Rapora Sibehê",
+    emptyReport: "Dema tomara şeva yekem temam bibe, rapora te li vir xuya dibe.",
+    ongoing: "berdewam dike",
+    startTonight: "Dest bi tomara îşevê bike",
+    totalSleep: "Xewa Tevahî",
+    totalEvents: "Bûyerên Tevahî",
+    peakSound: "Dengê Herî Bilind",
+    detectedEvents: "Bûyerên Tespîtkirî",
+    noDetectedEventsTonight: "Ji bo vê şevê bûyera tespîtkirî tune.",
+    timeline: "Rêzika Demê ya Şevê",
+    pastNights: "Şevên Berê",
+  },
+  billing: {
+    title: "Cyllene Premium — Pir nêzîk",
+    body: "Analîza şevê ya hûrgelî, tomarên dîrokê yên bêsînor û raporên pêşketî di rê de ne.",
+  },
+  audioPlayer: {
+    missingOnMobileShort: "Webê",
+    missingOnDesktopShort: "Tune",
+    missingMobileDetail:
+      "Klîba dengê li ser vê telefonê tune. Tu dikarî di geroka webê ya ku tomarê dest pê kiriye de guhdarî bikî.",
+    missingDesktopDetail:
+      "Klîba dengê di vê gerokê de tune. Heke tomar li amûreke din an navnîşanek din hatibe çêkirin, klîp li wir dimîne.",
+    missingToast: "Pelê dengê li ser vê amûrê tune",
+    missingPanelTitle: "Pelê dengê li ser vê amûrê tune.",
+    openError: "Klîba dengê venebû",
+    openErrorInline: "Klîba dengê venebû",
+    listen: "Guhdarî bike",
+    pause: "Rawestîne",
   },
   sleepHub: {
     guestSavedLocally: "Bê têketin tomar li ser amûrê hate hilanîn.",

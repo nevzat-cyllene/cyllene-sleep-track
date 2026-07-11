@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { getEventClip } from "@/features/recording/audio-clip-store";
 import { getStopAllAudioEventName } from "@/lib/stop-app-audio";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n/runtime";
 import { cn } from "@/lib/utils";
 
 interface EventAudioPlayerProps {
@@ -21,24 +22,8 @@ type MissingDeviceCopy = {
   detail: string;
 };
 
-function getLikelySourceDeviceCopy(): MissingDeviceCopy {
-  const isCurrentDeviceMobile =
-    typeof navigator !== "undefined" &&
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-  return isCurrentDeviceMobile
-    ? {
-        short: "Webde",
-        detail: "Ses klibi bu telefonda yok. Kaydı başlattığın web tarayıcısında dinleyebilirsin.",
-      }
-    : {
-        short: "Yok",
-        detail:
-          "Ses klibi bu tarayıcıda yok. Kayıt başka cihazda veya başka bir site adresinde yapıldıysa klip orada kalır.",
-      };
-}
-
 export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlayerProps) {
+  const { t } = useI18n();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -47,6 +32,22 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState(false);
   const [missingDevice, setMissingDevice] = useState<MissingDeviceCopy | null>(null);
+
+  const getLikelySourceDeviceCopy = useCallback((): MissingDeviceCopy => {
+    const isCurrentDeviceMobile =
+      typeof navigator !== "undefined" &&
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    return isCurrentDeviceMobile
+      ? {
+          short: t("audioPlayer.missingOnMobileShort"),
+          detail: t("audioPlayer.missingMobileDetail"),
+        }
+      : {
+          short: t("audioPlayer.missingOnDesktopShort"),
+          detail: t("audioPlayer.missingDesktopDetail"),
+        };
+  }, [t]);
 
   const cleanup = useCallback(() => {
     if (audioRef.current) {
@@ -95,7 +96,7 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
         if (!clip?.wavBlob) {
           const copy = getLikelySourceDeviceCopy();
           setMissingDevice(copy);
-          toast.message("Ses dosyası bu cihazda yok", { description: copy.detail });
+          toast.message(t("audioPlayer.missingToast"), { description: copy.detail });
           return;
         }
 
@@ -129,7 +130,7 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
       setPlaying(true);
     } catch {
       setError(true);
-      toast.error("Ses klibi açılamadı");
+      toast.error(t("audioPlayer.openError"));
     } finally {
       setLoading(false);
     }
@@ -170,7 +171,7 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
           <Smartphone className="h-4 w-4" />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-medium text-foreground">Ses dosyası bu cihazda yok.</p>
+          <p className="text-xs font-medium text-foreground">{t("audioPlayer.missingPanelTitle")}</p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">{missingDevice.detail}</p>
         </div>
       </div>
@@ -180,7 +181,7 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
   if (error) {
     return (
       <span className={cn("text-xs text-muted-foreground", className)}>
-        Ses klibi açılamadı
+        {t("audioPlayer.openErrorInline")}
       </span>
     );
   }
@@ -197,7 +198,7 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
           void togglePlay();
         }}
         disabled={loading}
-        aria-label={playing ? "Duraklat" : "Dinle"}
+        aria-label={playing ? t("audioPlayer.pause") : t("audioPlayer.listen")}
       >
         {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
       </Button>
@@ -216,7 +217,7 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
           void togglePlay();
         }}
         disabled={loading}
-        aria-label={playing ? "Duraklat" : "Dinle"}
+        aria-label={playing ? t("audioPlayer.pause") : t("audioPlayer.listen")}
       >
         {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
       </Button>
@@ -230,7 +231,7 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
           />
         </div>
         <p className="mt-1 text-xs tabular-nums text-muted-foreground">
-          {formatSeconds(progress)} / {duration > 0 ? formatSeconds(duration) : "—"}
+          {formatSeconds(progress)} / {duration > 0 ? formatSeconds(duration) : t("common.emDash")}
         </p>
       </div>
     </div>

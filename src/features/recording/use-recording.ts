@@ -12,6 +12,7 @@ import { float32ToWav } from "@/lib/audio-clip-utils";
 import { classifyAudio } from "./yamnet-classifier";
 import { calculateSleepScore } from "@/lib/sleep-utils";
 import { stopAllAppAudio } from "@/lib/stop-app-audio";
+import { useI18n } from "@/i18n/runtime";
 import type { LocalSleepEvent, LocalSleepSession, NoiseSample } from "@/types";
 
 export type RecordingStatus = "idle" | "preparing" | "recording" | "stopping";
@@ -56,6 +57,7 @@ function bucketNoiseSamples(session: LocalSleepSession) {
 }
 
 export function useRecording({ userId, onSessionComplete }: UseRecordingOptions = {}) {
+  const { t } = useI18n();
   const [status, setStatus] = useState<RecordingStatus>("idle");
   const [currentDb, setCurrentDb] = useState(0);
   const [recentDbSamples, setRecentDbSamples] = useState<number[]>([]);
@@ -289,10 +291,10 @@ export function useRecording({ userId, onSessionComplete }: UseRecordingOptions 
       setError(
         err instanceof Error
           ? err.message
-          : "Mikrofon erişimi reddedildi. Lütfen izin verin."
+          : t("recording.errors.microphoneDenied")
       );
     }
-  }, [cleanupAudio, enqueueEvent, persistSession, userId]);
+  }, [cleanupAudio, enqueueEvent, persistSession, t, userId]);
 
   const stopRecording = useCallback(async () => {
     setStatus("stopping");

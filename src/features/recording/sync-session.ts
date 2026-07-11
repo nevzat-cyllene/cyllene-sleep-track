@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { calculateSleepScore, countEventsByType } from "@/lib/sleep-utils";
 import type { LocalSleepSession, SleepEventType } from "@/types";
+import { translateClient } from "@/i18n/lookup";
 import { getUnsyncedSessions, saveSession } from "./session-store";
 import { deleteEventClip } from "./audio-clip-store";
 import { toast } from "sonner";
@@ -28,14 +29,15 @@ function clampConfidence(value: number) {
 }
 
 function formatSyncError(context: string, error: { message?: string; code?: string }) {
-  const msg = error.message ?? "Bilinmeyen hata";
+  const t = translateClient;
+  const msg = error.message ?? t("sync.unknownError");
   if (error.code === "42P01" || msg.includes("sleep_noise_samples")) {
-    return `${context}: sleep_noise_samples tablosu eksik. Supabase'de 002_noise_samples.sql migration'ını çalıştırın.`;
+    return t("sync.noiseTableMissing", { context });
   }
   if (msg.includes("profiles") || error.code === "23503") {
-    return `${context}: Kullanıcı profili bulunamadı. Çıkış yapıp tekrar giriş yapın.`;
+    return t("sync.profileMissingContext", { context });
   }
-  return `${context}: ${msg}`;
+  return t("sync.genericWithContext", { context, message: msg });
 }
 
 async function findExistingSessionId(
@@ -90,8 +92,7 @@ export async function syncSessionToSupabase(
 
   if (!profile) {
     return {
-      error:
-        "Kullanıcı profili bulunamadı. Çıkış yapıp tekrar giriş yapın veya hesabınızı yeniden oluşturun.",
+      error: translateClient("sync.profileMissing"),
     };
   }
 
@@ -134,7 +135,7 @@ export async function syncSessionToSupabase(
 
     if (updateError) {
       console.error("Session update error:", updateError);
-      return { error: formatSyncError("Oturum güncellenemedi", updateError) };
+      return { error: formatSyncError(translateClient("sync.sessionUpdateFailed"), updateError) };
     }
   } else {
     const { data: insertedSession, error: sessionError } = await supabase
@@ -145,7 +146,7 @@ export async function syncSessionToSupabase(
 
     if (sessionError || !insertedSession) {
       console.error("Session sync error:", sessionError);
-      return { error: formatSyncError("Oturum kaydedilemedi", sessionError ?? {}) };
+      return { error: formatSyncError(translateClient("sync.sessionSaveFailed"), sessionError ?? {}) };
     }
     remoteSessionId = insertedSession.id;
   }
@@ -166,7 +167,7 @@ export async function syncSessionToSupabase(
     const { error: eventsError } = await supabase.from("sleep_events").insert(events);
     if (eventsError) {
       console.error("Events sync error:", eventsError);
-      return { error: formatSyncError("Olaylar kaydedilemedi", eventsError) };
+      return { error: formatSyncError(translateClient("sync.eventsSaveFailed"), eventsError) };
     }
   }
 
