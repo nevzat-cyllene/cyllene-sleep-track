@@ -101,11 +101,15 @@ export function EventAudioPlayer({ eventId, className, compact }: EventAudioPlay
 
         const wav =
           clip.wavBlob instanceof Blob
-            ? clip.wavBlob
-            : new Blob([clip.wavBlob], { type: "audio/wav" });
+            ? clip.wavBlob.type
+              ? clip.wavBlob
+              : new Blob([clip.wavBlob], { type: "audio/wav" })
+            : new Blob([clip.wavBlob as BlobPart], { type: "audio/wav" });
         const url = URL.createObjectURL(wav);
         urlRef.current = url;
-        const audio = new Audio(url);
+        const audio = new Audio();
+        audio.preload = "auto";
+        audio.src = url;
         audioRef.current = audio;
 
         audio.addEventListener("loadedmetadata", () => {

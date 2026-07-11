@@ -1,13 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 
-export function AppContentFrame({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-
-  return (
-    <div key={pathname} className="cyllene-route-frame">
-      {children}
-    </div>
-  );
+/** Stable frame — no remount/animation on route change (keeps desktop snappy). */
+export function AppContentFrame({ children }: { children: ReactNode }) {
+  return <div className="cyllene-route-frame">{children}</div>;
 }
