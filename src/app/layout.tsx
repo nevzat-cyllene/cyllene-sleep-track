@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { defaultMetadata, defaultViewport } from "@/lib/site-config";
 import { Providers } from "@/components/providers";
+import { parseLocale } from "@/i18n/locales";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,15 +19,19 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = defaultMetadata;
 export const viewport = defaultViewport;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const initialLocale = parseLocale(cookieStore.get("cyllene.locale")?.value);
+
   return (
     <html
-      lang="tr"
+      lang={initialLocale === "ku" ? "ku" : initialLocale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <head>
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
@@ -38,7 +44,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
+        <Providers initialLocale={initialLocale}>{children}</Providers>
       </body>
     </html>
   );

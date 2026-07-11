@@ -12,13 +12,8 @@ import {
   Sparkles,
   UserRound,
 } from "lucide-react";
+import { localeOptions, useI18n, type Locale } from "@/i18n/runtime";
 import { cn } from "@/lib/utils";
-
-const languageOptions = [
-  { code: "TR", label: "Türkçe", status: "Aktif", active: true },
-  { code: "EN", label: "English", status: "Hazır", active: false },
-  { code: "KU", label: "Kurdî", status: "Hazır", active: false },
-] as const;
 
 function MenuBadge({ children, active }: { children: string; active?: boolean }) {
   return (
@@ -59,6 +54,7 @@ function ControlMenuButton({
 
 export function AppControlMenu() {
   const router = useRouter();
+  const { locale, setLocale, t } = useI18n();
   const [open, setOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const triggerRef = React.useRef<HTMLButtonElement | null>(null);
@@ -93,6 +89,10 @@ export function AppControlMenu() {
     router.push(href);
   };
 
+  const selectLocale = (next: Locale) => {
+    setLocale(next);
+  };
+
   return (
     <div ref={rootRef} className="relative">
       <button
@@ -100,7 +100,7 @@ export function AppControlMenu() {
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="Ayarlar ve dil"
+        aria-label={t("appControl.aria")}
         onClick={() => setOpen((value) => !value)}
         className="group relative flex h-10 w-10 touch-manipulation items-center justify-center overflow-hidden rounded-full border border-white/[0.08] bg-white/[0.035] text-white/68 shadow-[inset_0_1px_0_rgba(255,255,255,.055)] transition duration-100 hover:border-[#78b7ff]/20 hover:bg-white/[0.07] hover:text-white active:scale-[0.96]"
       >
@@ -111,7 +111,7 @@ export function AppControlMenu() {
       {open ? (
         <div
           role="menu"
-          aria-label="Cyllene kontrol"
+          aria-label={t("appControl.title")}
           className="absolute right-0 top-[calc(100%+.65rem)] z-[80] w-[min(22rem,calc(100vw-1.25rem))] origin-top-right rounded-[1.45rem] border border-[#8dbdff]/14 bg-[#071124] p-2 text-white shadow-[0_24px_90px_rgba(0,5,24,.72),inset_0_1px_0_rgba(255,255,255,.07)]"
         >
           <div className="relative overflow-hidden rounded-[1.1rem] border border-[#8dbdff]/10 bg-[linear-gradient(145deg,rgba(21,94,255,.13),rgba(111,210,255,.045))] p-3">
@@ -121,51 +121,54 @@ export function AppControlMenu() {
                 <Sparkles className="h-4.5 w-4.5" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-semibold tracking-[-0.02em]">Cyllene kontrol</p>
-                <p className="mt-1 text-xs leading-5 text-white/40">
-                  Dil, hesap ve gece akışı tek, sakin bir menüde.
-                </p>
+                <p className="text-sm font-semibold tracking-[-0.02em]">{t("appControl.title")}</p>
+                <p className="mt-1 text-xs leading-5 text-white/40">{t("appControl.subtitle")}</p>
               </div>
             </div>
           </div>
 
           <p className="mt-3 px-2 text-[10px] font-medium uppercase tracking-[0.2em] text-[#78b7ff]/70">
-            Hızlı erişim
+            {t("appControl.quickAccess")}
           </p>
           <div className="mt-1 grid gap-1">
             <ControlMenuButton onClick={() => navigate("/profile")}>
               <UserRound className="h-4 w-4 text-[#8fc0ff]" />
-              Profil ve ayarlar
+              {t("appControl.profile")}
             </ControlMenuButton>
             <ControlMenuButton onClick={() => navigate("/sleep")}>
               <MoonStar className="h-4 w-4 text-[#8fc0ff]" />
-              Yeni gece başlat
+              {t("appControl.newNight")}
             </ControlMenuButton>
             <ControlMenuButton onClick={() => navigate("/journal")}>
               <BookOpen className="h-4 w-4 text-[#8fc0ff]" />
-              Uyku günlüğü
+              {t("appControl.journal")}
             </ControlMenuButton>
           </div>
 
           <div className="my-2 h-px bg-white/[0.07]" />
 
           <p className="px-2 text-[10px] font-medium uppercase tracking-[0.2em] text-[#78b7ff]/70">
-            Dil
+            {t("appControl.language")}
           </p>
           <div className="mt-1 grid gap-1">
-            {languageOptions.map((language) => (
-              <ControlMenuButton key={language.code} disabled={!language.active}>
-                <Languages className="h-4 w-4 text-[#8fc0ff]" />
-                <span className="flex min-w-0 flex-1 items-center gap-2">
-                  <span className="w-7 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35">
-                    {language.code}
+            {localeOptions.map((language) => {
+              const active = locale === language.code;
+              return (
+                <ControlMenuButton key={language.code} onClick={() => selectLocale(language.code)}>
+                  <Languages className="h-4 w-4 text-[#8fc0ff]" />
+                  <span className="flex min-w-0 flex-1 items-center gap-2">
+                    <span className="w-7 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35">
+                      {language.short}
+                    </span>
+                    <span className="truncate">{language.nativeLabel}</span>
                   </span>
-                  <span className="truncate">{language.label}</span>
-                </span>
-                {language.active ? <Check className="h-3.5 w-3.5 text-[#75f2d6]" /> : null}
-                <MenuBadge active={language.active}>{language.status}</MenuBadge>
-              </ControlMenuButton>
-            ))}
+                  {active ? <Check className="h-3.5 w-3.5 text-[#75f2d6]" /> : null}
+                  <MenuBadge active={active}>
+                    {active ? t("appControl.active") : t("appControl.ready")}
+                  </MenuBadge>
+                </ControlMenuButton>
+              );
+            })}
           </div>
 
           <div className="my-2 h-px bg-white/[0.07]" />
@@ -174,9 +177,9 @@ export function AppControlMenu() {
             <div className="flex items-start gap-3 rounded-xl border border-emerald-300/10 bg-emerald-300/[0.045] px-3 py-2.5">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300/80" />
               <div>
-                <p className="text-xs font-medium text-white/72">Ham ses cihazında kalır</p>
+                <p className="text-xs font-medium text-white/72">{t("appControl.privacyTitle")}</p>
                 <p className="mt-0.5 text-[11px] leading-4 text-white/32">
-                  Hesabına yalnızca rapor ve özet metrikler senkronize edilir.
+                  {t("appControl.privacyBody")}
                 </p>
               </div>
             </div>

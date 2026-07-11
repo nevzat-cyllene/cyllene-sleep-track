@@ -1,11 +1,11 @@
-export const locales = ["tr", "en"] as const;
+export const messageLocales = ["tr", "en"] as const;
 
-export type Locale = (typeof locales)[number];
+export type MessageLocale = (typeof messageLocales)[number];
 
 /**
- * Hazırlık kataloğu: şu an uygulamaya bağlı değil.
- * URL yapısı, Supabase akışı, kayıt ve senkronizasyon mantığı değişmeden
- * sonraki turda provider/hook üzerinden ekrana bağlanabilir.
+ * Hazırlık kataloğu: Phase 1’de app chrome `runtime` + `chrome-messages` üzerinden bağlanır.
+ * Marketing/anasayfa bu PR’da dokunulmaz.
+ * KU için eksik anahtarlar şimdilik EN kataloğuna düşer; KU chrome overlay ayrıdır.
  */
 export const messages = {
   tr: {
@@ -1475,6 +1475,6 @@ export const messages = {
         "Tracks night sleep through audio analysis on a phone or browser, then presents a morning summary and score.",
     },
   },
-} as const satisfies Record<Locale, Record<string, unknown>>;
+} as const satisfies Record<MessageLocale, Record<string, unknown>>;
 
 export type Messages = (typeof messages)["tr"];

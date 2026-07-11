@@ -31,36 +31,38 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useI18n } from "@/i18n/runtime";
 import { siteConfig } from "@/lib/site-config";
 
 const primaryNav = [
-  { href: "/sleep", label: "Uyku", description: "Geceyi başlat", icon: MoonStar },
-  { href: "/journal", label: "Günlük", description: "Rapor arşivi", icon: BookOpen },
-  { href: "/statistics", label: "İstatistik", description: "Uyku eğilimleri", icon: BarChart3 },
-  { href: "/profile", label: "Profil", description: "Hesap ve cihazlar", icon: UserRound },
-];
+  { href: "/sleep", key: "sleep", icon: MoonStar },
+  { href: "/journal", key: "journal", icon: BookOpen },
+  { href: "/statistics", key: "statistics", icon: BarChart3 },
+  { href: "/profile", key: "profile", icon: UserRound },
+] as const;
 
 const upcomingNav = [
-  { label: "Rutinler", description: "Akşam hazırlığı", badge: "Yakında", icon: Clock3 },
-  { label: "Ses kasası", description: "Yerel klipler", badge: "Cihaz", icon: AudioWaveform },
-  { label: "Cihazlar", description: "Telefon eşleşmeleri", badge: "Beta", icon: Smartphone },
-  { label: "Takvim", description: "Haftalık ritim", badge: "Plan", icon: CalendarDays },
+  { key: "routines", icon: Clock3 },
+  { key: "audioVault", icon: AudioWaveform },
+  { key: "devices", icon: Smartphone },
+  { key: "calendar", icon: CalendarDays },
 ] as const;
 
 const trustNav = [
-  { label: "Mahremiyet", description: "Ham ses yüklenmez", icon: ShieldCheck },
-  { label: "Yerel analiz", description: "Klip cihazda kalır", icon: CloudOff },
-  { label: "Hesap kilidi", description: "Güvenli oturum", icon: LockKeyhole },
+  { key: "privacy", icon: ShieldCheck },
+  { key: "localAnalysis", icon: CloudOff },
+  { key: "accountLock", icon: LockKeyhole },
 ] as const;
 
 const commandTiles = [
-  { label: "Cihaz", value: "Eşleşti", icon: Smartphone },
-  { label: "Klipler", value: "Yerel", icon: AudioWaveform },
-  { label: "Ritim", value: "Planlı", icon: CalendarDays },
+  { key: "device", icon: Smartphone },
+  { key: "clips", icon: AudioWaveform },
+  { key: "rhythm", icon: CalendarDays },
 ] as const;
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { t } = useI18n();
 
   return (
     <Sidebar
@@ -79,7 +81,7 @@ export function AppSidebar() {
           <div className="min-w-0 leading-tight group-data-[collapsible=icon]/sidebar-wrapper:hidden">
             <div className="truncate font-semibold tracking-[-0.02em]">{siteConfig.shortName}</div>
             <div className="mt-0.5 truncate text-[9px] uppercase tracking-[0.18em] text-white/25">
-              Sleep intelligence
+              {t("navigation.sidebar.brandSubtitle")}
             </div>
           </div>
         </Link>
@@ -88,26 +90,28 @@ export function AppSidebar() {
       <SidebarContent className="px-2 pb-2">
         <SidebarGroup className="pb-1">
           <SidebarGroupLabel className="px-3 text-[9px] uppercase tracking-[0.2em] text-white/22">
-            Gece kontrolü
+            {t("navigation.sidebar.nightControl")}
           </SidebarGroupLabel>
           <SidebarGroupContent className="mt-2">
             <SidebarMenu className="gap-1.5">
               {primaryNav.map((item) => {
                 const active =
                   pathname === item.href || (item.href !== "/sleep" && pathname.startsWith(item.href));
+                const label = t(`navigation.primary.${item.key}.label`);
+                const description = t(`navigation.primary.${item.key}.description`);
 
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       isActive={active}
-                      tooltip={item.label}
+                      tooltip={label}
                       className="h-auto min-h-12 rounded-xl px-3 data-[active=true]:bg-[#155eff]/15 data-[active=true]:text-white data-[active=true]:shadow-[inset_0_0_0_1px_rgba(109,169,255,.12)]"
                       render={<Link href={item.href} />}
                     >
                       <item.icon className={active ? "text-[#7eb5ff]" : "text-white/35"} />
                       <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5 group-data-[collapsible=icon]/sidebar-wrapper:hidden">
-                        <span className="text-sm font-medium">{item.label}</span>
-                        <span className="text-[10px] font-normal text-white/28">{item.description}</span>
+                        <span className="text-sm font-medium">{label}</span>
+                        <span className="text-[10px] font-normal text-white/28">{description}</span>
                       </span>
                       {active && (
                         <ChevronRight className="h-3.5 w-3.5 text-[#70aaff]/60 group-data-[collapsible=icon]/sidebar-wrapper:hidden" />
@@ -124,9 +128,11 @@ export function AppSidebar() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[9px] font-medium uppercase tracking-[0.2em] text-[#8fc0ff]/70">
-                Komuta paneli
+                {t("navigation.sidebar.commandPanel")}
               </p>
-              <p className="mt-1 text-sm font-medium tracking-[-0.02em]">Gece akışı hazır</p>
+              <p className="mt-1 text-sm font-medium tracking-[-0.02em]">
+                {t("navigation.sidebar.nightFlowReady")}
+              </p>
             </div>
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#1769ff]/18 text-[#8fc0ff]">
               <Sparkles className="h-3.5 w-3.5" />
@@ -135,12 +141,16 @@ export function AppSidebar() {
           <div className="mt-3 grid grid-cols-3 gap-1.5">
             {commandTiles.map((tile) => (
               <div
-                key={tile.label}
+                key={tile.key}
                 className="rounded-2xl border border-white/[0.055] bg-black/10 px-2 py-2"
               >
                 <tile.icon className="h-3.5 w-3.5 text-[#78b7ff]/70" />
-                <p className="mt-2 truncate text-[9px] text-white/24">{tile.label}</p>
-                <p className="truncate text-[10px] font-medium text-white/62">{tile.value}</p>
+                <p className="mt-2 truncate text-[9px] text-white/24">
+                  {t(`navigation.sidebar.commandTiles.${tile.key}.label`)}
+                </p>
+                <p className="truncate text-[10px] font-medium text-white/62">
+                  {t(`navigation.sidebar.commandTiles.${tile.key}.value`)}
+                </p>
               </div>
             ))}
           </div>
@@ -148,53 +158,63 @@ export function AppSidebar() {
 
         <SidebarGroup className="py-1">
           <SidebarGroupLabel className="px-3 text-[9px] uppercase tracking-[0.2em] text-white/22">
-            Yakında
+            {t("navigation.sidebar.upcoming")}
           </SidebarGroupLabel>
           <SidebarGroupContent className="mt-2">
             <SidebarMenu className="gap-1.5">
-              {upcomingNav.map((item) => (
-                <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton
-                    tooltip={item.label}
-                    type="button"
-                    className="h-auto min-h-11 cursor-default rounded-xl border border-[#6da9ff]/10 bg-white/[0.03] px-3 opacity-100 hover:bg-[#155eff]/9 hover:text-white"
-                  >
-                    <item.icon className="text-[#8fc0ff]/50" />
-                    <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5 group-data-[collapsible=icon]/sidebar-wrapper:hidden">
-                      <span className="text-sm font-medium text-white/70">{item.label}</span>
-                      <span className="text-[10px] font-normal text-white/34">{item.description}</span>
-                    </span>
-                    <span className="rounded-full border border-[#6da9ff]/16 bg-[#155eff]/12 px-2 py-0.5 text-[9px] font-medium text-[#9dccff]/72 group-data-[collapsible=icon]/sidebar-wrapper:hidden">
-                      {item.badge}
-                    </span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {upcomingNav.map((item) => {
+                const label = t(`navigation.sidebar.upcomingItems.${item.key}.label`);
+                return (
+                  <SidebarMenuItem key={item.key}>
+                    <SidebarMenuButton
+                      tooltip={label}
+                      type="button"
+                      className="h-auto min-h-11 cursor-default rounded-xl border border-[#6da9ff]/10 bg-white/[0.03] px-3 opacity-100 hover:bg-[#155eff]/9 hover:text-white"
+                    >
+                      <item.icon className="text-[#8fc0ff]/50" />
+                      <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5 group-data-[collapsible=icon]/sidebar-wrapper:hidden">
+                        <span className="text-sm font-medium text-white/70">{label}</span>
+                        <span className="text-[10px] font-normal text-white/34">
+                          {t(`navigation.sidebar.upcomingItems.${item.key}.description`)}
+                        </span>
+                      </span>
+                      <span className="rounded-full border border-[#6da9ff]/16 bg-[#155eff]/12 px-2 py-0.5 text-[9px] font-medium text-[#9dccff]/72 group-data-[collapsible=icon]/sidebar-wrapper:hidden">
+                        {t(`navigation.sidebar.upcomingItems.${item.key}.badge`)}
+                      </span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup className="pt-1">
           <SidebarGroupLabel className="px-3 text-[9px] uppercase tracking-[0.2em] text-white/22">
-            Güven katmanı
+            {t("navigation.sidebar.trustLayer")}
           </SidebarGroupLabel>
           <SidebarGroupContent className="mt-2">
             <SidebarMenu className="gap-1.5">
-              {trustNav.map((item) => (
-                <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton
-                    tooltip={item.label}
-                    type="button"
-                    className="h-auto min-h-10 cursor-default rounded-xl px-3 opacity-100 hover:bg-white/[0.025] hover:text-white"
-                  >
-                    <item.icon className="text-[#79b7ff]/58" />
-                    <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5 group-data-[collapsible=icon]/sidebar-wrapper:hidden">
-                      <span className="text-xs font-medium text-white/58">{item.label}</span>
-                      <span className="text-[10px] font-normal text-white/30">{item.description}</span>
-                    </span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {trustNav.map((item) => {
+                const label = t(`navigation.sidebar.trustItems.${item.key}.label`);
+                return (
+                  <SidebarMenuItem key={item.key}>
+                    <SidebarMenuButton
+                      tooltip={label}
+                      type="button"
+                      className="h-auto min-h-10 cursor-default rounded-xl px-3 opacity-100 hover:bg-white/[0.025] hover:text-white"
+                    >
+                      <item.icon className="text-[#79b7ff]/58" />
+                      <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5 group-data-[collapsible=icon]/sidebar-wrapper:hidden">
+                        <span className="text-xs font-medium text-white/58">{label}</span>
+                        <span className="text-[10px] font-normal text-white/30">
+                          {t(`navigation.sidebar.trustItems.${item.key}.description`)}
+                        </span>
+                      </span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -205,17 +225,17 @@ export function AppSidebar() {
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs font-medium">
               <Sparkles className="h-3.5 w-3.5 text-[#78b7ff]" />
-              Bu gece hazır
+              {t("navigation.sidebar.tonightReady")}
             </div>
             <span className="rounded-full bg-emerald-400/10 px-2 py-0.5 text-[9px] font-medium text-emerald-300">
-              Live
+              {t("common.live")}
             </span>
           </div>
           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
             <div className="h-full w-[72%] rounded-full bg-[linear-gradient(90deg,#1769ff,#74d7ff)]" />
           </div>
           <p className="mt-2 text-[10px] leading-4 text-white/32">
-            Ham ses cihazında kalır. Sabah raporu hesabınla senkron görünür.
+            {t("navigation.sidebar.syncedReportHint")}
           </p>
         </div>
         <div className="group-data-[collapsible=icon]/sidebar-wrapper:hidden md:hidden">

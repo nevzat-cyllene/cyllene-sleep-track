@@ -7,21 +7,23 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { AppControlMenu } from "@/components/app/app-control-menu";
 import { useRecordingUI } from "@/components/app/recording-ui-context";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n/runtime";
 
-const titles = [
-  { path: "/sleep", eyebrow: "Bu gece", title: "Uyku alanı" },
-  { path: "/journal", eyebrow: "Arşivin", title: "Uyku günlüğü" },
-  { path: "/statistics", eyebrow: "İçgörüler", title: "İstatistikler" },
-  { path: "/profile", eyebrow: "Hesabın", title: "Profil ve ayarlar" },
+const titlePaths = [
+  { path: "/sleep", key: "sleep" },
+  { path: "/journal", key: "journal" },
+  { path: "/statistics", key: "statistics" },
+  { path: "/profile", key: "profile" },
 ] as const;
 
 export function AppTopbar() {
   const pathname = usePathname();
   const { isRecording } = useRecordingUI();
+  const { t } = useI18n();
 
   if (isRecording) return null;
 
-  const active = titles.find((item) => pathname.startsWith(item.path)) ?? titles[0];
+  const active = titlePaths.find((item) => pathname.startsWith(item.path)) ?? titlePaths[0];
 
   return (
     <header className="sticky top-0 z-30 border-b border-white/[0.055] bg-[#050a16]/72 backdrop-blur-2xl">
@@ -30,9 +32,11 @@ export function AppTopbar() {
         <div className="hidden h-6 w-px bg-white/[0.06] md:block" />
         <div className="min-w-0">
           <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-[#6da9ff]/70">
-            {active.eyebrow}
+            {t(`navigation.topbar.${active.key}.eyebrow`)}
           </p>
-          <p className="truncate text-sm font-semibold tracking-[-0.015em]">{active.title}</p>
+          <p className="truncate text-sm font-semibold tracking-[-0.015em]">
+            {t(`navigation.topbar.${active.key}.title`)}
+          </p>
         </div>
         <div className="flex-1" />
         {pathname !== "/sleep" && (
@@ -42,12 +46,12 @@ export function AppTopbar() {
             render={<Link href="/sleep" />}
           >
             <Plus className="h-3.5 w-3.5" />
-            Yeni gece
+            {t("navigation.topbar.newNight")}
           </Button>
         )}
         <div className="hidden items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.025] px-3 py-1.5 text-[10px] text-white/35 sm:flex">
           <MoonStar className="h-3 w-3 text-[#72aaff]" />
-          Hazır
+          {t("navigation.topbar.ready")}
         </div>
         <AppControlMenu />
       </div>
