@@ -2,9 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { CalendarDays, History } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, History } from "lucide-react";
 import { useI18n } from "@/i18n/runtime";
-import { formatDate } from "@/lib/sleep-utils";
+import {
+  buildMonthGrid,
+  getCalendarWeekdayShorts,
+  shiftMonth,
+  toLocalDateKeyFromParts,
+} from "@/lib/locale-dates";
+import { formatDate, formatMonthYear } from "@/lib/sleep-utils";
 import type { SleepSession } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -34,22 +40,36 @@ export function NightPickerSheet({
   onSelectSession,
 }: NightPickerSheetProps) {
   const { t } = useI18n();
+  const dateLocale = t("formatting.locale");
   const [dateFilter, setDateFilter] = useState("");
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [viewMonth, setViewMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
   const openedAtRef = useRef(0);
-  const dateInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!open) {
       setDateFilter("");
+      setCalendarOpen(false);
       return;
     }
     openedAtRef.current = Date.now();
+    const latest = sessions[0]?.started_at;
+    if (latest) {
+      const d = new Date(latest);
+      setViewMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+    } else {
+      const now = new Date();
+      setViewMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+    }
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [open]);
+  }, [open, sessions]);
 
   const availableDates = useMemo(() => {
     const keys = new Set(sessions.map((session) => toLocalDateKey(session.started_at)));
@@ -61,23 +81,20 @@ export function NightPickerSheet({
     return sessions.filter((session) => toLocalDateKey(session.started_at) === dateFilter);
   }, [dateFilter, sessions]);
 
-  const openDatePicker = () => {
-    const input = dateInputRef.current;
-    if (!input) return;
-    try {
-      if (typeof input.showPicker === "function") {
-        input.showPicker();
-        return;
-      }
-    } catch {
-      // Some browsers only allow showPicker from a direct user gesture; fall through.
-    }
-    input.focus();
-    input.click();
-  };
+  const weekdayShorts = useMemo(() => getCalendarWeekdayShorts(dateLocale), [dateLocale]);
+  const monthCells = useMemo(
+    () => buildMonthGrid(viewMonth.getFullYear(), viewMonth.getMonth()),
+    [viewMonth]
+  );
+
+  const todayKey = useMemo(() => {
+    const now = new Date();
+    return toLocalDateKeyFromParts(now.getFullYear(), now.getMonth(), now.getDate());
+  }, []);
 
   const applyDate = (next: string) => {
     setDateFilter(next);
+    setCalendarOpen(false);
     if (!next) return;
     const match = sessions.find((session) => toLocalDateKey(session.started_at) === next);
     if (match) {
@@ -95,7 +112,7 @@ export function NightPickerSheet({
   };
 
   const selectedLabel = dateFilter
-    ? formatDate(`${dateFilter}T12:00:00`, t("formatting.locale"))
+    ? formatDate(`${dateFilter}T12:00:00`, dateLocale)
     : t("nightPicker.selectDay");
 
   const sheet = (
@@ -131,32 +148,98 @@ export function NightPickerSheet({
             </div>
           </div>
 
-          <div className="relative">
-            <button
-              type="button"
-              onClick={openDatePicker}
-              className="flex h-11 w-full items-center gap-3 rounded-xl border border-[#78b7ff]/20 bg-[#155eff]/10 px-3.5 text-left transition hover:border-[#78b7ff]/35 hover:bg-[#155eff]/14"
+          <button
+            type="button"
+            onClick={() => setCalendarOpen((value) => !value)}
+            aria-expanded={calendarOpen}
+            className="flex h-11 w-full items-center gap-3 rounded-xl border border-[#78b7ff]/20 bg-[#155eff]/10 px-3.5 text-left transition hover:border-[#78b7ff]/35 hover:bg-[#155eff]/14"
+          >
+            <CalendarDays className="h-4 w-4 shrink-0 text-[#9bd5ff]" />
+            <span
+              className={cn(
+                "min-w-0 flex-1 truncate text-sm",
+                dateFilter ? "font-medium text-white" : "text-white/45"
+              )}
             >
-              <CalendarDays className="h-4 w-4 shrink-0 text-[#9bd5ff]" />
-              <span
-                className={cn(
-                  "min-w-0 flex-1 truncate text-sm",
-                  dateFilter ? "font-medium text-white" : "text-white/45"
-                )}
-              >
-                {selectedLabel}
-              </span>
-            </button>
-            <input
-              ref={dateInputRef}
-              type="date"
-              value={dateFilter}
-              tabIndex={-1}
-              aria-hidden="true"
-              onChange={(event) => applyDate(event.target.value)}
-              className="pointer-events-none absolute inset-0 h-px w-px opacity-0"
-            />
-          </div>
+              {selectedLabel}
+            </span>
+          </button>
+
+          {calendarOpen ? (
+            <div className="mt-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  aria-label={t("nightPicker.prevMonth")}
+                  onClick={() => setViewMonth((month) => shiftMonth(month, -1))}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl text-white/55 transition hover:bg-white/[0.06] hover:text-white"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <p className="text-sm font-medium text-white">
+                  {formatMonthYear(viewMonth, dateLocale)}
+                </p>
+                <button
+                  type="button"
+                  aria-label={t("nightPicker.nextMonth")}
+                  onClick={() => setViewMonth((month) => shiftMonth(month, 1))}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl text-white/55 transition hover:bg-white/[0.06] hover:text-white"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="mb-1 grid grid-cols-7 gap-1">
+                {weekdayShorts.map((label) => (
+                  <span
+                    key={label}
+                    className="py-1 text-center text-[10px] font-medium uppercase tracking-wide text-white/35"
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7 gap-1">
+                {monthCells.map((day, index) => {
+                  if (day == null) {
+                    return <span key={`empty-${index}`} className="h-9" />;
+                  }
+                  const key = toLocalDateKeyFromParts(
+                    viewMonth.getFullYear(),
+                    viewMonth.getMonth(),
+                    day
+                  );
+                  const hasNight = availableDates.has(key);
+                  const selected = dateFilter === key;
+                  const isToday = todayKey === key;
+
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => applyDate(key)}
+                      className={cn(
+                        "relative flex h-9 items-center justify-center rounded-xl text-sm tabular-nums transition",
+                        selected
+                          ? "bg-[#155eff] font-semibold text-white"
+                          : hasNight
+                            ? "bg-[#155eff]/14 font-medium text-white hover:bg-[#155eff]/22"
+                            : "text-white/45 hover:bg-white/[0.05] hover:text-white/75",
+                        isToday && !selected && "ring-1 ring-[#78b7ff]/35"
+                      )}
+                    >
+                      {day}
+                      {hasNight && !selected ? (
+                        <span className="absolute bottom-1 h-1 w-1 rounded-full bg-[#78b7ff]" />
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
           {dateFilter && !availableDates.has(dateFilter) ? (
             <p className="mt-2 text-[11px] text-amber-200/70">{t("nightPicker.noNightOnDate")}</p>
           ) : null}
@@ -195,7 +278,7 @@ export function NightPickerSheet({
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-medium text-white">
-                      {formatDate(session.started_at, t("formatting.locale"))}
+                      {formatDate(session.started_at, dateLocale)}
                     </span>
                     <span className="mt-0.5 block text-[11px] text-white/35">
                       {session.duration_minutes ?? t("common.emDash")}{" "}

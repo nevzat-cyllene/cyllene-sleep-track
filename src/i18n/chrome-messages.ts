@@ -50,6 +50,8 @@ export const chromeMessages = {
       noNightOnDate: "Bu tarihte kayıtlı gece yok.",
       empty: "Henüz gece kaydı yok.",
       closeAria: "Geçmişi kapat",
+      prevMonth: "Önceki ay",
+      nextMonth: "Sonraki ay",
     },
   },
   en: {
@@ -100,6 +102,8 @@ export const chromeMessages = {
       noNightOnDate: "No recorded night on this date.",
       empty: "No nights recorded yet.",
       closeAria: "Close history",
+      prevMonth: "Previous month",
+      nextMonth: "Next month",
     },
   },
   ku: {
@@ -150,6 +154,8 @@ export const chromeMessages = {
       noNightOnDate: "Di vê dîrokê de şeva tomarî tune.",
       empty: "Hîn şeva tomarî tune.",
       closeAria: "Dîrokê bigire",
+      prevMonth: "Meha berê",
+      nextMonth: "Meha pêş",
     },
     navigation: {
       primary: {

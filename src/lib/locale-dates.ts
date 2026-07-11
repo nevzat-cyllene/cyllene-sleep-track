@@ -28,6 +28,9 @@ const KU_WEEKDAYS_LONG = [
   "Şemî",
 ] as const;
 
+/** Monday-first short headers for calendar grids. */
+const KU_WEEKDAYS_SHORT_MON = ["Duş", "Sêş", "Çar", "Pên", "În", "Şem", "Yek"] as const;
+
 export function isKuDateLocale(locale: string | null | undefined) {
   if (!locale) return false;
   const normalized = locale.toLowerCase();
@@ -76,4 +79,39 @@ export function formatKuWeekdayRange(start: Date, end: Date) {
     start.getFullYear() === end.getFullYear();
   if (sameDay) return `${weekday} ${startDay} ${month}`;
   return `${weekday} ${startDay}–${endDay} ${month}`;
+}
+
+/** Monday-first weekday labels for in-app calendars (TR / EN / KU). */
+export function getCalendarWeekdayShorts(locale: string | null | undefined): string[] {
+  if (isKuDateLocale(locale)) return [...KU_WEEKDAYS_SHORT_MON];
+  const intlLocale = resolveIntlLocale(locale);
+  // Build Mon→Sun from a known week starting Monday 2024-01-01.
+  const monday = new Date(2024, 0, 1);
+  return Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(monday);
+    day.setDate(monday.getDate() + index);
+    return new Intl.DateTimeFormat(intlLocale, { weekday: "short" }).format(day);
+  });
+}
+
+export function toLocalDateKeyFromParts(year: number, monthIndex: number, day: number) {
+  const m = String(monthIndex + 1).padStart(2, "0");
+  const d = String(day).padStart(2, "0");
+  return `${year}-${m}-${d}`;
+}
+
+export function shiftMonth(base: Date, delta: number) {
+  return new Date(base.getFullYear(), base.getMonth() + delta, 1);
+}
+
+/** Days in month + Monday-first pad for grid (null = empty cell). */
+export function buildMonthGrid(year: number, monthIndex: number): Array<number | null> {
+  const first = new Date(year, monthIndex, 1);
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  // Convert Sunday=0…Saturday=6 → Monday-first index 0…6
+  const mondayIndex = (first.getDay() + 6) % 7;
+  const cells: Array<number | null> = Array.from({ length: mondayIndex }, () => null);
+  for (let day = 1; day <= daysInMonth; day++) cells.push(day);
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
 }
