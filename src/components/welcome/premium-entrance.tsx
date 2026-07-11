@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, MoonStar, Volume2, VolumeX } from "lucide-react";
 import { AmbientWelcomeSound } from "@/lib/ambient-welcome-sound";
 import { markGuestSplashSeen } from "@/lib/guest-splash-storage";
+import { GUEST_SPLASH_COMPLETE_EVENT } from "@/components/install-pwa";
 import { siteConfig } from "@/lib/site-config";
 
 interface PremiumEntranceProps {
@@ -87,6 +88,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
     doneRef.current = true;
     setExiting(true);
     markGuestSplashSeen();
+    window.dispatchEvent(new Event(GUEST_SPLASH_COMPLETE_EVENT));
     // Hard-stop ambience so it cannot leak into sleep recording.
     soundRef.current?.dispose();
     soundRef.current = null;

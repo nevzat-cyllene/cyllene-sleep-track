@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 
 interface RecordingUIContextValue {
   isRecording: boolean;
@@ -13,7 +13,15 @@ const RecordingUIContext = createContext<RecordingUIContextValue>({
 });
 
 export function RecordingUIProvider({ children }: { children: ReactNode }) {
-  const [isRecording, setIsRecording] = useState(false);
+  const [isRecording, setRecordingState] = useState(false);
+
+  const setIsRecording = useCallback((value: boolean) => {
+    setRecordingState(value);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("cyllene:recording-ui", { detail: value }));
+    }
+  }, []);
+
   return (
     <RecordingUIContext.Provider value={{ isRecording, setIsRecording }}>
       {children}

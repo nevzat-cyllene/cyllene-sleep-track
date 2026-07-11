@@ -1,16 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { Download, Share, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRecordingUI } from "@/components/app/recording-ui-context";
 import { hasSeenGuestSplash } from "@/lib/guest-splash-storage";
 import { getDevicePlatform } from "@/lib/recording-device";
 import { cn } from "@/lib/utils";
 
-/** Let the lunar entrance / first screen settle before the install prompt. */
-const TOAST_DELAY_MS = 4500;
+/** After moon entrance finishes, wait a beat then show install prompt. */
+const TOAST_DELAY_MS = 2800;
+export const GUEST_SPLASH_COMPLETE_EVENT = "cyllene:guest-splash-complete";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -19,7 +18,6 @@ interface BeforeInstallPromptEvent extends Event {
 
 interface InstallPWANavigator extends Navigator {
   standalone?: boolean;
-  getInstalledRelatedApps?: () => Promise<unknown[]>;
 }
 
 interface InstallPWAProps {
@@ -29,7 +27,7 @@ interface InstallPWAProps {
 
 const INSTALL_STORAGE_KEY = "cyllene-pwa-installed";
 const DISMISS_STORAGE_KEY = "cyllene-pwa-prompt-dismissed-at";
-const DISMISS_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 3; // 3 gün
+const DISMISS_COOLDOWN_MS = 1000 * 60 * 60 * 12; // 12 saat
 
 function hasStoredInstallFlag() {
   try {
@@ -43,7 +41,7 @@ function storeInstallFlag() {
   try {
     window.localStorage.setItem(INSTALL_STORAGE_KEY, "1");
   } catch {
-    // localStorage erişimi engelliyse sessiz geç.
+    // ignore
   }
 }
 
@@ -63,7 +61,7 @@ function storePromptDismissed() {
   try {
     window.localStorage.setItem(DISMISS_STORAGE_KEY, String(Date.now()));
   } catch {
-    // localStorage erişimi engelliyse sessiz geç.
+    // ignore
   }
 }
 
@@ -73,8 +71,7 @@ function isStandaloneDisplayMode() {
     const navigatorWithInstall = window.navigator as InstallPWANavigator;
     return (
       window.matchMedia?.("(display-mode: standalone)").matches === true ||
-      navigatorWithInstall.standalone === true ||
-      hasStoredInstallFlag()
+      navigatorWithInstall.standalone === true
     );
   } catch {
     return false;
@@ -88,35 +85,45 @@ function isMobileInstallTarget() {
 
 function AppIcon({ className, size = 40 }: { className?: string; size?: number }) {
   return (
-    <Image
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
       src="/icons/icon-192.png"
       alt="Cyllene"
       width={size}
       height={size}
-      className={cn("rounded-[0.7rem]", className)}
-      priority={false}
+      className={cn("rounded-[0.7rem] object-cover", className)}
+      decoding="async"
     />
   );
 }
 
 export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
-  const { isRecording } = useRecordingUI();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(isStandaloneDisplayMode);
+  const [installed, setInstalled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [platform, setPlatform] = useState<"ios" | "android" | "other">("other");
   const [dismissed, setDismissed] = useState(false);
   const [toastReady, setToastReady] = useState(false);
+  const [recording, setRecording] = useState(false);
 
   useEffect(() => {
     const device = getDevicePlatform();
     setIsMobile(isMobileInstallTarget());
     setPlatform(device === "ios" || device === "android" ? device : "other");
+    setInstalled(isStandaloneDisplayMode() || hasStoredInstallFlag());
     setDismissed(isPromptDismissedRecently());
   }, []);
 
   useEffect(() => {
-    // Desktop'ta install prompt'u yakalama — konsol uyarısı ve gereksiz UI olmasın.
+    const onRecording = (event: Event) => {
+      const detail = (event as CustomEvent<boolean>).detail;
+      setRecording(Boolean(detail));
+    };
+    window.addEventListener("cyllene:recording-ui", onRecording);
+    return () => window.removeEventListener("cyllene:recording-ui", onRecording);
+  }, []);
+
+  useEffect(() => {
     if (installed || !isMobile) return;
 
     const markInstalled = () => {
@@ -133,18 +140,6 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
     window.addEventListener("beforeinstallprompt", installPromptHandler);
     window.addEventListener("appinstalled", markInstalled);
 
-    const navigatorWithInstall = window.navigator as InstallPWANavigator;
-    const relatedAppsPromise = navigatorWithInstall.getInstalledRelatedApps?.();
-    if (relatedAppsPromise) {
-      void relatedAppsPromise
-        .then((apps) => {
-          if (apps.length > 0) markInstalled();
-        })
-        .catch(() => {
-          // Bu API her tarayıcıda yok; yükleme akışını bozmasın.
-        });
-    }
-
     return () => {
       window.removeEventListener("beforeinstallprompt", installPromptHandler);
       window.removeEventListener("appinstalled", markInstalled);
@@ -159,33 +154,41 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
     let pollTimer: number | undefined;
 
     const showAfterDelay = () => {
+      if (delayTimer) window.clearTimeout(delayTimer);
       delayTimer = window.setTimeout(() => {
         if (!cancelled) setToastReady(true);
       }, TOAST_DELAY_MS);
     };
 
-    // First visit: wait until moon entrance finishes, then delay.
-    // Return visit: just wait the delay so the page can settle.
-    if (hasSeenGuestSplash()) {
-      showAfterDelay();
-    } else {
+    const arm = () => {
+      if (hasSeenGuestSplash()) showAfterDelay();
+    };
+
+    arm();
+
+    // First visit: splash marks storage + fires event when finished.
+    const onSplashComplete = () => showAfterDelay();
+    window.addEventListener(GUEST_SPLASH_COMPLETE_EVENT, onSplashComplete);
+
+    if (!hasSeenGuestSplash()) {
       pollTimer = window.setInterval(() => {
         if (!hasSeenGuestSplash()) return;
         window.clearInterval(pollTimer);
         pollTimer = undefined;
         showAfterDelay();
-      }, 400);
+      }, 350);
     }
 
     return () => {
       cancelled = true;
       if (delayTimer) window.clearTimeout(delayTimer);
       if (pollTimer) window.clearInterval(pollTimer);
+      window.removeEventListener(GUEST_SPLASH_COMPLETE_EVENT, onSplashComplete);
     };
   }, [variant, installed, isMobile, dismissed]);
 
   if (!isMobile || installed) return null;
-  if (variant === "toast" && (dismissed || !toastReady || isRecording)) return null;
+  if (variant === "toast" && (dismissed || !toastReady || recording)) return null;
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
@@ -209,16 +212,16 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
 
   const subtitle =
     platform === "ios"
-      ? "Safari’de Paylaş → Ana Ekrana Ekle"
+      ? "Paylaş → Ana Ekrana Ekle ile Cyllene ikonunu ekleyin."
       : deferredPrompt
         ? "Gece kaydı daha stabil çalışır."
-        : "Tarayıcı menüsünden Uygulamayı yükle / Ana ekrana ekle";
+        : "Menü → Ana ekrana ekle / Uygulamayı yükle";
 
   if (variant === "toast") {
     return (
       <div
         className={cn(
-          "pointer-events-none fixed inset-x-3 z-[80] md:hidden",
+          "pointer-events-none fixed inset-x-3 z-[220] md:hidden",
           "bottom-[calc(6.4rem+env(safe-area-inset-bottom))]",
           className
         )}
@@ -238,7 +241,7 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
               <AppIcon size={44} className="rounded-2xl" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-medium text-white">Uygulamayı yükle</p>
+              <p className="text-[13px] font-medium text-white">Cyllene’i yükle</p>
               <p className="mt-0.5 text-[11px] leading-4 text-white/45">{subtitle}</p>
             </div>
           </div>
