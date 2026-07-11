@@ -5,7 +5,6 @@ import { chromeMessages } from "@/i18n/chrome-messages";
 import { kuAppMessages } from "@/i18n/ku-app-messages";
 import {
   detectLocaleFromNavigator,
-  isLocale,
   LOCALE_STORAGE_KEY,
   parseLocale,
   writeLocaleCookie,
@@ -108,14 +107,14 @@ export function LocaleProvider({
   }, []);
 
   React.useEffect(() => {
-    // Cookie is source of truth once set. Without it, prefer localStorage, else device language.
+    // Cookie is source of truth once set. Without it, follow the phone language
+    // (same idea as Accept-Language on the server) so guests see the right copy immediately.
     try {
       const hasCookie = document.cookie
         .split(";")
         .some((part) => part.trim().startsWith("cyllene.locale="));
-      const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
       if (!hasCookie) {
-        const next = isLocale(stored) ? stored : detectLocaleFromNavigator();
+        const next = detectLocaleFromNavigator();
         writeLocaleCookie(next);
         if (next !== locale) setLocaleState(next);
         window.localStorage.setItem(LOCALE_STORAGE_KEY, next);

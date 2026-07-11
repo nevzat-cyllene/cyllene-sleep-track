@@ -1,11 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowLeft, Check, MoonStar, ShieldCheck } from "lucide-react";
 import { SignupForm } from "@/features/auth/signup-form";
 import { siteConfig } from "@/lib/site-config";
-
-const benefits = ["Ham ses yüklenmez", "Cihaz içi ses analizi", "Net sabah raporu"];
+import { useI18n } from "@/i18n/runtime";
 
 export default function SignupPage() {
+  const { t, m } = useI18n();
+  const benefits = m<string[]>("auth.signupPage.chips", []);
+
   return (
     <main className="relative grid min-h-dvh overflow-hidden bg-[#020816] lg:grid-cols-[.9fr_1.1fr]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_72%_20%,rgba(23,105,255,.18),transparent_34%),radial-gradient(circle_at_18%_72%,rgba(111,210,255,.1),transparent_32%)]" />
@@ -23,15 +27,12 @@ export default function SignupPage() {
         </Link>
         <div className="relative max-w-lg">
           <p className="text-xs font-medium uppercase tracking-[0.28em] text-[#78b7ff]">
-            Cyllene hesabı
+            {t("auth.signupPage.eyebrow")}
           </p>
           <h2 className="mt-5 text-balance text-4xl font-medium leading-tight tracking-[-0.045em]">
-            Uykunun sinyalini güvenle çöz.
+            {t("auth.signupPage.title")}
           </h2>
-          <p className="mt-5 max-w-md text-sm leading-7 text-white/44">
-            Mavi-titanyum arayüz, cihaz içi analiz ve sade sabah raporu. Cyllene geceyi
-            büyütmez; ölçer, düzenler ve netleştirir.
-          </p>
+          <p className="mt-5 max-w-md text-sm leading-7 text-white/44">{t("auth.signupPage.body")}</p>
           <div className="mt-8 space-y-3">
             {benefits.map((benefit) => (
               <p key={benefit} className="flex items-center gap-3 text-sm text-white/58">
@@ -44,7 +45,7 @@ export default function SignupPage() {
           </div>
           <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-emerald-300/12 bg-emerald-300/[0.06] px-3.5 py-2 text-xs text-emerald-200/72">
             <ShieldCheck className="h-3.5 w-3.5" />
-            Supabase güvenli oturum · cihaz odaklı mahremiyet
+            {t("auth.signupPage.trust")}
           </div>
         </div>
         <p className="relative text-xs text-white/22">© {new Date().getFullYear()} Cyllene</p>
@@ -59,7 +60,7 @@ export default function SignupPage() {
           className="absolute left-6 top-6 flex items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.035] px-3 py-2 text-xs text-white/45 backdrop-blur-xl transition hover:border-[#8dbdff]/18 hover:bg-white/[0.06] hover:text-white sm:left-10 sm:top-8"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Ana sayfa
+          {t("auth.signupPage.home")}
         </Link>
         <div className="relative w-full max-w-md">
           <div className="absolute -inset-5 rounded-[2.4rem] bg-[radial-gradient(circle_at_30%_0%,rgba(111,210,255,.12),transparent_38%),radial-gradient(circle_at_80%_80%,rgba(23,105,255,.16),transparent_42%)] blur-2xl" />

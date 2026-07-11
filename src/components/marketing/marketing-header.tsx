@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Container } from "@/components/shell/container";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/lib/site-config";
+import { useI18n } from "@/i18n/runtime";
 
 export function MarketingHeader() {
   const pathname = usePathname();
+  const { t } = useI18n();
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/[0.055] bg-[#050a16]/75 backdrop-blur-2xl">
@@ -21,7 +23,7 @@ export function MarketingHeader() {
           <div className="leading-tight">
             <div className="font-semibold tracking-[-0.02em]">{siteConfig.shortName}</div>
             <div className="text-[9px] uppercase tracking-[0.2em] text-white/28">
-              Sleep intelligence
+              {t("marketing.header.eyebrow")}
             </div>
           </div>
         </Link>
@@ -36,15 +38,15 @@ export function MarketingHeader() {
             )}
             render={<Link href="/login" />}
           >
-            Giriş
+            {t("auth.signupForm.login")}
           </Button>
           <Button
             size="sm"
             className="h-9 rounded-full bg-white px-4 text-[#07122b] hover:bg-[#dceaff]"
             render={<Link href="/signup" />}
           >
-            <span className="hidden sm:inline">Ücretsiz başla</span>
-            <span className="sm:hidden">Başla</span>
+            <span className="hidden sm:inline">{t("marketing.header.startFree")}</span>
+            <span className="sm:hidden">{t("marketing.header.startShort")}</span>
             <ArrowUpRight className="h-3.5 w-3.5" />
           </Button>
         </div>

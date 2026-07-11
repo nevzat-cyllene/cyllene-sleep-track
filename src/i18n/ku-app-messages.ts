@@ -241,6 +241,55 @@ export const kuAppMessages = {
     deleteLocalDescription: "Bûyer û klîpa dengê ya li ser telefonê ji amûrê tên rakirin.",
     deleteConfirm: "Bûyerê jê bibe",
   },
+  welcome: {
+    premiumEntrance: {
+      headerSubtitle: "Zekîya xewê",
+      soundOff: "Dengê bigire",
+      soundOn: "Dengê veke",
+      preStart: {
+        eyebrow: "Dema heyv bilind dibe",
+        title: "Zimanê bêdeng ê xewê keşf bike.",
+        body:
+          "Xew çîrokek e ku laşê te bi şevê vedibêje. Cyllene bi naskirina akustîk a jîr li ser amûrê wê çîrokê analîz dike.",
+        cta: "Moda şevê dest pê bike",
+        acousticRecognition: "Naskirina akustîk a li ser amûrê",
+        signals: ["Rîtma nefesê", "Kuxîn", "Dengê jîngehê"],
+      },
+      moments: [
+        {
+          eyebrow: "Analîza li ser amûrê",
+          title: "Dengê xav li ser amûrê dimîne.",
+          body: "Cyllene nîşanên dengê şevê li ser telefona te dixebitîne.",
+        },
+        {
+          eyebrow: "Cyllene",
+          title: "Bûyerên şevê têne nîşankirin.",
+          body: "Xerxere, kuxîn û dengên nişkê di rapora sibehê de dibin kêliyên xwendî.",
+        },
+        {
+          eyebrow: "Rapora sibehê",
+          title: "Rîtma xewê ya te zelal dibe.",
+          body: "Skor, rêzika demê û kêliyên tespîtkirî wekî kurteyek sade vedibin.",
+        },
+      ],
+      continue: "Berdewam",
+      goMorning: "Here sibehê",
+      ambianceOn: "Ambîyansa heyvê vekirî ye",
+      soundStartsOnTouch: "Deng bi destlêdanê dest pê dike",
+    },
+  },
+  marketing: {
+    header: {
+      eyebrow: "Zekîya xewê",
+      startFree: "Bêpere dest pê bike",
+      startShort: "Dest pê bike",
+    },
+  },
+  auth: {
+    signupForm: {
+      login: "Têkeve",
+    },
+  },
 } as const satisfies Record<string, unknown>;
 
 export type KuAppMessages = typeof kuAppMessages;

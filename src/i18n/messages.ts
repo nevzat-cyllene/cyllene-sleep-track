@@ -128,6 +128,7 @@ export const messages = {
       header: {
         eyebrow: "Sleep intelligence",
         startFree: "Ücretsiz başla",
+        startShort: "Başla",
       },
       hero: {
         eyebrow: "Sleep intelligence · cihaz içi analiz",
@@ -882,6 +883,7 @@ export const messages = {
       header: {
         eyebrow: "Sleep intelligence",
         startFree: "Start free",
+        startShort: "Start",
       },
       hero: {
         eyebrow: "Sleep intelligence · on-device analysis",

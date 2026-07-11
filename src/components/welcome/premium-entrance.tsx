@@ -8,6 +8,7 @@ import { AmbientWelcomeSound } from "@/lib/ambient-welcome-sound";
 import { markGuestSplashSeen } from "@/lib/guest-splash-storage";
 import { GUEST_SPLASH_COMPLETE_EVENT } from "@/components/install-pwa";
 import { siteConfig } from "@/lib/site-config";
+import { useI18n } from "@/i18n/runtime";
 
 interface PremiumEntranceProps {
   onComplete: () => void;
@@ -20,25 +21,10 @@ const momentReadDuration = 7000;
 const centerTransform = (_: unknown, generated: string) => `translateX(-50%) ${generated}`;
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
-const MOMENTS = [
-  {
-    eyebrow: "Cihaz içi analiz",
-    title: "Ham ses cihazında kalır.",
-    body: "Cyllene gece boyunca oluşan ses sinyallerini telefonunda işler.",
-  },
-  {
-    eyebrow: siteConfig.shortName,
-    title: "Gece olayları işaretlenir.",
-    body: "Horlama, öksürük ve ani sesler sabah raporunda okunabilir anlara dönüşür.",
-  },
-  {
-    eyebrow: "Sabah raporu",
-    title: "Uyku ritmin netleşir.",
-    body: "Skor, zaman çizelgesi ve tespit edilen anlar sade bir özet halinde açılır.",
-  },
-] as const;
+type MomentCopy = { eyebrow: string; title: string; body: string };
 
 export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
+  const { t, m } = useI18n();
   const soundRef = useRef<AmbientWelcomeSound | null>(null);
   const doneRef = useRef(false);
   const reduceMotion = useReducedMotion();
@@ -47,6 +33,15 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
   const [moment, setMoment] = useState(0);
   const [hasSeenMomentCycle, setHasSeenMomentCycle] = useState(false);
   const [exiting, setExiting] = useState(false);
+
+  const moments = m<MomentCopy[]>("welcome.premiumEntrance.moments", []);
+  const signals = m<string[]>("welcome.premiumEntrance.preStart.signals", []);
+  const momentCount = Math.max(moments.length, 1);
+  const current = moments[moment] ?? {
+    eyebrow: siteConfig.shortName,
+    title: siteConfig.shortName,
+    body: "",
+  };
 
   useEffect(() => {
     soundRef.current = new AmbientWelcomeSound();
@@ -57,8 +52,8 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
     if (!started || exiting) return;
 
     const next = window.setTimeout(() => {
-      const nextMoment = (moment + 1) % MOMENTS.length;
-      if (nextMoment === MOMENTS.length - 1) {
+      const nextMoment = (moment + 1) % momentCount;
+      if (nextMoment === momentCount - 1) {
         setHasSeenMomentCycle(true);
       }
       setMoment(nextMoment);
@@ -67,7 +62,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
     return () => {
       window.clearTimeout(next);
     };
-  }, [exiting, moment, reduceMotion, started]);
+  }, [exiting, moment, momentCount, reduceMotion, started]);
 
   const begin = useCallback(async () => {
     if (started) return;
@@ -109,8 +104,6 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
       .then(() => setSoundOn(true))
       .catch(() => setSoundOn(false));
   }, [soundOn]);
-
-  const current = MOMENTS[moment];
 
   return (
     <motion.div
@@ -285,7 +278,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
             <div>
               <p className="text-sm font-semibold tracking-tight">{siteConfig.shortName}</p>
               <p className="text-[10px] uppercase tracking-[0.24em] text-white/35">
-                Uyku zekâsı
+                {t("welcome.premiumEntrance.headerSubtitle")}
               </p>
             </div>
           </div>
@@ -297,7 +290,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
               className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-white/55 backdrop-blur-xl transition hover:bg-white/10 hover:text-white"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              aria-label={soundOn ? "Sesi kapat" : "Sesi aç"}
+              aria-label={soundOn ? t("welcome.premiumEntrance.soundOff") : t("welcome.premiumEntrance.soundOn")}
             >
               {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
             </motion.button>
@@ -322,7 +315,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                     transition={{ duration: reduceMotion ? 0.2 : moonEntryDuration, delay: 0.08, ease: moonFlowEase }}
                   >
-                    Ay yükselirken
+                    {t("welcome.premiumEntrance.preStart.eyebrow")}
                   </motion.p>
                   <motion.h1
                     className="max-w-[25rem] text-balance text-[clamp(2.35rem,8.4vw,5.4rem)] font-medium leading-[0.96] tracking-[-0.06em] sm:max-w-2xl"
@@ -330,7 +323,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                     transition={{ duration: reduceMotion ? 0.2 : moonEntryDuration, delay: 0.12, ease: moonFlowEase }}
                   >
-                    Uykunun sessiz dilini keşfedin.
+                    {t("welcome.premiumEntrance.preStart.title")}
                   </motion.h1>
                   <motion.p
                     className="mt-5 max-w-[31rem] text-pretty text-sm font-light leading-6 text-white/54 sm:text-base sm:leading-7"
@@ -338,9 +331,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                     transition={{ duration: reduceMotion ? 0.2 : moonEntryDuration, delay: 0.18, ease: moonFlowEase }}
                   >
-                    Uyku, bedenin gece boyunca anlattığı bir hikayedir. Cyllene, akıllı
-                    akustik tanıma mimarisiyle bu hikayenin detaylarını cihaz içi işleme
-                    gücüyle analiz eder.
+                    {t("welcome.premiumEntrance.preStart.body")}
                   </motion.p>
 
                 <motion.button
@@ -359,7 +350,9 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                       transition={{ duration: 0.85, repeat: Infinity, repeatDelay: 1.1, ease }}
                     />
                   )}
-                  <span className="relative text-sm font-medium">Gece modunu başlat</span>
+                  <span className="relative text-sm font-medium">
+                    {t("welcome.premiumEntrance.preStart.cta")}
+                  </span>
                   <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-[#1769ff] text-white shadow-[0_0_32px_rgba(23,105,255,.55)]">
                     <span className="absolute inset-0 animate-ping rounded-full border border-[#78b7ff]/40 [animation-duration:1.35s]" />
                     <Volume2 className="h-4 w-4" />
@@ -374,10 +367,10 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                   transition={{ duration: reduceMotion ? 0.2 : 0.7, delay: 0.62, ease }}
                 >
                   <p className="text-[10px] uppercase tracking-[0.22em] text-[#8fc0ff]/70">
-                    Cihaz içi akustik tanıma
+                    {t("welcome.premiumEntrance.preStart.acousticRecognition")}
                   </p>
                   <div className="mt-4 space-y-2">
-                    {["Nefes ritmi", "Öksürük", "Çevresel ses"].map((item) => (
+                    {signals.map((item) => (
                       <div
                         key={item}
                         className="flex items-center justify-between rounded-2xl bg-white/[0.035] px-3 py-2"
@@ -399,7 +392,7 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
               >
                 <AnimatePresence mode="wait">
                   <motion.div
-                    key={moment}
+                    key={`${moment}-${current.title}`}
                     initial={{ opacity: 0, y: 26, scale: 0.99, filter: "blur(14px)" }}
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                     exit={{ opacity: 0, y: -18, scale: 1.01, filter: "blur(12px)" }}
@@ -420,9 +413,9 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
 
                 <div className="flex items-center gap-4 sm:flex-col sm:items-end">
                   <div className="flex gap-1.5">
-                    {MOMENTS.map((item, index) => (
+                    {moments.map((item, index) => (
                       <span
-                        key={item.title}
+                        key={`${item.title}-${index}`}
                         className={`h-1 rounded-full transition-all duration-300 ${
                           index === moment ? "w-9 bg-[#6da9ff]" : "w-3 bg-white/15"
                         }`}
@@ -434,8 +427,8 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                     onClick={() => {
                       if (hasSeenMomentCycle) void finish();
                       else {
-                        const nextMoment = Math.min(moment + 1, MOMENTS.length - 1);
-                        if (nextMoment === MOMENTS.length - 1) {
+                        const nextMoment = Math.min(moment + 1, momentCount - 1);
+                        if (nextMoment === momentCount - 1) {
                           setHasSeenMomentCycle(true);
                         }
                         setMoment(nextMoment);
@@ -443,7 +436,9 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
                     }}
                     className="ml-auto flex h-13 items-center gap-3 rounded-full bg-white px-5 text-sm font-semibold text-[#06112a] shadow-[0_12px_42px_rgba(48,112,255,.3)] transition hover:scale-[1.02] sm:ml-0"
                   >
-                    {hasSeenMomentCycle ? "Sabaha geç" : "Devam"}
+                    {hasSeenMomentCycle
+                      ? t("welcome.premiumEntrance.goMorning")
+                      : t("welcome.premiumEntrance.continue")}
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -453,7 +448,9 @@ export function PremiumEntrance({ onComplete }: PremiumEntranceProps) {
         </main>
 
         <p className="text-[10px] uppercase tracking-[0.24em] text-white/25">
-          {started && soundOn ? "Ay ambiyansı açık" : "Ses dokunuşla başlar"}
+          {started && soundOn
+            ? t("welcome.premiumEntrance.ambianceOn")
+            : t("welcome.premiumEntrance.soundStartsOnTouch")}
         </p>
       </div>
     </motion.div>

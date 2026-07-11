@@ -1,9 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowLeft, MoonStar, ShieldCheck } from "lucide-react";
 import { LoginForm } from "@/features/auth/login-form";
 import { siteConfig } from "@/lib/site-config";
+import { useI18n } from "@/i18n/runtime";
 
 export default function LoginPage() {
+  const { t } = useI18n();
+
   return (
     <main className="relative grid min-h-dvh overflow-hidden lg:grid-cols-[.9fr_1.1fr]">
       <section className="relative hidden overflow-hidden border-r border-white/[0.06] bg-[#071127] lg:flex lg:flex-col lg:justify-between lg:p-10">
@@ -17,14 +22,14 @@ export default function LoginPage() {
         </Link>
         <div className="relative max-w-lg">
           <p className="text-xs font-medium uppercase tracking-[0.28em] text-[#78b7ff]">
-            Kendi gecenin verisi
+            {t("auth.loginPage.eyebrow")}
           </p>
           <blockquote className="mt-5 text-balance text-4xl font-medium leading-tight tracking-[-0.045em]">
-            “İyi bir sabah, geceyi anlamakla başlar.”
+            {t("auth.loginPage.quote")}
           </blockquote>
           <div className="mt-8 flex items-center gap-3 text-xs text-white/40">
             <ShieldCheck className="h-4 w-4 text-emerald-300" />
-            Cihaz içi ses analizi · Gizlilik odaklı
+            {t("auth.loginPage.privacy")}
           </div>
         </div>
         <p className="relative text-xs text-white/22">© {new Date().getFullYear()} Cyllene</p>
@@ -37,7 +42,7 @@ export default function LoginPage() {
           className="absolute left-6 top-6 flex items-center gap-2 text-xs text-white/40 transition hover:text-white sm:left-10 sm:top-8"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Ana sayfa
+          {t("auth.loginPage.home")}
         </Link>
         <div className="relative w-full max-w-md">
           <LoginForm />

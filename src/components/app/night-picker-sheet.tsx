@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { CalendarDays, History } from "lucide-react";
 import { useI18n } from "@/i18n/runtime";
 import { formatDate } from "@/lib/sleep-utils";
@@ -34,7 +35,13 @@ export function NightPickerSheet({
 }: NightPickerSheetProps) {
   const { t } = useI18n();
   const [dateFilter, setDateFilter] = useState("");
+  const [mounted, setMounted] = useState(false);
   const openedAtRef = useRef(0);
+  const dateInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -42,6 +49,11 @@ export function NightPickerSheet({
       return;
     }
     openedAtRef.current = Date.now();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
   }, [open]);
 
   const availableDates = useMemo(() => {
@@ -54,17 +66,46 @@ export function NightPickerSheet({
     return sessions.filter((session) => toLocalDateKey(session.started_at) === dateFilter);
   }, [dateFilter, sessions]);
 
-  if (!open) return null;
+  const openDatePicker = () => {
+    const input = dateInputRef.current;
+    if (!input) return;
+    try {
+      if (typeof input.showPicker === "function") {
+        input.showPicker();
+        return;
+      }
+    } catch {
+      // Some browsers only allow showPicker from a direct user gesture; fall through.
+    }
+    input.focus();
+    input.click();
+  };
+
+  const applyDate = (next: string) => {
+    setDateFilter(next);
+    if (!next) return;
+    const match = sessions.find((session) => toLocalDateKey(session.started_at) === next);
+    if (match) {
+      onSelectSession(match);
+      onOpenChange(false);
+      setDateFilter("");
+    }
+  };
+
+  if (!open || !mounted) return null;
 
   const closeSheet = () => {
-    // Ignore the same tap that opened the sheet (ghost click on backdrop).
     if (Date.now() - openedAtRef.current < 450) return;
     onOpenChange(false);
   };
 
-  return (
+  const selectedLabel = dateFilter
+    ? formatDate(`${dateFilter}T12:00:00`, t("formatting.locale"))
+    : t("nightPicker.selectDay");
+
+  const sheet = (
     <div
-      className="fixed inset-0 z-[260] flex items-end justify-center px-3 pb-[max(.85rem,env(safe-area-inset-bottom))] sm:items-center sm:pb-0"
+      className="fixed inset-0 z-[400] flex items-end justify-center px-0 sm:items-center sm:px-3 sm:py-[max(1rem,env(safe-area-inset-top))] sm:pb-[max(1rem,env(safe-area-inset-bottom))]"
       role="dialog"
       aria-modal="true"
       aria-label={t("nightPicker.title")}
@@ -72,15 +113,17 @@ export function NightPickerSheet({
       <button
         type="button"
         aria-label={t("nightPicker.closeAria")}
-        className="absolute inset-0 cursor-default bg-[#02050d]/72"
+        className="absolute inset-0 cursor-default bg-[#02050d]/78"
         onPointerUp={closeSheet}
       />
 
       <div
-        className="relative w-full max-w-sm overflow-hidden rounded-[1.75rem] border border-white/[0.1] bg-[#07111f] shadow-[0_26px_100px_rgba(0,4,18,.78),inset_0_1px_0_rgba(255,255,255,.08)]"
+        className="relative flex max-h-[min(36rem,88dvh)] w-full max-w-sm flex-col overflow-hidden rounded-t-[1.75rem] border border-white/[0.1] border-b-0 bg-[#07111f] shadow-[0_26px_100px_rgba(0,4,18,.78),inset_0_1px_0_rgba(255,255,255,.08)] sm:rounded-[1.75rem] sm:border-b"
         onPointerDown={(event) => event.stopPropagation()}
       >
-        <div className="px-5 pb-2 pt-5">
+        <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-white/15 sm:hidden" />
+
+        <div className="shrink-0 px-5 pb-2 pt-4 sm:pt-5">
           <div className="mb-4 flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#78b7ff]/15 bg-[#155eff]/12 text-[#9bd5ff]">
               <History className="h-5 w-5" />
@@ -93,39 +136,38 @@ export function NightPickerSheet({
             </div>
           </div>
 
-          <label className="block space-y-1.5">
-            <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-[#78b7ff]/75">
-              <CalendarDays className="h-3.5 w-3.5" />
-              {t("nightPicker.pickDate")}
-            </span>
-            <div className="relative">
-              <input
-                type="date"
-                value={dateFilter}
-                onChange={(event) => {
-                  const next = event.target.value;
-                  setDateFilter(next);
-                  if (!next) return;
-                  const match = sessions.find(
-                    (session) => toLocalDateKey(session.started_at) === next
-                  );
-                  if (match) {
-                    onSelectSession(match);
-                    onOpenChange(false);
-                    setDateFilter("");
-                  }
-                }}
-                className="h-11 w-full rounded-xl border border-[#78b7ff]/20 bg-[#155eff]/10 px-3 pr-10 text-sm text-white outline-none [color-scheme:dark] focus:border-[#78b7ff]/45"
-              />
-              <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9bd5ff]/80" />
-            </div>
-          </label>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={openDatePicker}
+              className="flex h-11 w-full items-center gap-3 rounded-xl border border-[#78b7ff]/20 bg-[#155eff]/10 px-3.5 text-left transition hover:border-[#78b7ff]/35 hover:bg-[#155eff]/14"
+            >
+              <CalendarDays className="h-4 w-4 shrink-0 text-[#9bd5ff]" />
+              <span
+                className={cn(
+                  "min-w-0 flex-1 truncate text-sm",
+                  dateFilter ? "font-medium text-white" : "text-white/45"
+                )}
+              >
+                {selectedLabel}
+              </span>
+            </button>
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={dateFilter}
+              tabIndex={-1}
+              aria-hidden="true"
+              onChange={(event) => applyDate(event.target.value)}
+              className="pointer-events-none absolute inset-0 h-px w-px opacity-0"
+            />
+          </div>
           {dateFilter && !availableDates.has(dateFilter) ? (
             <p className="mt-2 text-[11px] text-amber-200/70">{t("nightPicker.noNightOnDate")}</p>
           ) : null}
         </div>
 
-        <div className="max-h-[min(22rem,50vh)] space-y-1.5 overflow-y-auto px-3 pb-4">
+        <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain px-3 pb-3">
           <p className="px-1.5 pb-1 text-[11px] font-medium uppercase tracking-[0.16em] text-white/35">
             {t("nightPicker.recentNights")}
           </p>
@@ -183,7 +225,7 @@ export function NightPickerSheet({
           )}
         </div>
 
-        <div className="border-t border-white/[0.06] px-5 py-3">
+        <div className="shrink-0 border-t border-white/[0.06] px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
           <button
             type="button"
             onClick={() => onOpenChange(false)}
@@ -195,4 +237,6 @@ export function NightPickerSheet({
       </div>
     </div>
   );
+
+  return createPortal(sheet, document.body);
 }

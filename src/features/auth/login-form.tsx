@@ -8,9 +8,11 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useI18n } from "@/i18n/runtime";
 
 export function LoginForm() {
   const router = useRouter();
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,8 +21,8 @@ export function LoginForm() {
   useEffect(() => {
     const authError = new URLSearchParams(window.location.search).get("error");
     if (!authError) return;
-    setError("Google ile giriş tamamlanamadı. Tekrar deneyin.");
-  }, []);
+    setError(t("auth.loginForm.googleError"));
+  }, [t]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,18 +63,16 @@ export function LoginForm() {
     <div className="w-full max-w-md">
       <div className="mb-8">
         <p className="mb-3 text-xs font-medium uppercase tracking-[0.25em] text-[#78b7ff]">
-          Hesabına dön
+          {t("auth.loginForm.eyebrow")}
         </p>
-        <h1 className="text-4xl font-medium tracking-[-0.05em]">Tekrar hoş geldin.</h1>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Gece geçmişin ve sabah raporların seni bekliyor.
-        </p>
+        <h1 className="text-4xl font-medium tracking-[-0.05em]">{t("auth.loginForm.title")}</h1>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">{t("auth.loginForm.body")}</p>
       </div>
 
       <form onSubmit={handleLogin} className="space-y-5">
         <div className="space-y-2">
           <Label htmlFor="email" className="text-xs text-white/60">
-            E-posta adresi
+            {t("auth.loginForm.emailLabel")}
           </Label>
           <div className="relative">
             <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/25" />
@@ -81,7 +81,7 @@ export function LoginForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="ornek@email.com"
+              placeholder={t("auth.loginForm.emailPlaceholder")}
               required
               autoComplete="email"
               className="h-12 rounded-xl border-white/[0.08] bg-white/[0.035] pl-11 placeholder:text-white/18 focus-visible:border-[#6da9ff]/45"
@@ -92,7 +92,7 @@ export function LoginForm() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password" className="text-xs text-white/60">
-              Şifre
+              {t("auth.loginForm.passwordLabel")}
             </Label>
           </div>
           <div className="relative">
@@ -120,14 +120,16 @@ export function LoginForm() {
           className="glow-purple h-12 w-full rounded-xl bg-[#1769ff] hover:bg-[#2c78ff]"
           disabled={loading}
         >
-          {loading ? "Giriş yapılıyor..." : "Giriş yap"}
+          {loading ? t("auth.loginForm.submitting") : t("auth.loginForm.submit")}
           {!loading && <ArrowRight className="ml-1 h-4 w-4" />}
         </Button>
       </form>
 
       <div className="my-6 flex items-center gap-3">
         <span className="h-px flex-1 bg-white/[0.07]" />
-        <span className="text-[10px] uppercase tracking-[0.2em] text-white/25">veya</span>
+        <span className="text-[10px] uppercase tracking-[0.2em] text-white/25">
+          {t("auth.loginForm.divider")}
+        </span>
         <span className="h-px flex-1 bg-white/[0.07]" />
       </div>
 
@@ -139,13 +141,13 @@ export function LoginForm() {
         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] font-bold text-[#15203a]">
           G
         </span>
-        Google ile devam et
+        {t("auth.loginForm.googleContinue")}
       </Button>
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        Henüz hesabın yok mu?{" "}
+        {t("auth.loginForm.noAccount")}{" "}
         <Link href="/signup" className="font-medium text-[#83b7ff] transition hover:text-white">
-          Ücretsiz hesap oluştur
+          {t("auth.loginForm.createFreeAccount")}
         </Link>
       </p>
     </div>
