@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useI18n } from "@/i18n/runtime";
 
 export function LandingFooterLinks() {
   const { user, ready } = useAuthUser();
+  const { t } = useI18n();
 
   if (!ready) return null;
 
@@ -12,11 +14,11 @@ export function LandingFooterLinks() {
     return (
       <>
         <Link className="hover:text-foreground" href="/sleep">
-          Panel
+          {t("marketing.hero.loggedInCta")}
         </Link>
         <span className="mx-2">·</span>
         <Link className="hover:text-foreground" href="/profile">
-          Profil
+          {t("common.profile")}
         </Link>
       </>
     );
@@ -25,11 +27,11 @@ export function LandingFooterLinks() {
   return (
     <>
       <Link className="hover:text-foreground" href="/login">
-        Giriş
+        {t("auth.signupForm.login")}
       </Link>
       <span className="mx-2">·</span>
       <Link className="hover:text-foreground" href="/signup">
-        Ücretsiz Başla
+        {t("marketing.hero.primaryCta")}
       </Link>
     </>
   );
