@@ -3,6 +3,7 @@ import { AppContentFrame } from "@/components/app/app-content-frame";
 import { AppTopbar } from "@/components/app/app-topbar";
 import { MobileBottomNav } from "@/components/app/mobile-bottom-nav";
 import { RecordingUIProvider } from "@/components/app/recording-ui-context";
+import { InstallPWA } from "@/components/install-pwa";
 import { Container } from "@/components/shell/container";
 import { SidebarInset, SidebarProvider, SidebarRail } from "@/components/ui/sidebar";
 
@@ -21,6 +22,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Container className="relative pb-28 pt-6 md:py-8">
             <AppContentFrame>{children}</AppContentFrame>
           </Container>
+          <InstallPWA variant="toast" />
           <MobileBottomNav />
         </RecordingUIProvider>
       </SidebarInset>
