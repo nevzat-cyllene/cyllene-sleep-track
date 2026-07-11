@@ -13,6 +13,7 @@ import {
   Sparkles,
   Waves,
 } from "lucide-react";
+import { CylleneTechMark } from "@/components/brand/cyllene-tech-mark";
 import { MarketingHeader } from "@/components/marketing/marketing-header";
 import { Container } from "@/components/shell/container";
 import { Button } from "@/components/ui/button";
@@ -558,20 +559,23 @@ export default function LandingPage() {
       </main>
 
       <footer className="border-t border-white/[0.055] py-8">
-        <Container className="flex flex-col gap-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2.5">
-            <MoonStar className="h-4 w-4 text-[#72aaff]" />
-            <span className="font-medium text-foreground">{siteConfig.shortName}</span>
-            <span className="text-white/20">© {new Date().getFullYear()}</span>
+        <Container className="flex flex-col gap-6 text-sm text-muted-foreground">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2.5">
+              <MoonStar className="h-4 w-4 text-[#72aaff]" />
+              <span className="font-medium text-foreground">{siteConfig.shortName}</span>
+              <span className="text-white/20">© {new Date().getFullYear()}</span>
+            </div>
+            <div className="flex items-center gap-5">
+              <Link className="transition hover:text-foreground" href="/login">
+                Giriş
+              </Link>
+              <Link className="transition hover:text-foreground" href="/signup">
+                Hesap oluştur
+              </Link>
+            </div>
           </div>
-          <div className="flex items-center gap-5">
-            <Link className="transition hover:text-foreground" href="/login">
-              Giriş
-            </Link>
-            <Link className="transition hover:text-foreground" href="/signup">
-              Hesap oluştur
-            </Link>
-          </div>
+          <CylleneTechMark className="sm:items-start sm:text-left" size="sm" />
         </Container>
       </footer>
     </div>

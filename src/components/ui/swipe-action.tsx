@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,7 @@ interface SwipeActionProps {
 
 const ACTION_WIDTH = 84;
 const OPEN_THRESHOLD = 30;
+const SWIPE_OPEN_EVENT = "cyllene:swipe-action-open";
 
 export function SwipeAction({
   children,
@@ -22,6 +23,7 @@ export function SwipeAction({
   className,
   onAction,
 }: SwipeActionProps) {
+  const id = useId();
   const startX = useRef(0);
   const startY = useRef(0);
   const startOffset = useRef(0);
@@ -29,13 +31,30 @@ export function SwipeAction({
   const dragged = useRef(false);
   const blockClick = useRef(false);
   const swipeActive = useRef(false);
+  const announcedOpen = useRef(false);
   const [offset, setOffset] = useState(0);
   const [dragging, setDragging] = useState(false);
 
   const close = () => {
     currentOffset.current = 0;
+    announcedOpen.current = false;
     setOffset(0);
   };
+
+  const announceOpen = () => {
+    if (announcedOpen.current) return;
+    announcedOpen.current = true;
+    window.dispatchEvent(new CustomEvent(SWIPE_OPEN_EVENT, { detail: id }));
+  };
+
+  useEffect(() => {
+    const onOtherOpen = (event: Event) => {
+      const openId = (event as CustomEvent<string>).detail;
+      if (openId !== id) close();
+    };
+    window.addEventListener(SWIPE_OPEN_EVENT, onOtherOpen);
+    return () => window.removeEventListener(SWIPE_OPEN_EVENT, onOtherOpen);
+  }, [id]);
 
   return (
     <div className={cn("relative overflow-hidden rounded-[1.45rem] bg-[#071222]", className)}>
@@ -101,6 +120,9 @@ export function SwipeAction({
             dragged.current = true;
             blockClick.current = true;
           }
+          if (next < -OPEN_THRESHOLD) {
+            announceOpen();
+          }
           currentOffset.current = next;
           setOffset(next);
         }}
@@ -109,8 +131,13 @@ export function SwipeAction({
           swipeActive.current = false;
           setDragging(false);
           const next = currentOffset.current <= -OPEN_THRESHOLD ? -ACTION_WIDTH : 0;
-          if (next < 0 && currentOffset.current > -ACTION_WIDTH) {
-            navigator.vibrate?.(8);
+          if (next < 0) {
+            announceOpen();
+            if (currentOffset.current > -ACTION_WIDTH) {
+              navigator.vibrate?.(8);
+            }
+          } else {
+            announcedOpen.current = false;
           }
           currentOffset.current = next;
           setOffset(next);
@@ -127,6 +154,7 @@ export function SwipeAction({
           swipeActive.current = false;
           setDragging(false);
           currentOffset.current = 0;
+          announcedOpen.current = false;
           setOffset(0);
           window.setTimeout(() => {
             blockClick.current = false;

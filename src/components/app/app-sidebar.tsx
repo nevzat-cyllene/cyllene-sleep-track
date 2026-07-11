@@ -17,6 +17,7 @@ import {
   Sparkles,
   UserRound,
 } from "lucide-react";
+import { CylleneTechMark } from "@/components/brand/cyllene-tech-mark";
 import { InstallPWA } from "@/components/install-pwa";
 import {
   Sidebar,
@@ -220,6 +221,10 @@ export function AppSidebar() {
         <div className="group-data-[collapsible=icon]/sidebar-wrapper:hidden md:hidden">
           <InstallPWA />
         </div>
+        <CylleneTechMark
+          className="pt-1 group-data-[collapsible=icon]/sidebar-wrapper:hidden"
+          size="sm"
+        />
       </SidebarFooter>
     </Sidebar>
   );
