@@ -3,8 +3,8 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
-  CalendarDays,
   Check,
+  History,
   Languages,
   ShieldCheck,
   SlidersHorizontal,
@@ -59,8 +59,9 @@ export function AppControlMenu() {
   const router = useRouter();
   const { locale, setLocale, t } = useI18n();
   const [open, setOpen] = React.useState(false);
-  const [calendarOpen, setCalendarOpen] = React.useState(false);
+  const [historyOpen, setHistoryOpen] = React.useState(false);
   const [sessions, setSessions] = React.useState<SleepSession[]>([]);
+  const [loadingSessions, setLoadingSessions] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const triggerRef = React.useRef<HTMLButtonElement | null>(null);
 
@@ -98,21 +99,25 @@ export function AppControlMenu() {
     setLocale(next);
   };
 
-  const openCalendar = async () => {
+  const openHistory = () => {
     setOpen(false);
-    try {
-      const supabase = createClient();
-      const { data } = await supabase.auth.getUser();
-      if (data.user?.id) {
-        const next = await fetchUserSessions(data.user.id);
-        setSessions(next);
-      } else {
+    setHistoryOpen(true);
+    setLoadingSessions(true);
+    void (async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.auth.getUser();
+        if (data.user?.id) {
+          setSessions(await fetchUserSessions(data.user.id));
+        } else {
+          setSessions([]);
+        }
+      } catch {
         setSessions([]);
+      } finally {
+        setLoadingSessions(false);
       }
-    } catch {
-      setSessions([]);
-    }
-    setCalendarOpen(true);
+    })();
   };
 
   return (
@@ -158,11 +163,11 @@ export function AppControlMenu() {
                 <UserRound className="h-4 w-4 text-[#8fc0ff]" />
                 {t("appControl.profile")}
               </ControlMenuButton>
-              <ControlMenuButton onClick={() => void openCalendar()}>
-                <CalendarDays className="h-4 w-4 text-[#8fc0ff]" />
+              <ControlMenuButton onClick={openHistory}>
+                <History className="h-4 w-4 text-[#8fc0ff]" />
                 <span className="min-w-0 flex-1">
-                  <span className="block">{t("appControl.calendar")}</span>
-                  <span className="block text-[10px] text-white/35">{t("appControl.calendarHint")}</span>
+                  <span className="block">{t("appControl.history")}</span>
+                  <span className="block text-[10px] text-white/35">{t("appControl.historyHint")}</span>
                 </span>
               </ControlMenuButton>
             </div>
@@ -214,9 +219,10 @@ export function AppControlMenu() {
       </div>
 
       <NightPickerSheet
-        open={calendarOpen}
+        open={historyOpen}
         sessions={sessions}
-        onOpenChange={setCalendarOpen}
+        loading={loadingSessions}
+        onOpenChange={setHistoryOpen}
         onSelectSession={(session) => router.push(`/journal/${session.id}`)}
       />
     </>
