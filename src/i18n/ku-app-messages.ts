@@ -50,7 +50,7 @@ export const kuAppMessages = {
     title: "Şev baş.",
     greetings: {
       morning: "Sibeh baş.",
-      afternoon: "Nîvro baş.",
+      afternoon: "Dem baş.",
       evening: "Êvar baş.",
       night: "Şev baş.",
     },
@@ -283,6 +283,106 @@ export const kuAppMessages = {
       eyebrow: "Zekîya xewê",
       startFree: "Bêpere dest pê bike",
       startShort: "Dest pê bike",
+    },
+    hero: {
+      eyebrow: "Zekîya xewê · analîza li ser amûrê",
+      titleLines: ["Tiştên ku laşê te", "di şevê de dike", "diyar", "bike."],
+      body:
+        "Dema tu dinê, Cyllene dixebite. Di şevê de dengên xurt û bêdeng li ser amûra te bi taybetî analîz dike. Daneyên tevlihev vediguherîne rêbera tenduristiyê ya sibehê.",
+      primaryCta: "Bêpere dest pê bike",
+      secondaryCta: "Têkeve hesabê xwe",
+      loggedInCta: "Here panelê",
+      journalCta: "Rojnivîska xewê",
+      assurances: [
+        "Karta krediyê nabe",
+        "Dengê xav nayê barkirin",
+        "Skor û rêzika demê",
+      ],
+    },
+    features: [
+      {
+        title: "Nîşana xewê li ser amûra te vedibêje",
+        description:
+          "Xurtbûn, qehirandin, axaftin û dengên bêdeng li ser telefona te digire. Tomarên xav ji amûra te dernakevin.",
+      },
+      {
+        title: "Rîtma şevê sade dike",
+        description:
+          "Daneyên tevlihev ên şevê vediguherîne kurteyek xewê ya zelal bi dem, tundî û demên girîng.",
+      },
+      {
+        title: "Rapora sibehê zelal dike",
+        description:
+          "Skora xewê, rêzika demê ya dengê û bûyerên ku tu dixwazî bibihîsî di yek herikînê de pêşkêş dike.",
+      },
+    ],
+    reportPreview: {
+      title: "Zekîya xewê",
+      subtitle: "Rapora şevê ya Cyllene · analîza li ser amûrê",
+      privacyBadge: "Dengê xav nayê barkirin",
+      sleepScore: "Skora xewê",
+      calmerThanPrevious: "%8 aramtir ji şeva berê",
+      totalSleep: "Xewa tevahî",
+      soundTrace: "Nîşana dengê",
+      markedMoment: "demê nîşankirî",
+      privacyLabel: "Nepenî",
+      calmerMeta: "+%8 aramî",
+      totalSleepValue: "7d 42dq",
+      stageLight: "Sivik",
+      stageDeep: "Kûr",
+      stageRem: "REM",
+      notAudioFile: "Ne pelê dengê ye; tenê metrikên raporê tê hevgirtin.",
+      detectedMoments: "Demên hatine dîtin",
+      playableEvents: "Bûyerên guhdarkirî û rêzika demê ya şevê",
+      eventCount: "14 bûyer",
+      reportReady: "Kurteya raporê amade ye",
+      reportReadyMeta: "Skor · rêzika demê · bûyer",
+      nightReport: "Rapora Şevê ya Cyllene",
+      sampleDateRange: "9 Tîrmeh · 00:18—07:56",
+      processedOnDevice: "Li ser amûrê hatiye pêvajokirin",
+      sleepSignature: "Îmzeya xewê",
+      signatureMeta: "Aramî, nîşana dengê û herikîna qonaxan",
+      liveAnalysis: "analîza zindî",
+      localAudioProtection: "Parastina dengê ya herêmî",
+      localAudioProtectionBody:
+        "Klîp li ser amûrê dimînin; hesabê te tenê rapor û metrikên kurteyê hev dike.",
+      noRawTransfer: "Veguhastina pelê xav tune",
+      morningSummaryReady: "Kurteya sibehê amade ye",
+      morningSummaryMeta: "Skorê zelal · rêzika demê · bûyer",
+      exampleReportView: "Nîşana rapora nimûneyê",
+      onDevice: "li ser amûrê",
+    },
+    eventSamples: {
+      snoreCluster: { title: "Komkirina xurtbûnê", meta: "36 sn · tundiya kêm" },
+      coughSeries: { title: "Rêza qehirandinê", meta: "12 sn · bûyera yekane" },
+      suddenNoise: { title: "Dengê bêdeng", meta: "8 sn · hat nîşankirin" },
+    },
+    privacy: {
+      title: "Nepenî di navenda sêwiranê de ye",
+      rawAudioStaysLocal: "Dengê xav naçe ewrê",
+      secureAccount: "Avahiya hesabê ya ewle",
+      realtimeAnalysis: "Analîza demrast li ser telefona te",
+    },
+    insight: {
+      title: "Ji nîşana xewê heya têgihîştinê",
+      subtitle: "Bi wêneyek xewê ya zelaltir sibehê dest pê bike.",
+      body:
+        "Cyllene nîşanên dengê yên şevê vediguherîne raporeke sibehê ya sade. Bê tevlihevî; tenê hûrguliyên ku alîkariya te dikin ku xewa xwe fêm bikî.",
+    },
+    closing: {
+      eyebrow: "Îşev amade ye",
+      title: "Rapora sibehê ya yekem dibe ku îşev amade be.",
+      body:
+        "Hesabeke belaş çêke, telefonê nêzîkî xwe bide û rîtma nedîyar a xewa xwe bi raporeke sibehê ya zelal veke.",
+      primaryCta: "Hesaba xwe ya belaş veke",
+      secondaryCta: "Hesab çêke",
+    },
+    footer: {
+      login: "Têkeve",
+      createAccount: "Hesab çêke",
+      startFree: "Bêpere dest pê bike",
+      panel: "Panel",
+      profile: "Profîl",
     },
   },
   auth: {

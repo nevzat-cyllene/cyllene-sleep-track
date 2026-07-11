@@ -167,6 +167,12 @@ export const messages = {
         totalSleep: "Toplam uyku",
         soundTrace: "Ses izi",
         markedMoment: "işaretli an",
+        privacyLabel: "Mahremiyet",
+        calmerMeta: "+%8 sakinlik",
+        totalSleepValue: "7s 42dk",
+        stageLight: "Hafif",
+        stageDeep: "Derin",
+        stageRem: "REM",
         notAudioFile: "Ses dosyası değil, yalnızca rapor metrikleri senkronize edilir.",
         detectedMoments: "Tespit edilen anlar",
         playableEvents: "Dinlenebilir olaylar ve gece zaman çizelgesi",
@@ -214,7 +220,11 @@ export const messages = {
         secondaryCta: "Hesap oluştur",
       },
       footer: {
+        login: "Giriş",
+        createAccount: "Hesap oluştur",
         startFree: "Ücretsiz Başla",
+        panel: "Panel",
+        profile: "Profil",
       },
     },
     welcome: {
@@ -887,7 +897,7 @@ export const messages = {
       },
       hero: {
         eyebrow: "Sleep intelligence · on-device analysis",
-        titleLines: ["Reveal what your body", "does while", "you sleep."],
+        titleLines: ["Reveal what your body", "does while", "you", "sleep."],
         body:
           "While you rest, Cyllene works. It privately analyzes snoring and sudden sounds on your device, turning complex night data into a calm health guide for your morning coffee.",
         primaryCta: "Start free",
@@ -922,6 +932,12 @@ export const messages = {
         totalSleep: "Total sleep",
         soundTrace: "Sound trace",
         markedMoment: "marked moment",
+        privacyLabel: "Privacy",
+        calmerMeta: "+8% calmer",
+        totalSleepValue: "7h 42m",
+        stageLight: "Light",
+        stageDeep: "Deep",
+        stageRem: "REM",
         notAudioFile: "Only report metrics are synced, not audio files.",
         detectedMoments: "Detected moments",
         playableEvents: "Playable events and night timeline",
@@ -969,7 +985,11 @@ export const messages = {
         secondaryCta: "Create account",
       },
       footer: {
+        login: "Sign in",
+        createAccount: "Create account",
         startFree: "Start Free",
+        panel: "Panel",
+        profile: "Profile",
       },
     },
     welcome: {
