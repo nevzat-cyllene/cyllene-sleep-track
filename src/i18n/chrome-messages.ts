@@ -6,7 +6,7 @@ export const chromeMessages = {
     appControl: {
       aria: "Ayarlar ve dil",
       title: "Cyllene kontrol",
-      subtitle: "Dil, hesap ve gece akışı tek, sakin bir menüde.",
+      subtitle: "Dil, hesap ve gece akışı tek, sakin bir menüde toplanır.",
       quickAccess: "Hızlı erişim",
       profile: "Profil ve ayarlar",
       newNight: "Yeni gece başlat",

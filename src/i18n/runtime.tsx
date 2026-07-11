@@ -4,7 +4,8 @@ import * as React from "react";
 import { chromeMessages } from "@/i18n/chrome-messages";
 import { kuAppMessages } from "@/i18n/ku-app-messages";
 import {
-  detectLocaleFromNavigator,
+  detectLocaleFromDevice,
+  isLocale,
   LOCALE_STORAGE_KEY,
   parseLocale,
   writeLocaleCookie,
@@ -107,20 +108,24 @@ export function LocaleProvider({
   }, []);
 
   React.useEffect(() => {
-    // Cookie is source of truth once set. Without it, follow the phone language
-    // (same idea as Accept-Language on the server) so guests see the right copy immediately.
+    // Cookie wins once set (including an early device-locale script).
+    // Without a cookie, prefer OS/regional locale via Intl — not browser UI language.
     try {
-      const hasCookie = document.cookie
-        .split(";")
-        .some((part) => part.trim().startsWith("cyllene.locale="));
-      if (!hasCookie) {
-        const next = detectLocaleFromNavigator();
-        writeLocaleCookie(next);
-        if (next !== locale) setLocaleState(next);
-        window.localStorage.setItem(LOCALE_STORAGE_KEY, next);
+      const cookieMatch = document.cookie.match(/(?:^|;\s*)cyllene\.locale=([^;]+)/);
+      const cookieLocale = cookieMatch?.[1]
+        ? decodeURIComponent(cookieMatch[1])
+        : null;
+
+      if (isLocale(cookieLocale)) {
+        if (cookieLocale !== locale) setLocaleState(cookieLocale);
+        window.localStorage.setItem(LOCALE_STORAGE_KEY, cookieLocale);
         return;
       }
-      window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+
+      const next = detectLocaleFromDevice();
+      writeLocaleCookie(next);
+      window.localStorage.setItem(LOCALE_STORAGE_KEY, next);
+      if (next !== locale) setLocaleState(next);
     } catch {
       // ignore
     }

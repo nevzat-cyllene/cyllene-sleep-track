@@ -12,7 +12,6 @@ import {
   UserRound,
 } from "lucide-react";
 import { NightPickerSheet } from "@/components/app/night-picker-sheet";
-import { fetchUserSessions } from "@/features/recording/sync-session";
 import { createClient } from "@/lib/supabase/client";
 import { localeOptions, useI18n, type Locale } from "@/i18n/runtime";
 import type { SleepSession } from "@/types";
@@ -62,8 +61,60 @@ export function AppControlMenu() {
   const [historyOpen, setHistoryOpen] = React.useState(false);
   const [sessions, setSessions] = React.useState<SleepSession[]>([]);
   const [loadingSessions, setLoadingSessions] = React.useState(false);
+  const userIdRef = React.useRef<string | null>(null);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const triggerRef = React.useRef<HTMLButtonElement | null>(null);
+
+  const ensureSessions = React.useCallback(async (force = false) => {
+    try {
+      const supabase = createClient();
+      const { data } = await supabase.auth.getUser();
+      const uid = data.user?.id ?? null;
+      userIdRef.current = uid;
+      if (!uid) {
+        setSessions([]);
+        return;
+      }
+
+      const { getCachedUserSessions, loadUserSessionsCached } = await import(
+        "@/features/recording/session-prefetch-cache"
+      );
+      if (!force) {
+        const cached = getCachedUserSessions(uid);
+        if (cached) {
+          setSessions(cached);
+          cached.slice(0, 8).forEach((session) => {
+            try {
+              router.prefetch(`/journal/${session.id}`);
+            } catch {
+              // ignore
+            }
+          });
+          return;
+        }
+      }
+
+      setLoadingSessions(true);
+      const next = await loadUserSessionsCached(uid);
+      setSessions(next);
+      next.slice(0, 8).forEach((session) => {
+        try {
+          router.prefetch(`/journal/${session.id}`);
+        } catch {
+          // ignore
+        }
+      });
+    } catch {
+      setSessions([]);
+    } finally {
+      setLoadingSessions(false);
+    }
+  }, [router]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    void ensureSessions(false);
+  }, [ensureSessions, open]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -102,22 +153,7 @@ export function AppControlMenu() {
   const openHistory = () => {
     setOpen(false);
     setHistoryOpen(true);
-    setLoadingSessions(true);
-    void (async () => {
-      try {
-        const supabase = createClient();
-        const { data } = await supabase.auth.getUser();
-        if (data.user?.id) {
-          setSessions(await fetchUserSessions(data.user.id));
-        } else {
-          setSessions([]);
-        }
-      } catch {
-        setSessions([]);
-      } finally {
-        setLoadingSessions(false);
-      }
-    })();
+    void ensureSessions(false);
   };
 
   return (
@@ -150,7 +186,9 @@ export function AppControlMenu() {
                 </span>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold tracking-[-0.02em]">{t("appControl.title")}</p>
-                  <p className="mt-1 text-xs leading-5 text-white/40">{t("appControl.subtitle")}</p>
+                  <p className="mt-1 min-h-[2.5rem] text-xs leading-5 text-white/40">
+                    {t("appControl.subtitle")}
+                  </p>
                 </div>
               </div>
             </div>
@@ -221,9 +259,23 @@ export function AppControlMenu() {
       <NightPickerSheet
         open={historyOpen}
         sessions={sessions}
-        loading={loadingSessions}
+        loading={loadingSessions && sessions.length === 0}
         onOpenChange={setHistoryOpen}
-        onSelectSession={(session) => router.push(`/journal/${session.id}`)}
+        onSelectSession={(session) => {
+          const uid = userIdRef.current;
+          if (uid) {
+            void import("@/features/recording/session-prefetch-cache").then(
+              ({ warmSessionDetail }) => warmSessionDetail(session.id, uid)
+            );
+          }
+          try {
+            router.prefetch(`/journal/${session.id}`);
+          } catch {
+            // ignore
+          }
+          setHistoryOpen(false);
+          router.push(`/journal/${session.id}`);
+        }}
       />
     </>
   );

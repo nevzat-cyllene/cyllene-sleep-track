@@ -10,13 +10,14 @@ import { NightPickerSheet } from "@/components/app/night-picker-sheet";
 import { SleepScoreRing } from "@/features/dashboard/components/sleep-score-ring";
 import { DetectedEventsList } from "@/features/dashboard/components/detected-events-list";
 import { NightSoundsChart } from "./components/night-sounds-chart";
+import { deleteRemoteSleepEvent } from "@/features/recording/sync-session";
 import {
-  deleteRemoteSleepEvent,
-  fetchSessionById,
-  fetchSessionEvents,
-  fetchSessionNoiseSamples,
-  fetchUserSessions,
-} from "@/features/recording/sync-session";
+  getCachedSessionDetail,
+  loadSessionDetailBundle,
+  setCachedSessionDetail,
+  warmSessionDetail,
+  warmUserSessions,
+} from "@/features/recording/session-prefetch-cache";
 import {
   formatDurationHours,
   formatWeekdayRange,
@@ -53,16 +54,23 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
     "C",
     "P",
   ]);
-  const [session, setSession] = useState<SleepSession | null>(null);
-  const [events, setEvents] = useState<SleepEvent[]>([]);
-  const [noiseSamples, setNoiseSamples] = useState<SleepNoiseSample[]>([]);
-  const [allSessions, setAllSessions] = useState<SleepSession[]>([]);
-  const [weekSessions, setWeekSessions] = useState<(SleepSession | null)[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const cached = getCachedSessionDetail(sessionId);
+  const [session, setSession] = useState<SleepSession | null>(cached?.session ?? null);
+  const [events, setEvents] = useState<SleepEvent[]>(cached?.events ?? []);
+  const [noiseSamples, setNoiseSamples] = useState<SleepNoiseSample[]>(
+    cached?.noiseSamples ?? []
+  );
+  const [allSessions, setAllSessions] = useState<SleepSession[]>(cached?.allSessions ?? []);
+  const [weekSessions, setWeekSessions] = useState<(SleepSession | null)[]>(() =>
+    cached?.session ? getWeekSessions(cached.allSessions, cached.session.started_at) : []
+  );
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(
+    cached?.events[0]?.id ?? null
+  );
   const [activeFilters, setActiveFilters] = useState(
     () => new Set(["snore", "cough", "talk", "noise"])
   );
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cached);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
   const [eventToDelete, setEventToDelete] = useState<SleepEvent | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -80,26 +88,49 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
   };
 
   useEffect(() => {
-    setLoading(true);
-    void Promise.all([
-      fetchSessionById(sessionId),
-      fetchSessionEvents(sessionId),
-      fetchSessionNoiseSamples(sessionId),
-      fetchUserSessions(userId),
-    ])
-      .then(([s, ev, noise, all]) => {
-        setSession(s);
-        setEvents(ev);
-        setNoiseSamples(noise);
-        setAllSessions(all);
-        setWeekSessions(getWeekSessions(all, s.started_at));
-        if (ev[0]) setSelectedEventId(ev[0].id);
+    warmUserSessions(userId);
+    const existing = getCachedSessionDetail(sessionId);
+    if (existing) {
+      setSession(existing.session);
+      setEvents(existing.events);
+      setNoiseSamples(existing.noiseSamples);
+      setAllSessions(existing.allSessions);
+      setWeekSessions(getWeekSessions(existing.allSessions, existing.session.started_at));
+      if (existing.events[0]) setSelectedEventId(existing.events[0].id);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
+    let cancelled = false;
+    void loadSessionDetailBundle(sessionId, userId)
+      .then((bundle) => {
+        if (cancelled) return;
+        setCachedSessionDetail(sessionId, bundle);
+        setSession(bundle.session);
+        setEvents(bundle.events);
+        setNoiseSamples(bundle.noiseSamples);
+        setAllSessions(bundle.allSessions);
+        setWeekSessions(getWeekSessions(bundle.allSessions, bundle.session.started_at));
+        if (bundle.events[0]) setSelectedEventId(bundle.events[0].id);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [sessionId, userId]);
 
   const goToSession = (next: SleepSession) => {
     if (next.id === sessionId) return;
+    warmSessionDetail(next.id, userId);
+    try {
+      router.prefetch(`/journal/${next.id}`);
+    } catch {
+      // ignore
+    }
     router.push(`/journal/${next.id}`);
   };
 

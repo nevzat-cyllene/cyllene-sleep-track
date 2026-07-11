@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowUpRight, BookOpen, CalendarDays, Clock3, MoonStar, Waves } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/sleep-utils";
@@ -11,11 +12,13 @@ import { SwipeAction } from "@/components/ui/swipe-action";
 import { cn } from "@/lib/utils";
 import { getSleepEventSummary } from "@/lib/sleep-event-summary";
 import { deleteRemoteSleepSession } from "@/features/recording/sync-session";
+import { warmSessionDetail, warmUserSessions, seedUserSessions } from "@/features/recording/session-prefetch-cache";
 import { useI18n } from "@/i18n/runtime";
 import type { SleepSession } from "@/types";
 
 interface JournalClientProps {
   sessions: SleepSession[];
+  userId: string;
 }
 
 function groupByMonth(sessions: SleepSession[], locale: string) {
@@ -37,10 +40,10 @@ function scoreTone(score: number) {
   return "from-rose-400 to-orange-300 text-rose-300";
 }
 
-export function JournalClient({ sessions }: JournalClientProps) {
+export function JournalClient({ sessions, userId }: JournalClientProps) {
+  const router = useRouter();
   const { t } = useI18n();
   const [deletedSessionIds, setDeletedSessionIds] = useState(() => new Set<string>());
-  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
   const [sessionToDelete, setSessionToDelete] = useState<SleepSession | null>(null);
 
   const monthLocale = t("formatting.locale");
@@ -49,6 +52,19 @@ export function JournalClient({ sessions }: JournalClientProps) {
     () => sessions.filter((session) => !deletedSessionIds.has(session.id)),
     [deletedSessionIds, sessions]
   );
+
+  useEffect(() => {
+    seedUserSessions(userId, sessions);
+    warmUserSessions(userId);
+    visibleSessions.slice(0, 6).forEach((session) => {
+      try {
+        router.prefetch(`/journal/${session.id}`);
+      } catch {
+        // ignore
+      }
+      warmSessionDetail(session.id, userId);
+    });
+  }, [router, sessions, userId, visibleSessions]);
   const groups = useMemo(
     () => groupByMonth(visibleSessions, monthLocale),
     [visibleSessions, monthLocale]
@@ -69,9 +85,10 @@ export function JournalClient({ sessions }: JournalClientProps) {
     const session = sessionToDelete;
     if (!session) return;
 
+    // Snap the row out immediately — network work stays in the background.
     setSessionToDelete(null);
-    setDeletingSessionId(session.id);
     setDeletedSessionIds((current) => new Set(current).add(session.id));
+    navigator.vibrate?.(14);
 
     try {
       await deleteRemoteSleepSession(session.id);
@@ -83,8 +100,6 @@ export function JournalClient({ sessions }: JournalClientProps) {
         return next;
       });
       toast.error(error instanceof Error ? error.message : t("journal.deleteError"));
-    } finally {
-      setDeletingSessionId(null);
     }
   };
 
@@ -159,12 +174,14 @@ export function JournalClient({ sessions }: JournalClientProps) {
                 <SwipeAction
                   key={session.id}
                   actionLabel={t("common.delete")}
-                  actionDisabled={deletingSessionId === session.id}
                   onAction={() => void handleDeleteSession(session)}
                 >
                   <Link
                     href={`/journal/${session.id}`}
-                    className="surface-panel group block rounded-[1.45rem] p-3 transition duration-150 hover:-translate-y-0.5 hover:border-[#6da9ff]/20 sm:p-4"
+                    prefetch
+                    onPointerEnter={() => warmSessionDetail(session.id, userId)}
+                    onTouchStart={() => warmSessionDetail(session.id, userId)}
+                    className="surface-panel group block rounded-[1.45rem] p-3 hover:-translate-y-0.5 hover:border-[#6da9ff]/20 sm:p-4"
                   >
                     <div className="flex items-center gap-3">
                       <div
@@ -207,7 +224,7 @@ export function JournalClient({ sessions }: JournalClientProps) {
                         </div>
                       </div>
 
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.03] text-white/25 transition group-hover:bg-[#155eff]/15 group-hover:text-[#78b7ff]">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.03] text-white/25 group-hover:bg-[#155eff]/15 group-hover:text-[#78b7ff]">
                         <ArrowUpRight className="h-3.5 w-3.5" />
                       </span>
                     </div>
@@ -224,7 +241,7 @@ export function JournalClient({ sessions }: JournalClientProps) {
         title={t("journal.deleteSessionTitle")}
         description={t("journal.deleteSessionDescription")}
         confirmLabel={t("journal.deleteSessionConfirm")}
-        isPending={Boolean(deletingSessionId)}
+        isPending={false}
         onOpenChange={(open) => {
           if (!open) setSessionToDelete(null);
         }}

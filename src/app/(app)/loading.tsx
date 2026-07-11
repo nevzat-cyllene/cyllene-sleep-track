@@ -1,5 +1,4 @@
-import { AppRouteLoading } from "@/components/app/app-route-loading";
-
+/** Intentionally empty: tab switches must stay instant (no skeleton flash). */
 export default function Loading() {
-  return <AppRouteLoading />;
+  return null;
 }

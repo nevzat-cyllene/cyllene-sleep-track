@@ -14,7 +14,7 @@ interface SwipeActionProps {
 }
 
 const ACTION_WIDTH = 84;
-const OPEN_THRESHOLD = 30;
+const OPEN_THRESHOLD = 28;
 const SWIPE_OPEN_EVENT = "cyllene:swipe-action-open";
 
 export function SwipeAction({
@@ -62,10 +62,9 @@ export function SwipeAction({
   return (
     <div className={cn("relative overflow-hidden rounded-[1.45rem] bg-[#071222]", className)}>
       <div
-        className="absolute inset-y-0 right-0 flex w-[84px] items-stretch justify-end transition-[opacity,transform] duration-75 ease-out"
+        className="absolute inset-y-0 right-0 flex w-[84px] items-stretch justify-end"
         style={{
-          opacity: Math.min(1, Math.abs(offset) / 14),
-          transform: `translateX(${Math.max(0, ACTION_WIDTH + offset) * 0.18}px)`,
+          opacity: Math.min(1, Math.abs(offset) / 10),
           pointerEvents: offset === 0 ? "none" : "auto",
         }}
       >
@@ -75,10 +74,11 @@ export function SwipeAction({
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
+            navigator.vibrate?.(10);
             void onAction();
             close();
           }}
-          className="my-1 flex w-[76px] flex-col items-center justify-center gap-1 rounded-2xl border border-rose-200/18 bg-[linear-gradient(145deg,rgba(255,72,108,.96),rgba(206,42,78,.94))] text-[10px] font-semibold text-white shadow-[0_14px_36px_rgba(244,63,94,.32),inset_0_1px_0_rgba(255,255,255,.16)] transition duration-75 active:scale-[0.97] disabled:opacity-55"
+          className="my-1 flex w-[76px] flex-col items-center justify-center gap-1 rounded-2xl border border-rose-200/18 bg-[linear-gradient(145deg,rgba(255,72,108,.96),rgba(206,42,78,.94))] text-[10px] font-semibold text-white shadow-[0_14px_36px_rgba(244,63,94,.32),inset_0_1px_0_rgba(255,255,255,.16)] active:scale-[0.96] disabled:opacity-55"
           aria-label={resolvedLabel}
         >
           <Trash2 className="h-4 w-4" />
@@ -88,10 +88,10 @@ export function SwipeAction({
 
       <div
         className={cn(
-          "relative z-10 touch-pan-y rounded-[inherit] bg-[#071222]",
-          dragging ? "transition-none" : "transition-transform duration-100 ease-out"
+          "relative z-10 touch-pan-y rounded-[inherit] bg-[#071222] will-change-transform",
+          dragging ? "transition-none" : "transition-transform duration-75 ease-out"
         )}
-        style={{ transform: `translateX(${offset}px)` }}
+        style={{ transform: `translate3d(${offset}px,0,0)` }}
         onPointerDown={(event) => {
           if (actionDisabled) return;
           if (event.pointerType !== "touch") return;

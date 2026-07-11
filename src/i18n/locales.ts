@@ -56,6 +56,24 @@ export function detectLocaleFromNavigator(): Locale {
   return "tr";
 }
 
+/**
+ * Prefer OS / regional settings over browser UI language.
+ * `navigator.language` follows the browser; Intl often follows the device locale
+ * (e.g. Windows Turkish + Chrome English → tr).
+ */
+export function detectLocaleFromDevice(): Locale {
+  if (typeof Intl !== "undefined") {
+    try {
+      const deviceTag = Intl.DateTimeFormat().resolvedOptions().locale;
+      const fromDevice = detectLocaleFromLanguageTag(deviceTag ?? "");
+      if (fromDevice) return fromDevice;
+    } catch {
+      // ignore
+    }
+  }
+  return detectLocaleFromNavigator();
+}
+
 /** Write cookie readable by the Next.js server layout (no flicker). */
 export function writeLocaleCookie(locale: Locale) {
   if (typeof document === "undefined") return;

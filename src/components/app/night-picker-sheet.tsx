@@ -35,13 +35,8 @@ export function NightPickerSheet({
 }: NightPickerSheetProps) {
   const { t } = useI18n();
   const [dateFilter, setDateFilter] = useState("");
-  const [mounted, setMounted] = useState(false);
   const openedAtRef = useRef(0);
   const dateInputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -92,10 +87,10 @@ export function NightPickerSheet({
     }
   };
 
-  if (!open || !mounted) return null;
+  if (!open || typeof document === "undefined") return null;
 
   const closeSheet = () => {
-    if (Date.now() - openedAtRef.current < 450) return;
+    if (Date.now() - openedAtRef.current < 120) return;
     onOpenChange(false);
   };
 

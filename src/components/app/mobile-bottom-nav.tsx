@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, BookOpen, MoonStar, UserRound } from "lucide-react";
@@ -24,6 +24,11 @@ export function MobileBottomNav() {
   const router = useRouter();
   const { isRecording } = useRecordingUI();
   const { t } = useI18n();
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPendingHref(null);
+  }, [pathname]);
 
   useEffect(() => {
     tabs.forEach(({ href }) => {
@@ -37,11 +42,13 @@ export function MobileBottomNav() {
 
   if (isRecording) return null;
 
+  const activePath = pendingHref ?? pathname;
+
   return (
-    <nav className="fixed inset-x-3 bottom-[max(.75rem,env(safe-area-inset-bottom))] z-50 overflow-hidden rounded-[1.35rem] border border-white/[0.09] bg-[#071122] p-1.5 shadow-[0_16px_48px_rgba(0,4,18,.72),inset_0_1px_0_rgba(255,255,255,.06)] transition-[border-color,background-color,box-shadow,transform] duration-75 ease-out [transform:translateZ(0)] md:hidden">
+    <nav className="fixed inset-x-3 bottom-[max(.75rem,env(safe-area-inset-bottom))] z-50 overflow-hidden rounded-[1.35rem] border border-white/[0.09] bg-[#071122] p-1.5 shadow-[0_16px_48px_rgba(0,4,18,.72),inset_0_1px_0_rgba(255,255,255,.06)] [transform:translateZ(0)] md:hidden">
       <div className="mx-auto flex max-w-lg items-stretch justify-around">
         {tabs.map(({ href, key, icon: Icon }) => {
-          const active = isActivePath(pathname, href);
+          const active = isActivePath(activePath, href);
           const label = t(`navigation.mobile.${key}`);
 
           return (
@@ -51,23 +58,24 @@ export function MobileBottomNav() {
               prefetch
               scroll={false}
               aria-current={active ? "page" : undefined}
+              onClick={() => {
+                if (!isActivePath(pathname, href)) {
+                  setPendingHref(href);
+                  navigator.vibrate?.(6);
+                }
+              }}
               className={cn(
-                "relative flex min-h-14 flex-1 touch-manipulation flex-col items-center justify-center gap-1 rounded-2xl text-[9px] font-medium transition-[background-color,color,transform,box-shadow] duration-75 ease-out active:scale-[0.94]",
+                "relative flex min-h-14 flex-1 touch-manipulation flex-col items-center justify-center gap-1 rounded-2xl text-[9px] font-medium active:scale-[0.92]",
                 active
                   ? "bg-[#155eff]/20 text-white shadow-[0_10px_28px_rgba(21,94,255,.18),inset_0_0_0_1px_rgba(109,169,255,.1)]"
-                  : "text-white/34 hover:text-white/64"
+                  : "text-white/34"
               )}
             >
-              <Icon
-                className={cn(
-                  "h-[18px] w-[18px] transition-[color,transform,opacity] duration-75",
-                  active && "text-[#78b7ff]"
-                )}
-              />
+              <Icon className={cn("h-[18px] w-[18px]", active && "text-[#78b7ff]")} />
               {label}
-              {active && (
+              {active ? (
                 <span className="absolute bottom-1 h-0.5 w-4 rounded-full bg-[#4f91ff]" />
-              )}
+              ) : null}
             </Link>
           );
         })}

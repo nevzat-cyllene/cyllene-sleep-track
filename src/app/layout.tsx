@@ -43,6 +43,11 @@ export default async function RootLayout({
         <link rel="icon" href="/icons/icon-512.png" type="image/png" sizes="512x512" />
         <script
           dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(document.cookie.split(";").some(function(p){return p.trim().indexOf("cyllene.locale=")===0;}))return;var tag=((Intl.DateTimeFormat().resolvedOptions().locale)||"").toLowerCase();var next="tr";if(tag.indexOf("en")===0)next="en";else if(tag.indexOf("tr")===0)next="tr";else if(tag.indexOf("ku")===0||tag.indexOf("ckb")===0||tag.indexOf("kmr")===0)next="ku";else{var langs=navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language];for(var i=0;i<langs.length;i++){var l=(langs[i]||"").toLowerCase();if(l.indexOf("tr")===0){next="tr";break;}if(l.indexOf("en")===0){next="en";break;}if(l.indexOf("ku")===0||l.indexOf("ckb")===0||l.indexOf("kmr")===0){next="ku";break;}}}document.cookie="cyllene.locale="+next+"; path=/; max-age=31536000; samesite=lax";document.documentElement.lang=next==="ku"?"ku":next;}catch(e){}})();`,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
             __html: `(function(){if(window.__cylleneBIPBound)return;window.__cylleneBIPBound=1;var ua=navigator.userAgent||"";var embed=/\\bwv\\b|; wv\\)|Instagram|FBAN|FBAV|Vercel/i.test(ua);if(embed)return;window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__cylleneBIP=e;},true);})();`,
           }}
         />
