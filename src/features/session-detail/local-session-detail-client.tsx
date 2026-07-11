@@ -16,6 +16,7 @@ import { DeleteConfirmSheet } from "@/components/ui/delete-confirm-sheet";
 import { syncSessionToSupabase } from "@/features/recording/sync-session";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useI18n } from "@/i18n/runtime";
 
 interface LocalSessionDetailClientProps {
   localSessionId: string;
@@ -84,17 +85,20 @@ export function LocalSessionDetailClient({
   userId,
 }: LocalSessionDetailClientProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const [local, setLocal] = useState<LocalSleepSession | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [activeFilters] = useState(() => new Set(["snore", "cough", "talk", "noise"]));
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
   const [eventToDelete, setEventToDelete] = useState<SleepEvent | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     void getSession(localSessionId).then((s) => {
       setLocal(s ?? null);
       if (s?.events[0]) setSelectedEventId(s.events[0].id);
+      setLoaded(true);
     });
   }, [localSessionId]);
 
@@ -104,7 +108,7 @@ export function LocalSessionDetailClient({
     const result = await syncSessionToSupabase(local, userId);
     setSyncing(false);
     if ("id" in result) {
-      toast.success("Kayıt senkronize edildi.");
+      toast.success(t("sessionDetail.syncSuccess"));
       router.push(`/journal/${result.id}`);
     } else {
       toast.error(result.error);
@@ -136,21 +140,29 @@ export function LocalSessionDetailClient({
     try {
       await saveSession(updated);
       await deleteEventClip(event.id);
-      toast.success("Olay silindi.");
+      toast.success(t("events.deleteSuccess"));
     } catch (error) {
       setLocal(previousLocal);
       setSelectedEventId(previousSelectedEventId);
-      toast.error(error instanceof Error ? error.message : "Olay silinemedi.");
+      toast.error(error instanceof Error ? error.message : t("events.deleteError"));
     } finally {
       setDeletingEventId(null);
     }
   };
 
+  if (!loaded) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center text-muted-foreground">
+        {t("sessionDetail.loading")}
+      </div>
+    );
+  }
+
   if (!local) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-muted-foreground">
-        <p>Yerel kayıt bulunamadı.</p>
-        <Button render={<Link href="/journal" />}>Günlüğe dön</Button>
+        <p>{t("sessionDetail.localNotFound")}</p>
+        <Button render={<Link href="/journal" />}>{t("sessionDetail.backToJournal")}</Button>
       </div>
     );
   }
@@ -170,7 +182,7 @@ export function LocalSessionDetailClient({
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-xl font-semibold">Gece kaydı</h1>
+          <h1 className="text-xl font-semibold">{t("sessionDetail.localTitle")}</h1>
           <p className="text-sm text-muted-foreground">{formatDate(session.started_at)}</p>
         </div>
       </div>
@@ -179,12 +191,10 @@ export function LocalSessionDetailClient({
         <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
           <CloudOff className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
           <div className="flex-1 space-y-2">
-            <p className="text-sm text-amber-100">
-              Bu kayıt henüz buluta senkronize edilmedi. Olaylar ve ses klipleri cihazınızda.
-            </p>
+            <p className="text-sm text-amber-100">{t("sessionDetail.localUnsynced")}</p>
             {userId && (
               <Button size="sm" disabled={syncing} onClick={() => void retrySync()}>
-                {syncing ? "Senkronize ediliyor..." : "Tekrar dene"}
+                {syncing ? t("sessionDetail.syncing") : t("sessionDetail.retry")}
               </Button>
             )}
           </div>
@@ -200,7 +210,7 @@ export function LocalSessionDetailClient({
           <SleepScoreRing
             score={session.sleep_score ?? 0}
             size={140}
-            label="Kalite"
+            label={t("sessionDetail.quality")}
             showPercent
           />
           <div className="flex flex-col justify-center gap-4">
@@ -208,13 +218,15 @@ export function LocalSessionDetailClient({
               <p className="text-2xl font-semibold tabular-nums">
                 {formatDurationHours(session.duration_minutes)}
               </p>
-              <p className="text-sm text-muted-foreground">Yatakta geçen süre</p>
+              <p className="text-sm text-muted-foreground">{t("sessionDetail.timeInBed")}</p>
             </div>
             <div>
               <p className="text-2xl font-semibold tabular-nums">
                 {formatDurationHours(asleepMinutes)}
               </p>
-              <p className="text-sm text-muted-foreground">Tahmini uyku süresi</p>
+              <p className="text-sm text-muted-foreground">
+                {t("sessionDetail.estimatedSleep")}
+              </p>
             </div>
           </div>
         </div>
@@ -234,7 +246,7 @@ export function LocalSessionDetailClient({
 
       <div className="rounded-2xl border border-white/10 bg-card/40 p-4">
         <h2 className="mb-3 text-sm font-medium text-muted-foreground">
-          Tespit edilen olaylar ({events.length})
+          {t("sessionDetail.detectedEventsWithCount", { count: events.length })}
         </h2>
         <DetectedEventsList
           events={events}
@@ -242,15 +254,15 @@ export function LocalSessionDetailClient({
           onSelectEvent={setSelectedEventId}
           deletingEventId={deletingEventId}
           onDeleteEvent={(event) => void handleDeleteLocalEvent(event as SleepEvent)}
-          emptyMessage="Bu gece olay tespit edilmedi."
+          emptyMessage={t("sessionDetail.noEvents")}
         />
       </div>
 
       <DeleteConfirmSheet
         open={Boolean(eventToDelete)}
-        title="Bu yerel ses olayını silmek istediğinizden emin misiniz?"
-        description="Olay ve telefonda duran ses klibi cihazdan kaldırılacak."
-        confirmLabel="Olayı sil"
+        title={t("events.deleteLocalTitle")}
+        description={t("events.deleteLocalDescription")}
+        confirmLabel={t("events.deleteConfirm")}
         isPending={Boolean(deletingEventId)}
         onOpenChange={(open) => {
           if (!open) setEventToDelete(null);

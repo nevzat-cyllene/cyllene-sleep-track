@@ -25,6 +25,7 @@ import { SleepScoreRing } from "@/features/dashboard/components/sleep-score-ring
 import { formatDate } from "@/lib/sleep-utils";
 import { formatDurationHours } from "@/lib/sleep-analytics";
 import { getSleepEventSummary } from "@/lib/sleep-event-summary";
+import { useI18n } from "@/i18n/runtime";
 import type { LocalSleepSession, SleepSession } from "@/types";
 
 const REPORT_HANDOFF_MIN_MS = 1400;
@@ -33,6 +34,7 @@ const waitForReportHandoff = () =>
 
 export function SleepPageClient() {
   const router = useRouter();
+  const { t } = useI18n();
   const { setIsRecording } = useRecordingUI();
   const [syncing, setSyncing] = useState(false);
   const [userId, setUserId] = useState<string | undefined>();
@@ -60,7 +62,7 @@ export function SleepPageClient() {
             router.push(`/journal/local/${session.id}`);
           }
         } else {
-          toast.message("Giriş yapmadan kayıt cihazınızda saklandı.");
+          toast.message(t("sleepHub.guestSavedLocally"));
           router.push(`/journal/local/${session.id}`);
         }
 
@@ -69,7 +71,7 @@ export function SleepPageClient() {
         setSyncing(false);
       }
     },
-    [router, userId]
+    [router, t, userId]
   );
 
   const {
@@ -135,18 +137,18 @@ export function SleepPageClient() {
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <span className="flex items-center gap-2 text-xs text-[#78b7ff]">
               <Sparkles className="h-3.5 w-3.5" />
-              Uyku ritmin hazır
+              {t("sleepHub.eyebrow")}
             </span>
             <span className="flex w-fit items-center gap-1.5 rounded-full border border-[#78b7ff]/14 bg-[#155eff]/8 px-2.5 py-1 text-[10px] text-[#9bd5ff]/72">
               <ShieldCheck className="h-3 w-3" />
-              Cihaz içi analiz
+              {t("sleepHub.trustBadge")}
             </span>
           </div>
           <h1 className="text-4xl font-medium tracking-[-0.055em] sm:text-5xl">
-            İyi geceler.
+            {t("sleepHub.title")}
           </h1>
           <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">
-            Telefonunu yakınına koy; Cyllene gece sinyallerini sabah raporuna dönüştürsün.
+            {t("sleepHub.body")}
           </p>
         </div>
       </div>
@@ -154,7 +156,7 @@ export function SleepPageClient() {
       <RecordSetup
         onStart={() => void startRecording()}
         isLoading={status === "preparing" || syncing}
-        startLabel="Bu geceyi başlat"
+        startLabel={t("sleepHub.startTonight")}
         compact
       />
 
@@ -173,7 +175,7 @@ export function SleepPageClient() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#78b7ff]">
-                  Son gece
+                  {t("sleepHub.lastNight")}
                 </p>
                 <h2 className="mt-2 text-xl font-medium tracking-[-0.03em]">
                   {formatDate(lastSession.started_at)}
@@ -192,13 +194,13 @@ export function SleepPageClient() {
                   <p className="text-sm font-medium">
                     {formatDurationHours(lastSession.duration_minutes)}
                   </p>
-                  <p className="mt-0.5 text-[10px] text-white/30">Toplam uyku</p>
+                  <p className="mt-0.5 text-[10px] text-white/30">{t("sleepHub.totalSleep")}</p>
                 </div>
                 <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3">
                   <Waves className="mb-2 h-3.5 w-3.5 text-[#78b7ff]" />
                   <p className="text-sm font-medium">{lastSessionEventSummary?.count ?? 0}</p>
                   <p className="mt-0.5 text-[10px] text-white/30">
-                    {lastSessionEventSummary?.statTitle ?? "Ses olayı"}
+                    {lastSessionEventSummary?.statTitle ?? t("sleepHub.soundEvent")}
                   </p>
                 </div>
               </div>
@@ -207,13 +209,13 @@ export function SleepPageClient() {
         ) : (
           <div className="surface-panel rounded-[1.65rem] p-6">
             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#78b7ff]">
-              İlk raporun
+              {t("sleepHub.firstReportEyebrow")}
             </p>
             <h2 className="mt-3 text-xl font-medium tracking-[-0.03em]">
-              Sabah burada bir hikâye olacak.
+              {t("sleepHub.firstReportTitle")}
             </h2>
             <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-              İlk gece tamamlandığında uyku skorun, ses olayların ve zaman çizelgen burada görünür.
+              {t("sleepHub.firstReportBody")}
             </p>
           </div>
         )}
@@ -223,9 +225,11 @@ export function SleepPageClient() {
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#155eff]/12 text-[#78b7ff]">
               <MoonStar className="h-4.5 w-4.5" />
             </div>
-            <h2 className="mt-5 text-lg font-medium tracking-[-0.025em]">Gece arşivin</h2>
+            <h2 className="mt-5 text-lg font-medium tracking-[-0.025em]">
+              {t("sleepHub.nightArchive")}
+            </h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Tüm kayıtlarını, ses kliplerini ve sabah raporlarını tek yerde incele.
+              {t("sleepHub.nightArchiveBody")}
             </p>
           </div>
           <Button
@@ -233,7 +237,7 @@ export function SleepPageClient() {
             className="mt-5 h-10 w-full justify-between rounded-xl bg-white/[0.03] px-3 text-white/55 hover:bg-white/[0.06] hover:text-white"
             render={<Link href="/journal" />}
           >
-            Geçmiş gecelere bak
+            {t("sleepHub.viewPastNights")}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

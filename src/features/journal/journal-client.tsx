@@ -11,16 +11,17 @@ import { SwipeAction } from "@/components/ui/swipe-action";
 import { cn } from "@/lib/utils";
 import { getSleepEventSummary } from "@/lib/sleep-event-summary";
 import { deleteRemoteSleepSession } from "@/features/recording/sync-session";
+import { useI18n } from "@/i18n/runtime";
 import type { SleepSession } from "@/types";
 
 interface JournalClientProps {
   sessions: SleepSession[];
 }
 
-function groupByMonth(sessions: SleepSession[]) {
+function groupByMonth(sessions: SleepSession[], locale: string) {
   const groups = new Map<string, SleepSession[]>();
   for (const session of sessions) {
-    const key = new Intl.DateTimeFormat("tr-TR", {
+    const key = new Intl.DateTimeFormat(locale, {
       month: "long",
       year: "numeric",
     }).format(new Date(session.started_at));
@@ -37,15 +38,21 @@ function scoreTone(score: number) {
 }
 
 export function JournalClient({ sessions }: JournalClientProps) {
+  const { t } = useI18n();
   const [deletedSessionIds, setDeletedSessionIds] = useState(() => new Set<string>());
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
   const [sessionToDelete, setSessionToDelete] = useState<SleepSession | null>(null);
+
+  const monthLocale = t("formatting.locale");
 
   const visibleSessions = useMemo(
     () => sessions.filter((session) => !deletedSessionIds.has(session.id)),
     [deletedSessionIds, sessions]
   );
-  const groups = useMemo(() => groupByMonth(visibleSessions), [visibleSessions]);
+  const groups = useMemo(
+    () => groupByMonth(visibleSessions, monthLocale),
+    [visibleSessions, monthLocale]
+  );
   const averageScore = useMemo(() => {
     if (visibleSessions.length === 0) return 0;
     return Math.round(
@@ -68,14 +75,14 @@ export function JournalClient({ sessions }: JournalClientProps) {
 
     try {
       await deleteRemoteSleepSession(session.id);
-      toast.success("Gece kaydı silindi.");
+      toast.success(t("journal.deleteSuccess"));
     } catch (error) {
       setDeletedSessionIds((current) => {
         const next = new Set(current);
         next.delete(session.id);
         return next;
       });
-      toast.error(error instanceof Error ? error.message : "Gece kaydı silinemedi.");
+      toast.error(error instanceof Error ? error.message : t("journal.deleteError"));
     } finally {
       setDeletingSessionId(null);
     }
@@ -86,23 +93,23 @@ export function JournalClient({ sessions }: JournalClientProps) {
       <div className="space-y-6 pb-4">
         <div>
           <p className="mb-3 text-xs font-medium uppercase tracking-[0.22em] text-[#78b7ff]">
-            Gece arşivin
+            {t("journal.archiveEyebrow")}
           </p>
-          <h1 className="text-4xl font-medium tracking-[-0.05em]">Uyku günlüğü</h1>
+          <h1 className="text-4xl font-medium tracking-[-0.05em]">{t("journal.title")}</h1>
         </div>
         <div className="surface-panel flex min-h-80 flex-col items-center justify-center rounded-[1.8rem] p-8 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#155eff]/12 text-[#78b7ff]">
             <BookOpen className="h-6 w-6" />
           </div>
-          <h2 className="mt-5 text-xl font-medium">İlk sayfan henüz boş.</h2>
+          <h2 className="mt-5 text-xl font-medium">{t("journal.emptyTitle")}</h2>
           <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
-            İlk gece kaydını tamamladığında raporun ve ses olayların burada görünecek.
+            {t("journal.emptyBody")}
           </p>
           <Button
             className="mt-6 h-11 rounded-full bg-[#1769ff] px-5 hover:bg-[#2c78ff]"
             render={<Link href="/sleep" />}
           >
-            İlk geceyi başlat
+            {t("journal.emptyCta")}
           </Button>
         </div>
       </div>
@@ -114,20 +121,22 @@ export function JournalClient({ sessions }: JournalClientProps) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="mb-3 text-xs font-medium uppercase tracking-[0.22em] text-[#78b7ff]">
-            Gece arşivin
+            {t("journal.archiveEyebrow")}
           </p>
-          <h1 className="text-4xl font-medium tracking-[-0.05em]">Uyku günlüğü</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Geçmiş gecelerin, skorların ve ses kayıtların.
-          </p>
+          <h1 className="text-4xl font-medium tracking-[-0.05em]">{t("journal.title")}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("journal.body")}</p>
         </div>
         <div className="flex gap-2">
           <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] px-4 py-2.5">
-            <p className="text-[9px] uppercase tracking-[0.16em] text-white/25">Gece</p>
+            <p className="text-[9px] uppercase tracking-[0.16em] text-white/25">
+              {t("journal.nights")}
+            </p>
             <p className="mt-0.5 text-sm font-medium">{visibleSessions.length}</p>
           </div>
           <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] px-4 py-2.5">
-            <p className="text-[9px] uppercase tracking-[0.16em] text-white/25">Ort. skor</p>
+            <p className="text-[9px] uppercase tracking-[0.16em] text-white/25">
+              {t("journal.averageScore")}
+            </p>
             <p className="mt-0.5 text-sm font-medium">{averageScore}</p>
           </div>
         </div>
@@ -177,13 +186,16 @@ export function JournalClient({ sessions }: JournalClientProps) {
                               hasScore ? scoreTone(score) : "text-white/32"
                             )}
                           >
-                            {hasScore ? `Skor ${score}` : "Skor yok"}
+                            {hasScore
+                              ? t("journal.scorePrefix", { score })
+                              : t("journal.scoreEmpty")}
                           </span>
                         </div>
                         <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-white/32">
                           <span className="flex items-center gap-1.5">
                             <Clock3 className="h-3 w-3 text-[#78b7ff]" />
-                            {session.duration_minutes ?? "—"} dk
+                            {session.duration_minutes ?? t("common.emDash")}{" "}
+                            {t("common.minutesShort")}
                           </span>
                           <span className="flex items-center gap-1.5">
                             <Waves className="h-3 w-3 text-[#78b7ff]" />
@@ -206,9 +218,9 @@ export function JournalClient({ sessions }: JournalClientProps) {
 
       <DeleteConfirmSheet
         open={Boolean(sessionToDelete)}
-        title="Bu gece kaydını silmek istediğinizden emin misiniz?"
-        description="Rapor, zaman çizelgesi ve senkron kayıtlar Cyllene’den kalıcı olarak kaldırılacak."
-        confirmLabel="Geceyi sil"
+        title={t("journal.deleteSessionTitle")}
+        description={t("journal.deleteSessionDescription")}
+        confirmLabel={t("journal.deleteSessionConfirm")}
         isPending={Boolean(deletingSessionId)}
         onOpenChange={(open) => {
           if (!open) setSessionToDelete(null);

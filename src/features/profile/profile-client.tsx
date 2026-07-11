@@ -9,6 +9,7 @@ import { CylleneTechMark } from "@/components/brand/cyllene-tech-mark";
 import { InstallPWA } from "@/components/install-pwa";
 import { getOnboardingAnswers } from "@/lib/onboarding-storage";
 import { formatOnboardingSummary } from "@/lib/onboarding-summary";
+import { useI18n } from "@/i18n/runtime";
 import type { Profile } from "@/types";
 import { LogOut, Moon, User } from "lucide-react";
 
@@ -19,6 +20,7 @@ interface ProfileClientProps {
 
 export function ProfileClient({ profile, email }: ProfileClientProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const [sleepProfile, setSleepProfile] = useState<{ label: string; value: string }[]>([]);
 
   useEffect(() => {
@@ -33,28 +35,32 @@ export function ProfileClient({ profile, email }: ProfileClientProps) {
     router.refresh();
   };
 
+  const plan = profile?.plan ?? "free";
+  const planLabel =
+    plan === "premium" ? t("common.premium") : plan === "free" ? t("common.free") : plan;
+
   return (
     <div className="space-y-6 pb-[calc(8rem+env(safe-area-inset-bottom))] md:pb-4">
       <div>
-        <h1 className="text-2xl font-semibold">Profil</h1>
-        <p className="text-sm text-muted-foreground">Hesap ve uygulama ayarları</p>
+        <h1 className="text-2xl font-semibold">{t("profile.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("profile.subtitle")}</p>
       </div>
 
       <Card className="glass border-white/10 shadow-soft">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <User className="h-5 w-5" />
-            Hesap
+            {t("profile.accountTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <p className="text-sm text-muted-foreground">E-posta</p>
-            <p className="font-medium">{email ?? profile?.email ?? "—"}</p>
+            <p className="text-sm text-muted-foreground">{t("profile.email")}</p>
+            <p className="font-medium">{email ?? profile?.email ?? t("common.emDash")}</p>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Plan</p>
-            <p className="font-medium capitalize">{profile?.plan ?? "free"}</p>
+            <p className="text-sm text-muted-foreground">{t("profile.plan")}</p>
+            <p className="font-medium capitalize">{planLabel}</p>
           </div>
         </CardContent>
       </Card>
@@ -64,7 +70,7 @@ export function ProfileClient({ profile, email }: ProfileClientProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Moon className="h-5 w-5" />
-              Uyku profiliniz
+              {t("profile.sleepProfile")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -80,13 +86,11 @@ export function ProfileClient({ profile, email }: ProfileClientProps) {
 
       <Card className="glass border-white/10 shadow-soft md:hidden">
         <CardHeader>
-          <CardTitle className="text-lg">Uygulama</CardTitle>
+          <CardTitle className="text-lg">{t("profile.appCardTitle")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <InstallPWA />
-          <p className="text-sm text-muted-foreground">
-            Gece kaydı için uygulamayı ana ekrana ekleyin ve şarjda tutun.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("profile.pwaHelp")}</p>
         </CardContent>
       </Card>
 
@@ -95,7 +99,7 @@ export function ProfileClient({ profile, email }: ProfileClientProps) {
 
       <Button variant="outline" className="w-full" onClick={() => void signOut()}>
         <LogOut className="mr-2 h-4 w-4" />
-        Çıkış yap
+        {t("profile.logout")}
       </Button>
 
       <CylleneTechMark className="pt-4" size="sm" />

@@ -18,6 +18,7 @@ type I18nContextValue = {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   t: (path: string, params?: Record<string, string | number>) => string;
+  m: <T>(path: string, fallback: T) => T;
 };
 
 const I18nContext = React.createContext<I18nContextValue | null>(null);
@@ -57,6 +58,17 @@ function translatePath(
   return interpolate(value, params);
 }
 
+function readMessage<T>(locale: Locale, path: string, fallback: T): T {
+  const catalogLocale = toMessageLocale(locale);
+  const value =
+    getByPath(chromeMessages[locale], path) ??
+    getByPath(messages[catalogLocale], path) ??
+    getByPath(chromeMessages.tr, path) ??
+    getByPath(messages.tr, path);
+
+  return value === undefined ? fallback : (value as T);
+}
+
 export function LocaleProvider({
   children,
   initialLocale,
@@ -80,7 +92,9 @@ export function LocaleProvider({
   React.useEffect(() => {
     // Cookie (server) is source of truth. Only promote localStorage when cookie is absent.
     try {
-      const hasCookie = document.cookie.split(";").some((part) => part.trim().startsWith("cyllene.locale="));
+      const hasCookie = document.cookie
+        .split(";")
+        .some((part) => part.trim().startsWith("cyllene.locale="));
       const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
       if (!hasCookie && isLocale(stored)) {
         writeLocaleCookie(stored);
@@ -104,6 +118,7 @@ export function LocaleProvider({
       locale,
       setLocale,
       t: (path, params) => translatePath(locale, path, params),
+      m: (path, fallback) => readMessage(locale, path, fallback),
     }),
     [locale, setLocale]
   );

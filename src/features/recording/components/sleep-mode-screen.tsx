@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, ShieldCheck, Sparkles, Waves } from "lucide-react";
 import { formatElapsedClock, formatWallClock } from "@/lib/sleep-utils";
 import type { WakeLockMethod } from "@/features/recording/wake-lock";
+import { useI18n } from "@/i18n/runtime";
 import { RecordingGuidanceBanner } from "./recording-guidance-banner";
 import { LiveSoundWave } from "./live-sound-wave";
 import { SwipeToStop } from "./swipe-to-stop";
@@ -20,23 +21,7 @@ interface SleepModeScreenProps {
   onStop: () => void;
 }
 
-const ANALYSIS_STEPS = [
-  {
-    icon: CheckCircle2,
-    label: "Kayıt kapandı",
-    description: "Gece oturumu güvenle mühürlendi.",
-  },
-  {
-    icon: Waves,
-    label: "Ses olayları ayrıştırılıyor",
-    description: "Horlama, öksürük ve ani sesler rapor için inceleniyor.",
-  },
-  {
-    icon: ShieldCheck,
-    label: "Rapor hazırlanıyor",
-    description: "Ham ses cihazında kalır; günlüğe yalnızca özet gider.",
-  },
-] as const;
+const ANALYSIS_STEP_ICONS = [CheckCircle2, Waves, ShieldCheck] as const;
 
 function toWakeLockStatus(active: boolean, method: WakeLockMethod) {
   if (active && method === "api") return "active" as const;
@@ -51,6 +36,12 @@ function AnalysisHandoffScreen({
   elapsedMs: number;
   eventCount: number;
 }) {
+  const { t, m } = useI18n();
+  const steps = m<{ label: string; description: string }[]>(
+    "recording.analysisHandoff.steps",
+    []
+  );
+
   return (
     <div className="fixed inset-0 z-[300] flex flex-col overflow-hidden bg-[#020816] text-white">
       <div className="pointer-events-none absolute inset-0">
@@ -72,52 +63,56 @@ function AnalysisHandoffScreen({
           </div>
 
           <p className="mt-8 text-xs font-medium uppercase tracking-[0.32em] text-[#78b7ff]">
-            Analiz hazırlanıyor
+            {t("recording.analysisHandoff.eyebrow")}
           </p>
           <h1 className="mt-4 text-balance text-4xl font-medium leading-tight tracking-[-0.055em]">
-            Gece kaydın rapora dönüşüyor.
+            {t("recording.analysisHandoff.title")}
           </h1>
           <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-white/48">
-            Cyllene ses izlerini inceliyor, olayları ayırıyor ve günlüğe hazır, sakin bir
-            sabah özeti hazırlıyor.
+            {t("recording.analysisHandoff.body")}
           </p>
         </div>
 
         <div className="mt-8 grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-[#8dbdff]/12 bg-white/[0.035] p-4">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">Süre</p>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
+              {t("recording.analysisHandoff.duration")}
+            </p>
             <p className="mt-2 font-mono text-2xl font-light tabular-nums">
               {formatElapsedClock(elapsedMs)}
             </p>
           </div>
           <div className="rounded-2xl border border-[#8dbdff]/12 bg-white/[0.035] p-4">
             <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
-              İncelenen olay
+              {t("recording.analysisHandoff.inspectedEvent")}
             </p>
             <p className="mt-2 text-2xl font-medium tracking-[-0.05em]">{eventCount}</p>
           </div>
         </div>
 
         <div className="mt-4 space-y-2 rounded-[1.5rem] border border-[#8dbdff]/12 bg-[linear-gradient(145deg,rgba(8,20,45,.72),rgba(4,10,24,.82))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,.06)]">
-          {ANALYSIS_STEPS.map((step, index) => (
-            <div key={step.label} className="flex items-start gap-3 rounded-2xl bg-white/[0.025] p-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#8dbdff]/12 bg-[#1769ff]/12 text-[#9bd5ff]">
-                <step.icon className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium">{step.label}</p>
-                  {index === 1 && (
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#6fd2ff] opacity-70" />
-                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#6fd2ff]" />
-                    </span>
-                  )}
+          {steps.map((step, index) => {
+            const Icon = ANALYSIS_STEP_ICONS[index] ?? CheckCircle2;
+            return (
+              <div key={step.label} className="flex items-start gap-3 rounded-2xl bg-white/[0.025] p-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#8dbdff]/12 bg-[#1769ff]/12 text-[#9bd5ff]">
+                  <Icon className="h-4 w-4" />
                 </div>
-                <p className="mt-1 text-xs leading-5 text-white/38">{step.description}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium">{step.label}</p>
+                    {index === 1 && (
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#6fd2ff] opacity-70" />
+                        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#6fd2ff]" />
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs leading-5 text-white/38">{step.description}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
@@ -134,6 +129,7 @@ export function SleepModeScreen({
   syncing,
   onStop,
 }: SleepModeScreenProps) {
+  const { t } = useI18n();
   const [wallClock, setWallClock] = useState(new Date());
   const wakeLockStatus = toWakeLockStatus(wakeLockActive, wakeLockMethod);
   const isFinishing = Boolean(syncing);
@@ -149,10 +145,10 @@ export function SleepModeScreen({
 
   const statusLabel =
     wakeLockStatus === "active"
-      ? "Kayıt devam ediyor"
+      ? t("recording.sleepMode.recordingContinues")
       : wakeLockStatus === "fallback"
-        ? "Ekran kapanabilir"
-        : "Kayıt kesilebilir";
+        ? t("recording.sleepMode.screenMayTurnOff")
+        : t("recording.sleepMode.recordingMayStop");
 
   return (
     <div className="fixed inset-0 z-[300] flex flex-col overflow-hidden bg-[#020816] text-white">
@@ -176,7 +172,9 @@ export function SleepModeScreen({
 
         <div className="flex flex-1 flex-col items-center justify-center gap-10">
           <div className="text-center">
-            <p className="text-[11px] uppercase tracking-[0.45em] text-[#8dbdff]/45">Şu an</p>
+            <p className="text-[11px] uppercase tracking-[0.45em] text-[#8dbdff]/45">
+              {t("recording.sleepMode.now")}
+            </p>
             <p className="mt-2 text-5xl font-extralight tracking-wider tabular-nums text-white sm:text-6xl">
               {formatWallClock(wallClock)}
             </p>
@@ -189,7 +187,7 @@ export function SleepModeScreen({
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
               </span>
               <p className="text-[11px] uppercase tracking-[0.45em] text-white/40">
-                Uyku süresi
+                {t("recording.sleepMode.sleepDuration")}
               </p>
             </div>
             <p className="font-mono text-5xl font-light tabular-nums tracking-tight text-[#eef7ff] drop-shadow-[0_0_28px_rgba(111,210,255,.14)] sm:text-6xl">

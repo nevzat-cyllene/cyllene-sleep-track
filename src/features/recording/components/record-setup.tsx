@@ -3,6 +3,7 @@
 import { BatteryCharging, LockKeyhole, Mic2, MoonStar, Smartphone, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useI18n } from "@/i18n/runtime";
 import { RecordingGuidanceBanner } from "./recording-guidance-banner";
 
 interface RecordSetupProps {
@@ -12,30 +13,14 @@ interface RecordSetupProps {
   compact?: boolean;
 }
 
-const tips = [
-  {
-    icon: BatteryCharging,
-    title: "Şarja takın",
-    description: "Gece boyunca kesintisiz kayıt için telefonunuzu şarjda tutun.",
-  },
-  {
-    icon: Smartphone,
-    title: "Ekran açık kalsın",
-    description: "Kayıt ekranını açık bırakın; Cyllene ekranın uyanık kalmasını sağlar.",
-  },
-  {
-    icon: Volume2,
-    title: "Yakına yerleştirin",
-    description: "Telefonu yatağınıza 30–50 cm mesafede, mikrofon yukarı bakacak şekilde koyun.",
-  },
-  {
-    icon: MoonStar,
-    title: "Ortamı hazırlayın",
-    description: "Mümkünse televizyonu ve sürekli gürültü üreten cihazları kapatın.",
-  },
-];
+const tipIcons = [BatteryCharging, Smartphone, Volume2, MoonStar] as const;
 
 export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordSetupProps) {
+  const { t, m } = useI18n();
+  const tips = m<{ title: string; description: string }[]>("recording.setup.tips", []);
+  const loadingLabel = t("recording.setup.loading");
+  const defaultStartLabel = t("recording.setup.startSleepMode");
+
   if (compact) {
     return (
       <div className="space-y-4 -translate-y-2 sm:translate-y-0">
@@ -52,24 +37,23 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
                   <span className="absolute inset-0 animate-ping rounded-full bg-[#6da9ff] opacity-35" />
                   <span className="relative h-2 w-2 rounded-full bg-[#6da9ff]" />
                 </span>
-                Cyllene analizi hazır
+                {t("recording.setup.readyEyebrow")}
               </div>
               <h2 className="max-w-md text-balance text-3xl font-medium tracking-[-0.045em] sm:text-4xl">
-                Uyku ritmini kaydetmeye hazır mısın?
+                {t("recording.setup.compactTitle")}
               </h2>
               <p className="mt-3 max-w-md text-sm leading-6 text-white/45">
-                Telefonunu yakınına koy. Sesler cihazında analiz edilir ve ham kayıtların buluta
-                gönderilmez.
+                {t("recording.setup.compactBody")}
               </p>
 
               <div className="mt-5 flex flex-wrap gap-2">
                 <span className="flex items-center gap-1.5 rounded-full border border-[#8dbdff]/10 bg-white/[0.025] px-3 py-1.5 text-[10px] text-white/42">
                   <Mic2 className="h-3 w-3 text-[#78b7ff]" />
-                  Gerçek zamanlı analiz
+                  {t("recording.setup.realtimeAnalysis")}
                 </span>
                 <span className="flex items-center gap-1.5 rounded-full border border-[#8dbdff]/10 bg-white/[0.025] px-3 py-1.5 text-[10px] text-white/42">
                   <LockKeyhole className="h-3 w-3 text-emerald-300" />
-                  Cihazında kalır
+                  {t("recording.setup.staysOnDevice")}
                 </span>
               </div>
             </div>
@@ -81,7 +65,7 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
               className="h-14 w-full rounded-2xl bg-[linear-gradient(135deg,#8fd1ff_0%,#2d79ff_42%,#165dff_100%)] px-7 text-base font-semibold text-white shadow-[0_18px_50px_rgba(24,105,255,.38),inset_0_1px_0_rgba(255,255,255,.18)] transition duration-150 hover:brightness-110 active:scale-[0.98] sm:w-auto"
             >
               <MoonStar className="mr-1 h-4.5 w-4.5" />
-              {isLoading ? "Hazırlanıyor..." : startLabel ?? "Uyku modunu başlat"}
+              {isLoading ? loadingLabel : startLabel ?? defaultStartLabel}
             </Button>
           </div>
         </div>
@@ -97,30 +81,31 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-semibold tracking-tight">Gece kaydını başlat</h1>
-        <p className="text-muted-foreground">
-          Ses analizi telefonunuzda yapılır. Hiçbir ham ses kaydı sunucuya gönderilmez.
-        </p>
+        <h1 className="text-3xl font-semibold tracking-tight">{t("recording.setup.fullTitle")}</h1>
+        <p className="text-muted-foreground">{t("recording.setup.fullBody")}</p>
       </div>
 
       <RecordingGuidanceBanner mode="setup" />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {tips.map((tip) => (
-          <Card key={tip.title} className="glass border-white/[0.08] shadow-soft">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                  <tip.icon className="h-5 w-5 text-primary" />
+        {tips.map((tip, index) => {
+          const Icon = tipIcons[index] ?? MoonStar;
+          return (
+            <Card key={tip.title} className="glass border-white/[0.08] shadow-soft">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <CardTitle className="text-base">{tip.title}</CardTitle>
                 </div>
-                <CardTitle className="text-base">{tip.title}</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CardDescription>{tip.description}</CardDescription>
-            </CardContent>
-          </Card>
-        ))}
+              </CardHeader>
+              <CardContent>
+                <CardDescription>{tip.description}</CardDescription>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <div className="flex justify-center pt-2">
@@ -130,7 +115,7 @@ export function RecordSetup({ onStart, isLoading, startLabel, compact }: RecordS
           disabled={isLoading}
           className="h-14 w-full max-w-sm rounded-2xl bg-[linear-gradient(135deg,#8fd1ff_0%,#2d79ff_45%,#165dff_100%)] text-lg text-white shadow-[0_18px_50px_rgba(24,105,255,.35)] transition duration-150 hover:brightness-110 active:scale-[0.98] sm:w-auto sm:px-12"
         >
-          {isLoading ? "Hazırlanıyor..." : startLabel ?? "Uyku modunu başlat"}
+          {isLoading ? loadingLabel : startLabel ?? defaultStartLabel}
         </Button>
       </div>
     </div>

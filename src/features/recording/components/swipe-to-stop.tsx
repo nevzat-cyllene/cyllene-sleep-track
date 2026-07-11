@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronUp } from "lucide-react";
+import { useI18n } from "@/i18n/runtime";
 import { cn } from "@/lib/utils";
 
 interface SwipeToStopProps {
@@ -26,6 +27,7 @@ function useIsCoarsePointer() {
 }
 
 export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
+  const { t } = useI18n();
   const isCoarsePointer = useIsCoarsePointer();
   const [dragY, setDragY] = useState(0);
   const startYRef = useRef(0);
@@ -68,7 +70,7 @@ export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
             disabled && "opacity-50"
           )}
         >
-          {disabled ? "Rapor hazırlanıyor…" : "Kaydı tamamla"}
+          {disabled ? t("recording.stop.finishing") : t("recording.stop.finishRecording")}
         </button>
       </div>
     );
@@ -77,7 +79,7 @@ export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-3 pb-4">
       <p className="text-xs uppercase tracking-[0.25em] text-white/40">
-        {disabled ? "Rapor hazırlanıyor…" : "Kaydı tamamlamak için yukarı kaydır"}
+        {disabled ? t("recording.stop.finishing") : t("recording.stop.swipeToFinish")}
       </p>
       <div
         className={cn(
@@ -101,7 +103,7 @@ export function SwipeToStop({ onStop, disabled }: SwipeToStopProps) {
         >
           <ChevronUp className={cn("h-5 w-5", progress > 0.6 && "text-cyllene-cyan")} />
           <span className="text-[10px] uppercase tracking-widest">
-            {disabled ? "Analiz" : "Kaydı tamamla"}
+            {disabled ? t("common.analysis") : t("recording.stop.finishRecording")}
           </span>
         </button>
       </div>

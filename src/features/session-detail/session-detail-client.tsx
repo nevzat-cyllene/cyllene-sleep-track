@@ -20,6 +20,7 @@ import {
   getWeekSessions,
 } from "@/lib/sleep-analytics";
 import { fetchUserSessions } from "@/features/recording/sync-session";
+import { useI18n } from "@/i18n/runtime";
 import type { SleepEvent, SleepEventType, SleepNoiseSample, SleepSession } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +40,16 @@ const countKeys: Record<
 };
 
 export function SessionDetailClient({ sessionId, userId }: SessionDetailClientProps) {
+  const { t, m } = useI18n();
+  const weekdayLabels = m<string[]>("sessionDetail.weekdayLabels", [
+    "P",
+    "S",
+    "Ç",
+    "P",
+    "C",
+    "C",
+    "P",
+  ]);
   const [session, setSession] = useState<SleepSession | null>(null);
   const [events, setEvents] = useState<SleepEvent[]>([]);
   const [noiseSamples, setNoiseSamples] = useState<SleepNoiseSample[]>([]);
@@ -105,12 +116,12 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
 
     try {
       await deleteRemoteSleepEvent(event.id, event.session_id, event.event_type);
-      toast.success("Olay silindi.");
+      toast.success(t("events.deleteSuccess"));
     } catch (error) {
       setEvents(previousEvents);
       setSelectedEventId(previousSelectedEventId);
       setSession(previousSession);
-      toast.error(error instanceof Error ? error.message : "Olay silinemedi.");
+      toast.error(error instanceof Error ? error.message : t("events.deleteError"));
     } finally {
       setDeletingEventId(null);
     }
@@ -119,7 +130,7 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
   if (loading || !session) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center text-muted-foreground">
-        Yükleniyor...
+        {t("sessionDetail.loading")}
       </div>
     );
   }
@@ -136,7 +147,7 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-xl font-semibold">Gece seslerinizi dinleyin</h1>
+          <h1 className="text-xl font-semibold">{t("sessionDetail.title")}</h1>
         </div>
         <Calendar className="h-5 w-5 text-muted-foreground" />
       </div>
@@ -151,7 +162,7 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
         </div>
 
         <div className="mt-4 flex justify-center gap-2">
-          {["P", "S", "Ç", "P", "C", "C", "P"].map((label, i) => {
+          {weekdayLabels.map((label, i) => {
             const has = weekSessions[i];
             return (
               <div
@@ -173,7 +184,7 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
           <SleepScoreRing
             score={session.sleep_score ?? 0}
             size={140}
-            label="Kalite"
+            label={t("sessionDetail.quality")}
             showPercent
           />
           <div className="flex flex-col justify-center gap-4">
@@ -181,13 +192,15 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
               <p className="text-2xl font-semibold tabular-nums">
                 {formatDurationHours(session.duration_minutes)}
               </p>
-              <p className="text-sm text-muted-foreground">Yatakta geçen süre</p>
+              <p className="text-sm text-muted-foreground">{t("sessionDetail.timeInBed")}</p>
             </div>
             <div>
               <p className="text-2xl font-semibold tabular-nums">
                 {formatDurationHours(asleepMinutes)}
               </p>
-              <p className="text-sm text-muted-foreground">Tahmini uyku süresi</p>
+              <p className="text-sm text-muted-foreground">
+                {t("sessionDetail.estimatedSleep")}
+              </p>
             </div>
           </div>
         </div>
@@ -207,22 +220,24 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-card/40 p-4">
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">Tespit edilen olaylar</h2>
+        <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+          {t("sessionDetail.detectedEvents")}
+        </h2>
         <DetectedEventsList
           events={events}
           selectedEventId={selectedEventId}
           onSelectEvent={setSelectedEventId}
           deletingEventId={deletingEventId}
           onDeleteEvent={(event) => void handleDeleteEvent(event as SleepEvent)}
-          emptyMessage="Bu gece olay tespit edilmedi."
+          emptyMessage={t("sessionDetail.noEvents")}
         />
       </div>
 
       <DeleteConfirmSheet
         open={Boolean(eventToDelete)}
-        title="Bu ses olayını silmek istediğinizden emin misiniz?"
-        description="Olay listeden kaldırılacak; varsa ilişkili ses klibi de temizlenecek."
-        confirmLabel="Olayı sil"
+        title={t("events.deleteRemoteTitle")}
+        description={t("events.deleteRemoteDescription")}
+        confirmLabel={t("events.deleteConfirm")}
         isPending={Boolean(deletingEventId)}
         onOpenChange={(open) => {
           if (!open) setEventToDelete(null);

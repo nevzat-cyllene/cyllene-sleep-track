@@ -13,19 +13,13 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { buildTrendData, formatDurationHours, type StatsPeriod } from "@/lib/sleep-analytics";
+import { useI18n } from "@/i18n/runtime";
 import type { SleepEvent, SleepEventType, SleepSession } from "@/types";
 
 interface StatisticsClientProps {
   sessions: SleepSession[];
   events: SleepEvent[];
 }
-
-const EVENT_LABELS: Record<SleepEventType, string> = {
-  snore: "Horlama",
-  cough: "Öksürük",
-  talk: "Konuşma",
-  noise: "Hareket / dış ses",
-};
 
 const EVENT_TONES: Record<SleepEventType, string> = {
   snore: "bg-[#79b7ff]",
@@ -43,14 +37,8 @@ function average(values: number[]) {
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
 }
 
-function formatEventTime(value: string) {
-  return new Intl.DateTimeFormat("tr-TR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
-}
-
 export function StatisticsClient({ sessions, events }: StatisticsClientProps) {
+  const { t } = useI18n();
   const [period, setPeriod] = useState<StatsPeriod>("months");
   const trend = useMemo(() => buildTrendData(sessions, period), [sessions, period]);
 
@@ -91,16 +79,14 @@ export function StatisticsClient({ sessions, events }: StatisticsClientProps) {
         <div>
           <p className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.22em] text-[#78b7ff]">
             <Sparkles className="h-3.5 w-3.5" />
-            Uyku içgörüleri
+            {t("statistics.eyebrow")}
           </p>
-          <h1 className="text-4xl font-medium tracking-[-0.05em]">Ritmini keşfet.</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Uyku kalitesi, ses izi ve düzenliliğinin gerçek kayıtlarından oluşan özeti.
-          </p>
+          <h1 className="text-4xl font-medium tracking-[-0.05em]">{t("statistics.title")}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("statistics.body")}</p>
         </div>
         <div className="flex w-fit items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.025] px-3 py-2 text-[10px] text-white/35">
           <CalendarRange className="h-3.5 w-3.5 text-[#78b7ff]" />
-          {sessions.length} gece analiz edildi
+          {t("statistics.nightsAnalyzed", { count: sessions.length })}
         </div>
       </div>
 
@@ -113,29 +99,29 @@ export function StatisticsClient({ sessions, events }: StatisticsClientProps) {
         <Tabs value={period} onValueChange={(value) => setPeriod(value as StatsPeriod)}>
           <div className="flex flex-col gap-4 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-medium">Trend görünümü</p>
-              <p className="mt-1 text-xs text-white/30">Dönemleri karşılaştır ve değişimi izle.</p>
+              <p className="text-sm font-medium">{t("statistics.trendView")}</p>
+              <p className="mt-1 text-xs text-white/30">{t("statistics.trendBody")}</p>
             </div>
             <TabsList className="grid h-10 w-full grid-cols-4 rounded-xl bg-[#050b19]/70 p-1 sm:w-auto sm:min-w-80">
               <TabsTrigger value="days" className="rounded-lg text-xs">
-                Gün
+                {t("statistics.periods.days")}
               </TabsTrigger>
               <TabsTrigger value="weeks" className="rounded-lg text-xs">
-                Hafta
+                {t("statistics.periods.weeks")}
               </TabsTrigger>
               <TabsTrigger value="months" className="rounded-lg text-xs">
-                Ay
+                {t("statistics.periods.months")}
               </TabsTrigger>
               <TabsTrigger value="all" className="rounded-lg text-xs">
-                Tümü
+                {t("statistics.periods.all")}
               </TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value={period} className="mt-5 grid gap-4 xl:grid-cols-2">
             <TrendCard
-              title="Uyku kalitesi"
-              description="Gece skorlarının dönemsel ortalaması"
+              title={t("statistics.trendCards.quality.title")}
+              description={t("statistics.trendCards.quality.description")}
               icon={BarChart3}
               data={trend}
               dataKey="quality"
@@ -143,8 +129,8 @@ export function StatisticsClient({ sessions, events }: StatisticsClientProps) {
               color="#6da9ff"
             />
             <TrendCard
-              title="Düzenlilik"
-              description="Uyku saatlerindeki tutarlılık"
+              title={t("statistics.trendCards.regularity.title")}
+              description={t("statistics.trendCards.regularity.description")}
               icon={Activity}
               data={trend}
               dataKey="regularity"
@@ -174,6 +160,7 @@ function SleepSignatureCard({
     scoredCount: number;
   };
 }) {
+  const { t } = useI18n();
   const durationPercent = Math.min(100, Math.round((signature.avgDuration / 480) * 100));
   const scorePercent = Math.max(0, Math.min(100, signature.avgScore));
 
@@ -182,10 +169,10 @@ function SleepSignatureCard({
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-[#78b7ff]">
-            Uyku imzası
+            {t("statistics.signature.eyebrow")}
           </p>
           <h2 className="mt-2 text-2xl font-medium tracking-[-0.04em]">
-            Gerçek kayıtlarından çıkan gece profili.
+            {t("statistics.signature.title")}
           </h2>
         </div>
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#155eff]/12 text-[#9bd5ff]">
@@ -195,32 +182,48 @@ function SleepSignatureCard({
 
       <div className="mt-5 grid grid-cols-3 gap-2.5">
         <MetricPill
-          label="Skor"
-          value={signature.avgScore ? `${signature.avgScore}` : "—"}
-          detail={`${signature.scoredCount} gece`}
+          label={t("common.score")}
+          value={signature.avgScore ? `${signature.avgScore}` : t("common.emDash")}
+          detail={`${signature.scoredCount} ${t("journal.nights")}`}
         />
         <MetricPill
-          label="Süre"
-          value={signature.avgDuration ? formatDurationHours(signature.avgDuration) : "—"}
-          detail="ortalama"
+          label={t("statistics.signature.duration")}
+          value={
+            signature.avgDuration
+              ? formatDurationHours(signature.avgDuration)
+              : t("common.emDash")
+          }
+          detail={t("common.average")}
         />
         <MetricPill
-          label="Ses izi"
+          label={t("statistics.signature.soundTrace")}
           value={`${signature.eventAverage}`}
-          detail={`${signature.eventTotal} toplam`}
+          detail={`${signature.eventTotal} ${t("common.total")}`}
         />
       </div>
 
       <div className="mt-5 space-y-3 rounded-[1.35rem] border border-white/[0.06] bg-[#06142f]/70 p-4">
-        <SignatureBar label="Skor ritmi" value={scorePercent} color="from-[#1769ff] to-[#6fd2ff]" />
-        <SignatureBar label="Uyku süresi" value={durationPercent} color="from-[#5f8cff] to-[#8f7cff]" />
-        <SignatureBar label="Sakinlik" value={signature.quietScore} color="from-[#75f2d6] to-[#6da9ff]" />
+        <SignatureBar
+          label={t("statistics.signature.scoreRhythm")}
+          value={scorePercent}
+          color="from-[#1769ff] to-[#6fd2ff]"
+        />
+        <SignatureBar
+          label={t("statistics.signature.sleepDuration")}
+          value={durationPercent}
+          color="from-[#5f8cff] to-[#8f7cff]"
+        />
+        <SignatureBar
+          label={t("statistics.signature.calmness")}
+          value={signature.quietScore}
+          color="from-[#75f2d6] to-[#6da9ff]"
+        />
       </div>
 
       <p className="mt-4 text-[11px] leading-5 text-white/34">
         {sessions.length > 0
-          ? "Bu bölüm pazarlama maketi değil; senkronize edilen gece kayıtlarının özetinden hesaplanır."
-          : "İlk gece kaydından sonra bu imza otomatik oluşur."}
+          ? t("statistics.signature.realDataNote")
+          : t("statistics.signature.emptyNote")}
       </p>
     </section>
   );
@@ -233,22 +236,35 @@ function DetectedMomentsCard({
   events: SleepEvent[];
   eventCounts: Record<SleepEventType, number>;
 }) {
+  const { t } = useI18n();
   const total = Object.values(eventCounts).reduce((sum, value) => sum + value, 0);
   const recentEvents = events.slice(0, 3);
+  const eventLabels: Record<SleepEventType, string> = {
+    snore: t("statistics.eventLabels.snore"),
+    cough: t("statistics.eventLabels.cough"),
+    talk: t("statistics.eventLabels.talk"),
+    noise: t("statistics.eventLabels.noise"),
+  };
+
+  const formatEventTime = (value: string) =>
+    new Intl.DateTimeFormat(t("formatting.locale"), {
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(value));
 
   return (
     <section className="surface-panel overflow-hidden rounded-[1.8rem] p-5 sm:p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-[#78b7ff]">
-            Tespit edilen anlar
+            {t("statistics.detectedMoments.eyebrow")}
           </p>
           <h2 className="mt-2 text-2xl font-medium tracking-[-0.04em]">
-            Ses olayları analiz akışında.
+            {t("statistics.detectedMoments.title")}
           </h2>
         </div>
         <span className="rounded-full border border-white/[0.07] bg-white/[0.035] px-3 py-1.5 text-[10px] text-white/42">
-          {total} olay
+          {t("statistics.detectedMoments.eventCount", { count: total })}
         </span>
       </div>
 
@@ -263,14 +279,16 @@ function DetectedMomentsCard({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <p className="truncate text-sm font-medium text-white/82">
-                    {EVENT_LABELS[event.event_type]}
+                    {eventLabels[event.event_type]}
                   </p>
                   <span className="text-[10px] tabular-nums text-white/35">
                     {formatEventTime(event.occurred_at)}
                   </span>
                 </div>
                 <p className="mt-0.5 text-[11px] text-white/32">
-                  {Math.round(event.duration_ms / 1000)} sn · {Math.round(event.peak_db)} dB
+                  {Math.round(event.duration_ms / 1000)} {t("common.secondsShort")}{" "}
+                  {t("formatting.eventDurationSeparator")} {Math.round(event.peak_db)}{" "}
+                  {t("common.decibel")}
                 </p>
               </div>
             </div>
@@ -284,7 +302,7 @@ function DetectedMomentsCard({
             return (
               <div key={type}>
                 <div className="mb-1.5 flex items-center justify-between text-[11px] text-white/38">
-                  <span>{EVENT_LABELS[type]}</span>
+                  <span>{eventLabels[type]}</span>
                   <span>{count}</span>
                 </div>
                 <div className="h-2 rounded-full bg-white/[0.05]">
@@ -298,7 +316,7 @@ function DetectedMomentsCard({
           })}
           {total === 0 && (
             <div className="rounded-2xl border border-white/[0.055] bg-white/[0.025] p-4 text-sm text-white/42">
-              İlk tespit edilen olaylardan sonra burada gerçek dağılım görünecek.
+              {t("statistics.detectedMoments.emptyDistribution")}
             </div>
           )}
         </div>
@@ -308,6 +326,8 @@ function DetectedMomentsCard({
 }
 
 function PremiumAnalysisCard() {
+  const { t } = useI18n();
+
   return (
     <section className="relative overflow-hidden rounded-[1.8rem] border border-[#8dbdff]/14 bg-[linear-gradient(120deg,rgba(18,48,96,.74),rgba(7,16,35,.92))] p-5 shadow-[0_24px_90px_rgba(24,105,255,.18),inset_0_1px_0_rgba(255,255,255,.07)] sm:p-6">
       <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#6fd2ff]/14 blur-[76px]" />
@@ -315,22 +335,19 @@ function PremiumAnalysisCard() {
         <div className="max-w-xl">
           <div className="mb-3 flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.22em] text-[#9bd5ff]/72">
             <Crown className="h-3.5 w-3.5" />
-            Cyllene Premium
+            {t("statistics.premium.eyebrow")}
           </div>
           <h2 className="text-2xl font-medium tracking-[-0.04em]">
-            Daha derin içgörüler üyelik planına hazırlanıyor.
+            {t("statistics.premium.title")}
           </h2>
-          <p className="mt-2 text-sm leading-6 text-white/42">
-            Gelişmiş trend karşılaştırmaları, uzun dönem arşiv ve kişisel uyku notları premium
-            planda yer alacak. Şimdilik kayıt ve temel analiz ücretsiz kalır.
-          </p>
+          <p className="mt-2 text-sm leading-6 text-white/42">{t("statistics.premium.body")}</p>
         </div>
         <button
           type="button"
           className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.06] px-5 text-sm font-semibold text-white/78 shadow-[inset_0_1px_0_rgba(255,255,255,.08)]"
         >
           <LockKeyhole className="h-4 w-4 text-[#78b7ff]" />
-          Premium üyelik yakında
+          {t("statistics.premium.cta")}
         </button>
       </div>
     </section>
@@ -378,6 +395,8 @@ function TrendCard({
   gradientId: string;
   color: string;
 }) {
+  const { t } = useI18n();
+
   return (
     <div className="rounded-[1.35rem] border border-white/[0.065] bg-[#071126]/55 p-4 sm:p-5">
       <div className="flex items-start justify-between">
@@ -394,8 +413,8 @@ function TrendCard({
         {data.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <BarChart3 className="h-6 w-6 text-white/15" />
-            <p className="mt-3 text-sm text-muted-foreground">Henüz yeterli veri yok.</p>
-            <p className="mt-1 text-[11px] text-white/25">Birkaç gece sonra trendin burada oluşur.</p>
+            <p className="mt-3 text-sm text-muted-foreground">{t("statistics.chartEmptyTitle")}</p>
+            <p className="mt-1 text-[11px] text-white/25">{t("statistics.chartEmptyBody")}</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
