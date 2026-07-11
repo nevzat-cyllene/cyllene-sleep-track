@@ -8,6 +8,7 @@ import { AppControlMenu } from "@/components/app/app-control-menu";
 import { useRecordingUI } from "@/components/app/recording-ui-context";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n/runtime";
+import { siteConfig } from "@/lib/site-config";
 
 const titlePaths = [
   { path: "/sleep", key: "sleep" },
@@ -29,6 +30,18 @@ export function AppTopbar() {
     <header className="sticky top-0 z-30 border-b border-white/[0.055] bg-[#050a16]/72 backdrop-blur-2xl">
       <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
         <SidebarTrigger className="-ml-1 hidden rounded-xl text-white/45 hover:bg-white/[0.06] hover:text-white md:flex" />
+        <Link
+          href="/sleep"
+          className="flex shrink-0 items-center gap-2.5 rounded-xl py-1 pr-1 transition hover:opacity-90"
+          aria-label={siteConfig.shortName}
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#6da9ff]/20 bg-[#155eff]/12">
+            <MoonStar className="h-4 w-4 text-[#78b7ff]" />
+          </div>
+          <span className="hidden text-sm font-semibold tracking-[-0.02em] sm:inline">
+            {siteConfig.shortName}
+          </span>
+        </Link>
         <div className="hidden h-6 w-px bg-white/[0.06] md:block" />
         <div className="min-w-0">
           <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-[#6da9ff]/70">

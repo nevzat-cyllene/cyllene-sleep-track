@@ -17,8 +17,10 @@ import {
 } from "lucide-react";
 import { CylleneTechMark } from "@/components/brand/cyllene-tech-mark";
 import { MarketingHeader } from "@/components/marketing/marketing-header";
+import { LandingFooterLinks } from "@/components/marketing/landing-footer-links";
 import { Container } from "@/components/shell/container";
 import { Button } from "@/components/ui/button";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { useI18n } from "@/i18n/runtime";
 import { siteConfig } from "@/lib/site-config";
 
@@ -48,6 +50,7 @@ type EventSamples = {
 
 export function LandingPageClient() {
   const { t, m } = useI18n();
+  const { user, ready } = useAuthUser();
 
   const features = m<MarketingFeature[]>("marketing.features", []);
   const eventSamples = m<EventSamples>("marketing.eventSamples", {
@@ -124,22 +127,45 @@ export function LandingPageClient() {
               </p>
 
               <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row">
-                <Button
-                  size="lg"
-                  className="glow-purple h-12 rounded-full bg-[#1769ff] px-6 hover:bg-[#2d79ff] sm:h-13"
-                  render={<Link href="/signup" />}
-                >
-                  {t("marketing.hero.primaryCta")}
-                  <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-12 rounded-full border-white/10 bg-white/[0.035] px-6 backdrop-blur-xl hover:bg-white/[0.07] sm:h-13"
-                  render={<Link href="/login" />}
-                >
-                  {t("marketing.hero.secondaryCta")}
-                </Button>
+                {ready && user ? (
+                  <>
+                    <Button
+                      size="lg"
+                      className="glow-purple h-12 rounded-full bg-[#1769ff] px-6 hover:bg-[#2d79ff] sm:h-13"
+                      render={<Link href="/sleep" />}
+                    >
+                      {t("marketing.hero.loggedInCta")}
+                      <ArrowRight className="ml-1 h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="h-12 rounded-full border-white/10 bg-white/[0.035] px-6 backdrop-blur-xl hover:bg-white/[0.07] sm:h-13"
+                      render={<Link href="/journal" />}
+                    >
+                      {t("marketing.hero.journalCta")}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      size="lg"
+                      className="glow-purple h-12 rounded-full bg-[#1769ff] px-6 hover:bg-[#2d79ff] sm:h-13"
+                      render={<Link href="/signup" />}
+                    >
+                      {t("marketing.hero.primaryCta")}
+                      <ArrowRight className="ml-1 h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="h-12 rounded-full border-white/10 bg-white/[0.035] px-6 backdrop-blur-xl hover:bg-white/[0.07] sm:h-13"
+                      render={<Link href="/login" />}
+                    >
+                      {t("marketing.hero.secondaryCta")}
+                    </Button>
+                  </>
+                )}
               </div>
 
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2.5 text-xs text-muted-foreground sm:mt-5">
@@ -591,9 +617,9 @@ export function LandingPageClient() {
                 <Button
                   size="lg"
                   className="h-13 shrink-0 rounded-full bg-white px-6 text-[#07122b] hover:bg-[#dceaff]"
-                  render={<Link href="/signup" />}
+                  render={<Link href={user ? "/sleep" : "/signup"} />}
                 >
-                  {t("marketing.closing.primaryCta")}
+                  {user ? t("marketing.hero.loggedInCta") : t("marketing.closing.primaryCta")}
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
@@ -611,12 +637,7 @@ export function LandingPageClient() {
               <span className="text-white/20">© {new Date().getFullYear()}</span>
             </div>
             <div className="flex items-center gap-5">
-              <Link className="transition hover:text-foreground" href="/login">
-                {t("marketing.footer.login")}
-              </Link>
-              <Link className="transition hover:text-foreground" href="/signup">
-                {t("marketing.footer.createAccount")}
-              </Link>
+              <LandingFooterLinks />
             </div>
           </div>
           <CylleneTechMark className="sm:items-start sm:text-left" size="sm" />
