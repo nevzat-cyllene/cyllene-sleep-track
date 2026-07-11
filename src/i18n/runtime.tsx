@@ -34,9 +34,10 @@ function localeOverlay(locale: Locale): unknown {
     return {
       ...chromeMessages.ku,
       ...kuAppMessages,
-      // Keep nested chrome navigation from chromeMessages
+      // Keep nested chrome navigation / control strings from chromeMessages
       navigation: chromeMessages.ku.navigation,
       appControl: chromeMessages.ku.appControl,
+      nightPicker: chromeMessages.ku.nightPicker,
     };
   }
   return chromeMessages[locale];

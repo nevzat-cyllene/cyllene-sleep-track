@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { DeleteConfirmSheet } from "@/components/ui/delete-confirm-sheet";
+import { NightPickerSheet } from "@/components/app/night-picker-sheet";
 import { SleepScoreRing } from "@/features/dashboard/components/sleep-score-ring";
 import { DetectedEventsList } from "@/features/dashboard/components/detected-events-list";
 import { NightSoundsChart } from "./components/night-sounds-chart";
@@ -13,13 +15,13 @@ import {
   fetchSessionById,
   fetchSessionEvents,
   fetchSessionNoiseSamples,
+  fetchUserSessions,
 } from "@/features/recording/sync-session";
 import {
   formatDurationHours,
   formatWeekdayRange,
   getWeekSessions,
 } from "@/lib/sleep-analytics";
-import { fetchUserSessions } from "@/features/recording/sync-session";
 import { useI18n } from "@/i18n/runtime";
 import type { SleepEvent, SleepEventType, SleepNoiseSample, SleepSession } from "@/types";
 import { cn } from "@/lib/utils";
@@ -40,6 +42,7 @@ const countKeys: Record<
 };
 
 export function SessionDetailClient({ sessionId, userId }: SessionDetailClientProps) {
+  const router = useRouter();
   const { t, m } = useI18n();
   const weekdayLabels = m<string[]>("sessionDetail.weekdayLabels", [
     "P",
@@ -53,6 +56,7 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
   const [session, setSession] = useState<SleepSession | null>(null);
   const [events, setEvents] = useState<SleepEvent[]>([]);
   const [noiseSamples, setNoiseSamples] = useState<SleepNoiseSample[]>([]);
+  const [allSessions, setAllSessions] = useState<SleepSession[]>([]);
   const [weekSessions, setWeekSessions] = useState<(SleepSession | null)[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState(
@@ -61,6 +65,7 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
   const [loading, setLoading] = useState(true);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
   const [eventToDelete, setEventToDelete] = useState<SleepEvent | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const toggleFilter = (type: string) => {
     setActiveFilters((prev) => {
@@ -75,6 +80,7 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
   };
 
   useEffect(() => {
+    setLoading(true);
     void Promise.all([
       fetchSessionById(sessionId),
       fetchSessionEvents(sessionId),
@@ -85,11 +91,17 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
         setSession(s);
         setEvents(ev);
         setNoiseSamples(noise);
+        setAllSessions(all);
         setWeekSessions(getWeekSessions(all, s.started_at));
         if (ev[0]) setSelectedEventId(ev[0].id);
       })
       .finally(() => setLoading(false));
   }, [sessionId, userId]);
+
+  const goToSession = (next: SleepSession) => {
+    if (next.id === sessionId) return;
+    router.push(`/journal/${next.id}`);
+  };
 
   const handleDeleteEvent = (event: SleepEvent) => {
     setEventToDelete(event);
@@ -149,7 +161,14 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
         <div className="flex-1">
           <h1 className="text-xl font-semibold">{t("sessionDetail.title")}</h1>
         </div>
-        <Calendar className="h-5 w-5 text-muted-foreground" />
+        <button
+          type="button"
+          onClick={() => setCalendarOpen(true)}
+          aria-label={t("nightPicker.title")}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-muted-foreground transition hover:border-[#78b7ff]/25 hover:text-[#9bd5ff]"
+        >
+          <Calendar className="h-5 w-5" />
+        </button>
       </div>
 
       <div className="rounded-3xl border border-white/10 bg-[#0A1621]/90 p-5 shadow-soft">
@@ -163,19 +182,36 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
 
         <div className="mt-4 flex justify-center gap-2">
           {weekdayLabels.map((label, i) => {
-            const has = weekSessions[i];
+            const daySession = weekSessions[i];
+            const active = daySession?.id === session.id;
+            const className = cn(
+              "flex h-9 w-9 items-center justify-center rounded-full border text-xs transition",
+              active
+                ? "border-[#78b7ff]/70 bg-[#155eff]/25 text-[#b7dcff]"
+                : daySession
+                  ? "border-orange-400/60 text-orange-300 hover:bg-orange-400/10"
+                  : "border-white/10 text-white/30"
+            );
+
+            if (!daySession) {
+              return (
+                <span key={i} className={className} aria-disabled>
+                  {label}
+                </span>
+              );
+            }
+
             return (
-              <div
+              <button
                 key={i}
-                className={cn(
-                  "flex h-9 w-9 items-center justify-center rounded-full border text-xs",
-                  has
-                    ? "border-orange-400/60 text-orange-300"
-                    : "border-white/10 text-white/30"
-                )}
+                type="button"
+                onClick={() => goToSession(daySession)}
+                aria-current={active ? "true" : undefined}
+                aria-label={label}
+                className={className}
               >
                 {label}
-              </div>
+              </button>
             );
           })}
         </div>
@@ -205,7 +241,6 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
           </div>
         </div>
 
-        {/* Night charts are desktop-only for now — mobile SVG/stage cards still render broken. */}
         <div className="mt-6 hidden md:block">
           <NightSoundsChart
             session={session}
@@ -232,6 +267,14 @@ export function SessionDetailClient({ sessionId, userId }: SessionDetailClientPr
           emptyMessage={t("sessionDetail.noEvents")}
         />
       </div>
+
+      <NightPickerSheet
+        open={calendarOpen}
+        sessions={allSessions}
+        activeSessionId={session.id}
+        onOpenChange={setCalendarOpen}
+        onSelectSession={goToSession}
+      />
 
       <DeleteConfirmSheet
         open={Boolean(eventToDelete)}
