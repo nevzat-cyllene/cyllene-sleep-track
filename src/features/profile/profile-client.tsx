@@ -33,7 +33,7 @@ export function ProfileClient({ profile, email }: ProfileClientProps) {
   };
 
   return (
-    <div className="space-y-6 pb-4">
+    <div className="space-y-6 pb-[calc(8rem+env(safe-area-inset-bottom))] md:pb-4">
       <div>
         <h1 className="text-2xl font-semibold">Profil</h1>
         <p className="text-sm text-muted-foreground">Hesap ve uygulama ayarları</p>
@@ -88,6 +88,9 @@ export function ProfileClient({ profile, email }: ProfileClientProps) {
           </p>
         </CardContent>
       </Card>
+
+      {/* Extra spacer keeps logout fully under the mobile nav until the user scrolls. */}
+      <div className="h-[4.5rem] md:hidden" aria-hidden="true" />
 
       <Button variant="outline" className="w-full" onClick={() => void signOut()}>
         <LogOut className="mr-2 h-4 w-4" />
