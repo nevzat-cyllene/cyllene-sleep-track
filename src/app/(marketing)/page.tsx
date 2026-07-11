@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import {
   ArrowRight,
@@ -19,7 +17,6 @@ import { CylleneTechMark } from "@/components/brand/cyllene-tech-mark";
 import { MarketingHeader } from "@/components/marketing/marketing-header";
 import { Container } from "@/components/shell/container";
 import { Button } from "@/components/ui/button";
-import { useI18n } from "@/i18n/runtime";
 import { siteConfig } from "@/lib/site-config";
 
 const features = [
@@ -66,55 +63,6 @@ const acousticEvents = [
 ] as const;
 
 export default function LandingPage() {
-  const { t, m } = useI18n();
-  const heroTitleLines = m<readonly string[]>("marketing.hero.titleLines", [
-    "Bedeninizin gece",
-    "çalışmasını",
-    "görünür",
-    "kılın.",
-  ]);
-  const localizedFeatures = m<ReadonlyArray<{ title: string; description: string }>>(
-    "marketing.features",
-    features
-  ).map((feature, index) => ({
-    ...feature,
-    icon: features[index]?.icon ?? AudioWaveform,
-    number: features[index]?.number ?? String(index + 1).padStart(2, "0"),
-  }));
-  const localizedSleepMetrics = [
-    {
-      ...sleepMetrics[0],
-      label: t("marketing.reportPreview.sleepScore"),
-      meta: "+%8 sakinlik",
-    },
-    {
-      ...sleepMetrics[1],
-      label: t("marketing.reportPreview.totalSleep"),
-    },
-    {
-      ...sleepMetrics[2],
-      label: t("marketing.reportPreview.soundTrace"),
-      meta: t("marketing.reportPreview.markedMoment"),
-    },
-  ] as const;
-  const localizedAcousticEvents = [
-    {
-      ...acousticEvents[0],
-      title: t("marketing.eventSamples.snoreCluster.title"),
-      meta: t("marketing.eventSamples.snoreCluster.meta"),
-    },
-    {
-      ...acousticEvents[1],
-      title: t("marketing.eventSamples.coughSeries.title"),
-      meta: t("marketing.eventSamples.coughSeries.meta"),
-    },
-    {
-      ...acousticEvents[2],
-      title: t("marketing.eventSamples.suddenNoise.title"),
-      meta: t("marketing.eventSamples.suddenNoise.meta"),
-    },
-  ] as const;
-
   return (
     <div className="min-h-screen overflow-x-hidden">
       <MarketingHeader />
@@ -134,22 +82,20 @@ export default function LandingPage() {
                   <span className="absolute inset-0 animate-ping rounded-full bg-[#6da9ff] opacity-60" />
                   <span className="relative h-2 w-2 rounded-full bg-[#6da9ff]" />
                 </span>
-                {t("marketing.hero.eyebrow")}
+                Sleep intelligence · cihaz içi analiz
               </div>
 
               <h1 className="text-balance text-[clamp(2.45rem,11vw,5.45rem)] font-medium leading-[0.92] tracking-[-0.065em] sm:text-[clamp(2.75rem,6.4vw,5.45rem)] sm:leading-[0.9]">
-                {heroTitleLines.map((line, index) => (
-                  <span
-                    key={`${line}-${index}`}
-                    className={index >= 2 ? "block text-gradient" : "block"}
-                  >
-                    {line}
-                  </span>
-                ))}
+                <span className="block">Bedeninizin gece</span>
+                <span className="block">çalışmasını</span>
+                <span className="block text-gradient">görünür</span>
+                <span className="block text-gradient">kılın.</span>
               </h1>
 
               <p className="mt-4 max-w-lg text-pretty text-sm leading-6 text-muted-foreground sm:mt-5 sm:text-base sm:leading-7">
-                {t("marketing.hero.body")}
+                Siz dinlenirken Cyllene çalışır. Gece boyunca oluşan horlama ve ani sesleri
+                cihazınızda gizlilikle analiz eder. Karmaşık verileri, sabah kahvenize eşlik
+                edecek bir sağlık rehberine dönüştürür.
               </p>
 
               <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row">
@@ -158,7 +104,7 @@ export default function LandingPage() {
                   className="glow-purple h-12 rounded-full bg-[#1769ff] px-6 hover:bg-[#2d79ff] sm:h-13"
                   render={<Link href="/signup" />}
                 >
-                  {t("marketing.hero.primaryCta")}
+                  Ücretsiz başla
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
                 <Button
@@ -167,23 +113,21 @@ export default function LandingPage() {
                   className="h-12 rounded-full border-white/10 bg-white/[0.035] px-6 backdrop-blur-xl hover:bg-white/[0.07] sm:h-13"
                   render={<Link href="/login" />}
                 >
-                  {t("marketing.hero.secondaryCta")}
+                  Hesabına giriş yap
                 </Button>
               </div>
 
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2.5 text-xs text-muted-foreground sm:mt-5">
-                {m<readonly string[]>("marketing.hero.assurances", [
-                  "Kredi kartı gerekmez",
-                  "Ham ses yüklenmez",
-                  "Skor ve zaman çizelgesi",
-                ]).map((item) => (
+                {["Kredi kartı gerekmez", "Ham ses yüklenmez", "Skor ve zaman çizelgesi"].map(
+                  (item) => (
                     <span key={item} className="flex items-center gap-2">
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-400/10 text-emerald-300">
                         <Check className="h-3 w-3" />
                       </span>
                       {item}
                     </span>
-                  ))}
+                  )
+                )}
               </div>
 
             </div>
@@ -200,14 +144,12 @@ export default function LandingPage() {
                       <MoonStar className="h-4.5 w-4.5" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold tracking-[-0.02em]">
-                        {t("marketing.reportPreview.title")}
-                      </p>
-                      <p className="text-xs text-white/36">{t("marketing.reportPreview.subtitle")}</p>
+                      <p className="text-sm font-semibold tracking-[-0.02em]">Sleep intelligence</p>
+                      <p className="text-xs text-white/36">Cyllene gece raporu · cihaz içi analiz</p>
                     </div>
                   </div>
                   <span className="rounded-full border border-emerald-300/15 bg-emerald-300/8 px-2.5 py-1 text-[10px] font-medium text-emerald-300">
-                    {t("marketing.reportPreview.privacyBadge")}
+                    Ham ses yüklenmez
                   </span>
                 </div>
 
@@ -215,16 +157,14 @@ export default function LandingPage() {
                   <section className="rounded-[1.55rem] border border-[#8dbdff]/12 bg-[linear-gradient(150deg,rgba(14,35,77,.72),rgba(7,17,39,.86))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.055)]">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="text-[10px] uppercase tracking-[0.22em] text-[#91c1ff]/65">
-                          {t("marketing.reportPreview.sleepScore")}
-                        </p>
+                        <p className="text-[10px] uppercase tracking-[0.22em] text-[#91c1ff]/65">Uyku skoru</p>
                         <div className="mt-2 flex items-end gap-2">
                           <span className="text-5xl font-medium leading-none tracking-[-0.08em]">86</span>
                           <span className="pb-1 text-sm text-white/38">/100</span>
                         </div>
                       </div>
                       <div className="rounded-full border border-[#8dbdff]/12 bg-[#1769ff]/10 px-3 py-1.5 text-[10px] text-[#a9d7ff]">
-                        {t("marketing.reportPreview.calmerThanPrevious")}
+                        Önceki geceye göre %8 sakin
                       </div>
                     </div>
 
@@ -275,7 +215,7 @@ export default function LandingPage() {
                   </section>
 
                   <aside className="grid gap-3">
-                    {localizedSleepMetrics.slice(1).map((metric) => (
+                    {sleepMetrics.slice(1).map((metric) => (
                       <div
                         key={metric.label}
                         className="rounded-[1.35rem] border border-white/[0.065] bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.045)]"
@@ -288,10 +228,10 @@ export default function LandingPage() {
                     <div className="rounded-[1.35rem] border border-emerald-300/12 bg-[linear-gradient(145deg,rgba(22,163,116,.105),rgba(21,94,255,.06))] p-4">
                       <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-emerald-300/72">
                         <LockKeyhole className="h-3.5 w-3.5" />
-                        {t("marketing.privacy.title")}
+                        Mahremiyet
                       </div>
                       <p className="mt-3 text-sm leading-5 text-white/62">
-                        {t("marketing.reportPreview.notAudioFile")}
+                        Ses dosyası değil, yalnızca rapor metrikleri senkronize edilir.
                       </p>
                     </div>
                   </aside>
@@ -300,18 +240,16 @@ export default function LandingPage() {
                 <div className="relative mt-3 rounded-[1.45rem] border border-white/[0.065] bg-white/[0.035] p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium">{t("marketing.reportPreview.detectedMoments")}</p>
-                      <p className="mt-0.5 text-xs text-white/34">
-                        {t("marketing.reportPreview.playableEvents")}
-                      </p>
+                      <p className="text-sm font-medium">Tespit edilen anlar</p>
+                      <p className="mt-0.5 text-xs text-white/34">Dinlenebilir olaylar ve gece zaman çizelgesi</p>
                     </div>
                     <span className="flex items-center gap-1.5 rounded-full bg-[#1769ff]/10 px-2.5 py-1 text-[10px] text-[#9bd5ff]">
                       <AudioWaveform className="h-3 w-3" />
-                      {t("marketing.reportPreview.eventCount")}
+                      14 olay
                     </span>
                   </div>
                   <div className="mt-3 grid gap-2">
-                    {localizedAcousticEvents.map((event) => (
+                    {acousticEvents.map((event) => (
                       <div
                         key={`${event.time}-${event.title}`}
                         className="flex items-center gap-3 rounded-2xl border border-white/[0.045] bg-black/10 px-3 py-2.5"
@@ -335,8 +273,8 @@ export default function LandingPage() {
                   <Sparkles className="h-4 w-4 text-[#8fc0ff]" />
                 </div>
                 <div>
-                  <p className="text-xs font-medium">{t("marketing.reportPreview.reportReady")}</p>
-                  <p className="text-[10px] text-white/35">{t("marketing.reportPreview.reportReadyMeta")}</p>
+                  <p className="text-xs font-medium">Rapor özeti hazır</p>
+                  <p className="text-[10px] text-white/35">Skor · zaman çizelgesi · olaylar</p>
                 </div>
               </div>
             </div>
@@ -354,19 +292,17 @@ export default function LandingPage() {
                       <MoonStar className="h-4.5 w-4.5" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold tracking-[-0.02em]">
-                        {t("marketing.reportPreview.nightReport")}
-                      </p>
-                      <p className="text-xs text-white/35">{t("marketing.reportPreview.sampleDateRange")}</p>
+                      <p className="text-sm font-semibold tracking-[-0.02em]">Cyllene Night Report</p>
+                      <p className="text-xs text-white/35">09 Temmuz · 00:18—07:56</p>
                     </div>
                   </div>
                   <span className="rounded-full border border-emerald-400/15 bg-emerald-400/8 px-2.5 py-1 text-[10px] font-medium text-emerald-300">
-                    {t("marketing.reportPreview.processedOnDevice")}
+                    Cihazda işlendi
                   </span>
                 </div>
 
                 <div className="relative mt-4 grid gap-2.5 sm:grid-cols-3">
-                  {localizedSleepMetrics.map((metric) => (
+                  {sleepMetrics.map((metric) => (
                     <div
                       key={metric.label}
                       className="rounded-[1.15rem] border border-white/[0.07] bg-white/[0.045] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,.055)]"
@@ -381,14 +317,12 @@ export default function LandingPage() {
                 <div className="relative mt-3 rounded-[1.55rem] border border-[#8dbdff]/12 bg-[linear-gradient(145deg,rgba(10,31,72,.82),rgba(5,14,34,.78))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.055)]">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-medium">{t("marketing.reportPreview.sleepSignature")}</p>
-                      <p className="mt-0.5 text-xs text-white/35">
-                        {t("marketing.reportPreview.signatureMeta")}
-                      </p>
+                      <p className="text-sm font-medium">Uyku imzası</p>
+                      <p className="mt-0.5 text-xs text-white/35">Sakinlik, ses izi ve evre akışı</p>
                     </div>
                     <div className="flex items-center gap-1.5 rounded-full bg-white/[0.05] px-2.5 py-1 text-[10px] text-white/45">
                       <AudioWaveform className="h-3 w-3 text-[#6da9ff]" />
-                      {t("marketing.reportPreview.liveAnalysis")}
+                      canlı analiz
                     </div>
                   </div>
 
@@ -456,14 +390,14 @@ export default function LandingPage() {
                 <div className="relative mt-3 grid gap-3 sm:grid-cols-[1fr_.9fr]">
                   <div className="rounded-[1.35rem] border border-[#8dbdff]/12 bg-white/[0.035] p-4">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium">{t("marketing.reportPreview.detectedMoments")}</p>
+                      <p className="text-sm font-medium">Tespit edilen anlar</p>
                       <span className="flex items-center gap-1 rounded-full bg-white/[0.05] px-2 py-0.5 text-[10px] text-white/38">
                         <Waves className="h-3 w-3 text-[#6da9ff]" />
-                        {t("marketing.reportPreview.eventCount")}
+                        14 olay
                       </span>
                     </div>
                     <div className="mt-3 space-y-2">
-                      {localizedAcousticEvents.map((event) => (
+                      {acousticEvents.map((event) => (
                         <div key={`${event.time}-${event.title}`} className="flex items-center gap-3 rounded-2xl bg-black/10 px-3 py-2">
                           <span className={`h-2 w-2 shrink-0 rounded-full ${event.tone} shadow-[0_0_18px_currentColor]`} />
                           <div className="min-w-0 flex-1">
@@ -482,13 +416,13 @@ export default function LandingPage() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-400/10">
                       <ShieldCheck className="h-4.5 w-4.5 text-emerald-300" />
                     </div>
-                    <p className="mt-4 text-sm font-medium">{t("marketing.reportPreview.localAudioProtection")}</p>
+                    <p className="mt-4 text-sm font-medium">Yerel ses koruması</p>
                     <p className="mt-2 text-xs leading-5 text-white/36">
-                      {t("marketing.reportPreview.localAudioProtectionBody")}
+                      Klipler cihazda kalır; hesabın yalnızca rapor ve özet metrikleri senkronize eder.
                     </p>
                     <div className="mt-4 flex items-center gap-2 text-[10px] text-emerald-300/75">
                       <LockKeyhole className="h-3 w-3" />
-                      {t("marketing.reportPreview.noRawTransfer")}
+                      Ham dosya aktarımı yok
                     </div>
                   </div>
                 </div>
@@ -499,8 +433,8 @@ export default function LandingPage() {
                   <Sparkles className="h-4 w-4 text-[#8fc0ff]" />
                 </div>
                 <div>
-                  <p className="text-xs font-medium">{t("marketing.reportPreview.morningSummaryReady")}</p>
-                  <p className="text-[10px] text-white/35">{t("marketing.reportPreview.morningSummaryMeta")}</p>
+                  <p className="text-xs font-medium">Sabah özeti hazır</p>
+                  <p className="text-[10px] text-white/35">Net skor · zaman çizelgesi · olaylar</p>
                 </div>
               </div>
             </div>
@@ -510,17 +444,15 @@ export default function LandingPage() {
             <div className="rounded-[1.55rem] border border-[#8dbdff]/14 bg-[linear-gradient(145deg,rgba(18,38,76,.82),rgba(6,15,35,.92))] p-4 shadow-[0_18px_70px_rgba(24,105,255,.16),inset_0_1px_0_rgba(255,255,255,.07)]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium">{t("marketing.reportPreview.sleepSignature")}</p>
-                  <p className="mt-0.5 text-[11px] text-white/35">
-                    {t("marketing.reportPreview.exampleReportView")}
-                  </p>
+                  <p className="text-sm font-medium">Uyku imzası</p>
+                  <p className="mt-0.5 text-[11px] text-white/35">Örnek rapor görünümü</p>
                 </div>
                 <span className="rounded-full bg-[#155eff]/14 px-2.5 py-1 text-[10px] text-[#9bd5ff]/75">
-                  {t("marketing.reportPreview.onDevice")}
+                  cihaz içi
                 </span>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-2">
-                {localizedSleepMetrics.map((metric) => (
+                {sleepMetrics.map((metric) => (
                   <div key={metric.label} className="rounded-2xl bg-white/[0.045] p-3">
                     <p className="text-[9px] uppercase tracking-[0.12em] text-white/28">
                       {metric.label}
@@ -539,19 +471,19 @@ export default function LandingPage() {
         <section className="border-y border-white/[0.055] bg-white/[0.018] py-7">
           <Container className="flex flex-wrap items-center justify-center gap-x-10 gap-y-5 text-xs text-white/35 sm:justify-between">
             <span className="text-[10px] font-medium uppercase tracking-[0.28em] text-white/22">
-              {t("marketing.privacy.title")}
+              Mahremiyet tasarımın merkezinde
             </span>
             <span className="flex items-center gap-2">
               <CloudOff className="h-4 w-4 text-[#72aaff]" />
-              {t("marketing.privacy.rawAudioStaysLocal")}
+              Ham ses buluta gitmez
             </span>
             <span className="flex items-center gap-2">
               <LockKeyhole className="h-4 w-4 text-[#72aaff]" />
-              {t("marketing.privacy.secureAccount")}
+              Güvenli hesap yapısı
             </span>
             <span className="flex items-center gap-2">
               <Mic2 className="h-4 w-4 text-[#72aaff]" />
-              {t("marketing.privacy.realtimeAnalysis")}
+              Telefonunda gerçek zamanlı analiz
             </span>
           </Container>
         </section>
@@ -561,19 +493,20 @@ export default function LandingPage() {
             <div className="mb-14 grid gap-5 lg:grid-cols-2 lg:items-end">
               <div>
                 <p className="mb-4 text-xs font-medium uppercase tracking-[0.28em] text-[#78b7ff]">
-                  {t("marketing.insight.title")}
+                  Uyku sinyalinden içgörüye
                 </p>
                 <h2 className="max-w-xl text-balance text-4xl font-medium tracking-[-0.045em] sm:text-5xl">
-                  {t("marketing.insight.subtitle")}
+                  Sabahına daha net bir uyku resmiyle başla.
                 </h2>
               </div>
               <p className="max-w-lg text-pretty leading-7 text-muted-foreground lg:justify-self-end">
-                {t("marketing.insight.body")}
+                Cyllene, gece boyunca oluşan ses sinyallerini sade bir sabah raporuna dönüştürür.
+                Karmaşa yok; yalnızca uykunu anlamana yarayan net detaylar var.
               </p>
             </div>
 
             <div className="grid gap-4 lg:grid-cols-3">
-              {localizedFeatures.map((feature) => (
+              {features.map((feature) => (
                 <article
                   key={feature.title}
                   className="surface-panel group relative overflow-hidden rounded-[1.75rem] p-6 transition duration-300 hover:-translate-y-1 hover:border-[#6da9ff]/25 sm:p-7"
@@ -601,13 +534,14 @@ export default function LandingPage() {
               <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
                 <div className="max-w-2xl">
                   <p className="mb-4 text-xs font-medium uppercase tracking-[0.28em] text-[#8fc0ff]">
-                    {t("marketing.closing.eyebrow")}
+                    Bu gece hazır
                   </p>
                   <h2 className="text-balance text-4xl font-medium tracking-[-0.05em] sm:text-5xl">
-                    {t("marketing.closing.title")}
+                    İlk sabah raporun bu gece hazır olabilir.
                   </h2>
                   <p className="mt-5 max-w-lg leading-7 text-white/48">
-                    {t("marketing.closing.body")}
+                    Ücretsiz hesabını oluştur, telefonu yakınına koy ve uykunun görünmeyen
+                    ritmini sabah net bir raporla keşfet.
                   </p>
                 </div>
                 <Button
@@ -615,7 +549,7 @@ export default function LandingPage() {
                   className="h-13 shrink-0 rounded-full bg-white px-6 text-[#07122b] hover:bg-[#dceaff]"
                   render={<Link href="/signup" />}
                 >
-                  {t("marketing.closing.primaryCta")}
+                  Ücretsiz hesabını aç
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
@@ -634,10 +568,10 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center gap-5">
               <Link className="transition hover:text-foreground" href="/login">
-                {t("auth.signupForm.login")}
+                Giriş
               </Link>
               <Link className="transition hover:text-foreground" href="/signup">
-                {t("marketing.closing.secondaryCta")}
+                Hesap oluştur
               </Link>
             </div>
           </div>
