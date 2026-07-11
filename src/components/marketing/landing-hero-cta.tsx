@@ -11,8 +11,8 @@ export function LandingHeroCta() {
   if (!ready) {
     return (
       <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="h-12 w-40 animate-pulse rounded-2xl bg-white/5" />
-        <div className="h-12 w-32 animate-pulse rounded-2xl bg-white/5" />
+        <div className="h-12 w-40 rounded-2xl bg-white/5" />
+        <div className="h-12 w-32 rounded-2xl bg-white/5" />
       </div>
     );
   }

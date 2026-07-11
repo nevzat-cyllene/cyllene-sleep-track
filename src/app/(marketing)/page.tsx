@@ -79,7 +79,6 @@ export default function LandingPage() {
             <div className="max-w-xl sm:max-w-2xl">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#6da9ff]/20 bg-[#155eff]/10 px-3.5 py-2 text-xs font-medium text-[#91c1ff] shadow-[inset_0_1px_0_rgba(255,255,255,.06)] sm:mb-5">
                 <span className="relative flex h-2 w-2">
-                  <span className="absolute inset-0 animate-ping rounded-full bg-[#6da9ff] opacity-60" />
                   <span className="relative h-2 w-2 rounded-full bg-[#6da9ff]" />
                 </span>
                 Sleep intelligence · cihaz içi analiz

@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { flushSync } from "react-dom";
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, BookOpen, MoonStar, UserRound } from "lucide-react";
@@ -23,152 +22,53 @@ export function MobileBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { isRecording } = useRecordingUI();
-  const [pendingPath, setPendingPath] = useState<string | null>(null);
 
-  const warmRoute = useCallback(
-    (href: string) => {
+  useEffect(() => {
+    tabs.forEach(({ href }) => {
       try {
         router.prefetch(href);
       } catch {
         // Prefetch can be ignored by the runtime in edge cases; navigation still works.
       }
-    },
-    [router]
-  );
-
-  useEffect(() => {
-    tabs.forEach(({ href }) => warmRoute(href));
-  }, [warmRoute]);
-
-  useEffect(() => {
-    if (!pendingPath) return;
-
-    if (isActivePath(pathname, pendingPath)) {
-      const done = window.setTimeout(() => setPendingPath(null), 80);
-      return () => window.clearTimeout(done);
-    }
-
-    const timeout = window.setTimeout(() => setPendingPath(null), 3200);
-    return () => window.clearTimeout(timeout);
-  }, [pathname, pendingPath]);
-
-  const navigate = useCallback(
-    (href: string) => {
-      warmRoute(href);
-
-      if (isActivePath(pathname, href)) {
-        setPendingPath(null);
-        return;
-      }
-
-      flushSync(() => setPendingPath(href));
-      router.push(href, { scroll: false });
-    },
-    [pathname, router, warmRoute]
-  );
+    });
+  }, [router]);
 
   if (isRecording) return null;
 
-  const visiblePath = pendingPath ?? pathname;
-  const isNavigating = Boolean(pendingPath && !isActivePath(pathname, pendingPath));
-  const pendingTab = tabs.find((tab) => tab.href === pendingPath);
-  const PendingIcon = pendingTab?.icon;
-
   return (
-    <>
-      {isNavigating && pendingTab && PendingIcon && (
-        <div className="pointer-events-none fixed inset-x-5 bottom-[calc(6.25rem+env(safe-area-inset-bottom))] z-40 md:hidden">
-          <div className="relative overflow-hidden rounded-2xl border border-[#8dbdff]/12 bg-[#061124]/78 px-4 py-3 shadow-[0_18px_54px_rgba(0,5,24,.38),inset_0_1px_0_rgba(255,255,255,.07)] backdrop-blur-2xl animate-in fade-in-0 slide-in-from-bottom-1 duration-75">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(111,210,255,.12),transparent_34%)]" />
-            <div className="relative flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#155eff]/16 text-[#8fc0ff]">
-                <PendingIcon className="h-4.5 w-4.5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-medium text-white/82">{pendingTab.label}</p>
-                <div className="mt-1 h-0.5 overflow-hidden rounded-full bg-white/[0.06]">
-                  <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,#1769ff,#6fd2ff)] animate-pulse" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+    <nav className="fixed inset-x-3 bottom-[max(.75rem,env(safe-area-inset-bottom))] z-50 overflow-hidden rounded-[1.35rem] border border-white/[0.09] bg-[#081122]/94 p-1.5 shadow-[0_16px_48px_rgba(0,4,18,.5),inset_0_1px_0_rgba(255,255,255,.06)] backdrop-blur-xl transition-[border-color,background-color,box-shadow,transform] duration-75 ease-out [transform:translateZ(0)] md:hidden">
+      <div className="mx-auto flex max-w-lg items-stretch justify-around">
+        {tabs.map(({ href, label, icon: Icon }) => {
+          const active = isActivePath(pathname, href);
 
-      <nav
-        aria-busy={isNavigating}
-        className="fixed inset-x-3 bottom-[max(.75rem,env(safe-area-inset-bottom))] z-50 overflow-hidden rounded-[1.35rem] border border-white/[0.09] bg-[#081122]/94 p-1.5 shadow-[0_16px_48px_rgba(0,4,18,.5),inset_0_1px_0_rgba(255,255,255,.06)] backdrop-blur-xl transition-[border-color,background-color,box-shadow,transform] duration-75 ease-out [transform:translateZ(0)] md:hidden"
-      >
-        <span
-          aria-hidden="true"
-          className={cn(
-            "pointer-events-none absolute inset-x-6 top-0 h-px origin-left rounded-full bg-gradient-to-r from-transparent via-[#62a4ff] to-transparent opacity-0 transition-[opacity,transform] duration-100",
-            isNavigating && "opacity-100 animate-pulse"
-          )}
-        />
-        <div className="mx-auto flex max-w-lg items-stretch justify-around">
-          {tabs.map(({ href, label, icon: Icon }) => {
-            const active = isActivePath(visiblePath, href);
-            const pending = pendingPath === href && !isActivePath(pathname, href);
-
-            return (
-              <Link
-                key={href}
-                href={href}
-                prefetch
-                scroll={false}
-                aria-current={active ? "page" : undefined}
-                onClick={(event) => {
-                  if (
-                    event.defaultPrevented ||
-                    event.button !== 0 ||
-                    event.metaKey ||
-                    event.altKey ||
-                    event.ctrlKey ||
-                    event.shiftKey
-                  ) {
-                    return;
-                  }
-
-                  event.preventDefault();
-                  navigate(href);
-                }}
-                onPointerDown={() => {
-                  warmRoute(href);
-                  if (!isActivePath(pathname, href)) {
-                    flushSync(() => setPendingPath(href));
-                  }
-                }}
-                onPointerEnter={() => warmRoute(href)}
-                onFocus={() => warmRoute(href)}
+          return (
+            <Link
+              key={href}
+              href={href}
+              prefetch
+              scroll={false}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "relative flex min-h-14 flex-1 touch-manipulation flex-col items-center justify-center gap-1 rounded-2xl text-[9px] font-medium transition-[background-color,color,transform,box-shadow] duration-75 ease-out active:scale-[0.94]",
+                active
+                  ? "bg-[#155eff]/20 text-white shadow-[0_10px_28px_rgba(21,94,255,.18),inset_0_0_0_1px_rgba(109,169,255,.1)]"
+                  : "text-white/34 hover:text-white/64"
+              )}
+            >
+              <Icon
                 className={cn(
-                  "relative flex min-h-14 flex-1 touch-manipulation flex-col items-center justify-center gap-1 rounded-2xl text-[9px] font-medium transition-[background-color,color,transform,box-shadow] duration-75 ease-out will-change-transform active:scale-[0.94]",
-                  active
-                    ? "bg-[#155eff]/20 text-white shadow-[0_10px_28px_rgba(21,94,255,.18),inset_0_0_0_1px_rgba(109,169,255,.1)]"
-                    : "text-white/34 hover:text-white/64"
+                  "h-[18px] w-[18px] transition-[color,transform,opacity] duration-75",
+                  active && "text-[#78b7ff]"
                 )}
-              >
-                <Icon
-                  className={cn(
-                    "h-[18px] w-[18px] transition-[color,transform,opacity] duration-75",
-                    pending && "scale-95 opacity-80",
-                    active && "text-[#78b7ff]"
-                  )}
-                />
-                {label}
-                {active && (
-                  <span
-                    className={cn(
-                      "absolute bottom-1 h-0.5 rounded-full bg-[#4f91ff] transition-[opacity,transform,width] duration-75",
-                      pending ? "w-7 animate-pulse" : "w-4"
-                    )}
-                  />
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-    </>
+              />
+              {label}
+              {active && (
+                <span className="absolute bottom-1 h-0.5 w-4 rounded-full bg-[#4f91ff]" />
+              )}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
