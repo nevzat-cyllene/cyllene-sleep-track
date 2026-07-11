@@ -5,8 +5,12 @@ import Image from "next/image";
 import { Download, Share, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRecordingUI } from "@/components/app/recording-ui-context";
+import { hasSeenGuestSplash } from "@/lib/guest-splash-storage";
 import { getDevicePlatform } from "@/lib/recording-device";
 import { cn } from "@/lib/utils";
+
+/** Let the lunar entrance / first screen settle before the install prompt. */
+const TOAST_DELAY_MS = 4500;
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -149,8 +153,35 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
 
   useEffect(() => {
     if (variant !== "toast" || installed || !isMobile || dismissed) return;
-    const timer = window.setTimeout(() => setToastReady(true), 1200);
-    return () => window.clearTimeout(timer);
+
+    let cancelled = false;
+    let delayTimer: number | undefined;
+    let pollTimer: number | undefined;
+
+    const showAfterDelay = () => {
+      delayTimer = window.setTimeout(() => {
+        if (!cancelled) setToastReady(true);
+      }, TOAST_DELAY_MS);
+    };
+
+    // First visit: wait until moon entrance finishes, then delay.
+    // Return visit: just wait the delay so the page can settle.
+    if (hasSeenGuestSplash()) {
+      showAfterDelay();
+    } else {
+      pollTimer = window.setInterval(() => {
+        if (!hasSeenGuestSplash()) return;
+        window.clearInterval(pollTimer);
+        pollTimer = undefined;
+        showAfterDelay();
+      }, 400);
+    }
+
+    return () => {
+      cancelled = true;
+      if (delayTimer) window.clearTimeout(delayTimer);
+      if (pollTimer) window.clearInterval(pollTimer);
+    };
   }, [variant, installed, isMobile, dismissed]);
 
   if (!isMobile || installed) return null;
