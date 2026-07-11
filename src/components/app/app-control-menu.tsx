@@ -16,10 +16,8 @@ import { cn } from "@/lib/utils";
 
 const languageOptions = [
   { code: "TR", label: "Türkçe", status: "Aktif", active: true },
-  { code: "EN", label: "English", status: "Hazırlandı", active: false },
-  { code: "DE", label: "Deutsch", status: "Yakında", active: false },
-  { code: "FR", label: "Français", status: "Yakında", active: false },
-  { code: "ES", label: "Español", status: "Yakında", active: false },
+  { code: "EN", label: "English", status: "Hazır", active: false },
+  { code: "KU", label: "Kurdî", status: "Hazır", active: false },
 ] as const;
 
 function MenuBadge({ children, active }: { children: string; active?: boolean }) {
@@ -114,7 +112,7 @@ export function AppControlMenu() {
         <div
           role="menu"
           aria-label="Cyllene kontrol"
-          className="absolute right-0 top-[calc(100%+.65rem)] z-[80] w-[min(22rem,calc(100vw-1.25rem))] origin-top-right rounded-[1.45rem] border border-[#8dbdff]/12 bg-[#071124]/96 p-2 text-white shadow-[0_24px_90px_rgba(0,5,24,.58),inset_0_1px_0_rgba(255,255,255,.07)] backdrop-blur-2xl"
+          className="absolute right-0 top-[calc(100%+.65rem)] z-[80] w-[min(22rem,calc(100vw-1.25rem))] origin-top-right rounded-[1.45rem] border border-[#8dbdff]/14 bg-[#071124] p-2 text-white shadow-[0_24px_90px_rgba(0,5,24,.72),inset_0_1px_0_rgba(255,255,255,.07)]"
         >
           <div className="relative overflow-hidden rounded-[1.1rem] border border-[#8dbdff]/10 bg-[linear-gradient(145deg,rgba(21,94,255,.13),rgba(111,210,255,.045))] p-3">
             <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-[#6fd2ff]/14 blur-3xl" />
