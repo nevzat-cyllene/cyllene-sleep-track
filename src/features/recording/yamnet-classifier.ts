@@ -275,7 +275,7 @@ function decideFromYamnetScores(mappedScores: Record<SleepEventType, number>): {
       ["cough", cough],
       ["talk", talk],
       ["noise", noise],
-    ] as const
+    ] satisfies Array<[SleepEventType, number]>
   ).sort((a, b) => b[1] - a[1])[0];
 
   if (ranked[1] > (ranked[0] === "snore" ? 0.1 : 0.13)) {
