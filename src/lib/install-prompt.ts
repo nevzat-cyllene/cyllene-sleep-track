@@ -1,9 +1,11 @@
 "use client";
 
 /**
- * Capture Chrome beforeinstallprompt early and suppress the white system UI.
- * Install sheet opens only after an explicit tap on our own İndir button.
+ * Capture Chrome beforeinstallprompt in real browsers only.
+ * In Vercel/WebView shells we do nothing — those hosts show their own white dialogs.
  */
+
+import { isEmbeddedBrowser } from "@/lib/browser-env";
 
 export interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -32,8 +34,9 @@ function adoptPrompt(event: BeforeInstallPromptEvent | null) {
 }
 
 function onBeforeInstallPrompt(event: Event) {
+  // Never fight the host WebView — let it alone / ignore install there.
+  if (isEmbeddedBrowser()) return;
   event.preventDefault();
-  event.stopImmediatePropagation?.();
   adoptPrompt(event as BeforeInstallPromptEvent);
 }
 
@@ -44,6 +47,12 @@ function onAppInstalled() {
 export function ensureInstallPromptCapture() {
   if (typeof window === "undefined" || listening) return;
   listening = true;
+
+  if (isEmbeddedBrowser()) {
+    deferredPrompt = null;
+    notify();
+    return;
+  }
 
   if (window.__cylleneBIP) deferredPrompt = window.__cylleneBIP;
 
@@ -64,6 +73,7 @@ export function subscribeInstallPrompt(
 }
 
 export function getDeferredInstallPrompt() {
+  if (typeof window !== "undefined" && isEmbeddedBrowser()) return null;
   return deferredPrompt ?? (typeof window !== "undefined" ? window.__cylleneBIP ?? null : null);
 }
 

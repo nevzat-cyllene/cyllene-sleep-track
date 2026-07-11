@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Download, Share, X } from "lucide-react";
+import { Download, ExternalLink, Share, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { hasSeenGuestSplash } from "@/lib/guest-splash-storage";
+import { getOpenInBrowserHref, isEmbeddedBrowser } from "@/lib/browser-env";
 import { getDevicePlatform } from "@/lib/recording-device";
 import {
   clearDeferredInstallPrompt,
@@ -27,6 +28,7 @@ interface InstallPWAProps {
 }
 
 const SESSION_DISMISS_KEY = "cyllene-install-invite-dismissed";
+const EMBED_DISMISS_KEY = "cyllene-open-chrome-dismissed";
 
 function isStandaloneDisplayMode() {
   if (typeof window === "undefined") return false;
@@ -44,26 +46,26 @@ function isStandaloneDisplayMode() {
 function shouldOfferInstall() {
   if (typeof window === "undefined" || typeof navigator === "undefined") return false;
   if (isStandaloneDisplayMode()) return false;
+  if (isEmbeddedBrowser()) return false;
   const platform = getDevicePlatform();
   if (platform === "ios" || platform === "android") return true;
-  // Desktop-site mode on phones still has touch + narrow width.
   const touch = navigator.maxTouchPoints > 0;
   const narrow = window.matchMedia("(max-width: 1024px)").matches;
   const coarse = window.matchMedia("(pointer: coarse)").matches;
   return touch && (narrow || coarse);
 }
 
-function wasDismissedThisSession() {
+function wasDismissed(key: string) {
   try {
-    return sessionStorage.getItem(SESSION_DISMISS_KEY) === "1";
+    return sessionStorage.getItem(key) === "1";
   } catch {
     return false;
   }
 }
 
-function markDismissedThisSession() {
+function markDismissed(key: string) {
   try {
-    sessionStorage.setItem(SESSION_DISMISS_KEY, "1");
+    sessionStorage.setItem(key, "1");
   } catch {
     // ignore
   }
@@ -83,11 +85,37 @@ function AppIcon({ className, size = 36 }: { className?: string; size?: number }
   );
 }
 
+function TopChip({
+  children,
+  onDismiss,
+}: {
+  children: React.ReactNode;
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-[400] px-3 pt-[max(0.7rem,env(safe-area-inset-top))]">
+      <div className="pointer-events-auto mx-auto flex max-w-lg items-center gap-3 overflow-hidden rounded-2xl border border-[#78b7ff]/18 bg-[#071627]/95 px-3 py-2.5 shadow-[0_18px_50px_rgba(0,8,24,.5),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-xl">
+        {children}
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white/35 transition hover:bg-white/5 hover:text-white/70"
+          aria-label="Kapat"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [offer, setOffer] = useState(false);
+  const [embedded, setEmbedded] = useState(false);
   const [platform, setPlatform] = useState<"ios" | "android" | "other">("other");
   const [dismissed, setDismissed] = useState(false);
+  const [embedDismissed, setEmbedDismissed] = useState(false);
   const [ready, setReady] = useState(false);
   const [recording, setRecording] = useState(false);
   const [portalReady, setPortalReady] = useState(false);
@@ -97,9 +125,12 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
     ensureInstallPromptCapture();
     setPortalReady(true);
     const device = getDevicePlatform();
+    const inEmbed = isEmbeddedBrowser();
+    setEmbedded(inEmbed);
     setOffer(shouldOfferInstall());
     setPlatform(device === "ios" || device === "android" ? device : "other");
-    setDismissed(wasDismissedThisSession());
+    setDismissed(wasDismissed(SESSION_DISMISS_KEY));
+    setEmbedDismissed(wasDismissed(EMBED_DISMISS_KEY));
     setDeferredPrompt(getDeferredInstallPrompt());
   }, []);
 
@@ -122,7 +153,15 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
   }, []);
 
   useEffect(() => {
-    if (variant !== "toast" || !offer || dismissed) return;
+    if (variant !== "toast") return;
+    if (recording) return;
+    // Embedded (Vercel app WebView): show "open in Chrome" after splash.
+    // Real browser: show install invite after splash.
+    if (embedded) {
+      if (embedDismissed) return;
+    } else if (!offer || dismissed) {
+      return;
+    }
 
     let cancelled = false;
     let timer: number | undefined;
@@ -130,14 +169,12 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
 
     const show = () => {
       if (cancelled || !hasSeenGuestSplash()) return;
-      // Tiny delay so splash exit finishes; do not wait on Chrome BIP.
       timer = window.setTimeout(() => {
         if (!cancelled) setReady(true);
       }, 500);
     };
 
     if (hasSeenGuestSplash()) show();
-
     const onSplashComplete = () => show();
     window.addEventListener(GUEST_SPLASH_COMPLETE_EVENT, onSplashComplete);
 
@@ -156,7 +193,7 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
       if (poll) window.clearInterval(poll);
       window.removeEventListener(GUEST_SPLASH_COMPLETE_EVENT, onSplashComplete);
     };
-  }, [variant, offer, dismissed]);
+  }, [variant, offer, dismissed, embedded, embedDismissed, recording]);
 
   const handleInstall = async () => {
     setInstallError(null);
@@ -172,11 +209,8 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
     try {
       await promptEvent.prompt();
       const { outcome } = await promptEvent.userChoice;
-      if (outcome === "accepted") {
-        setOffer(false);
-      } else {
-        setInstallError("Yükleme iptal edildi");
-      }
+      if (outcome === "accepted") setOffer(false);
+      else setInstallError("Yükleme iptal edildi");
     } catch {
       setInstallError("Yükleme başlatılamadı");
     } finally {
@@ -185,64 +219,87 @@ export function InstallPWA({ variant = "button", className }: InstallPWAProps) {
     }
   };
 
-  const handleDismiss = () => {
-    markDismissedThisSession();
-    setDismissed(true);
-    setReady(false);
-  };
-
   if (variant === "toast") {
-    if (!offer || dismissed || !ready || recording || !portalReady) return null;
+    if (!portalReady || !ready || recording) return null;
 
-    return createPortal(
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-[400] px-3 pt-[max(0.7rem,env(safe-area-inset-top))]">
-        <div className="pointer-events-auto mx-auto flex max-w-lg items-center gap-3 overflow-hidden rounded-2xl border border-[#78b7ff]/18 bg-[#071627]/95 px-3 py-2.5 shadow-[0_18px_50px_rgba(0,8,24,.5),inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-xl">
+    // In-app WebView (Vercel preview, etc.): guide to a real browser — any browser is fine.
+    if (embedded && !embedDismissed) {
+      return createPortal(
+        <TopChip
+          onDismiss={() => {
+            markDismissed(EMBED_DISMISS_KEY);
+            setEmbedDismissed(true);
+          }}
+        >
           <div className="shrink-0 overflow-hidden rounded-xl border border-[#78b7ff]/12">
             <AppIcon size={38} className="rounded-xl" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[12.5px] font-medium leading-snug text-white">
-              Cyllene Uyku Takipçisini indirmek ister misiniz?
+              Cyllene’i tarayıcıda açın
             </p>
             <p className="mt-0.5 text-[10.5px] leading-4 text-white/42">
-              {installError ??
-                (platform === "ios"
-                  ? "Paylaş → Ana Ekrana Ekle"
-                  : "İndir’e basınca yükleme başlar")}
+              Chrome, Safari, Yandex… hepsi olur
             </p>
           </div>
-          {platform === "ios" ? (
-            <div className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-[#1769ff] px-2.5 text-[11px] font-semibold text-white">
-              <Share className="h-3 w-3" />
-              İndir
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => void handleInstall()}
-              className="h-8 shrink-0 rounded-full bg-[#1769ff] px-3 text-[11px] font-semibold text-white transition active:scale-[0.97]"
-            >
-              <span className="inline-flex items-center gap-1">
-                <Download className="h-3 w-3" />
-                İndir
-              </span>
-            </button>
-          )}
+          <a
+            href={getOpenInBrowserHref()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-[#1769ff] px-3 text-[11px] font-semibold text-white"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Aç
+          </a>
+        </TopChip>,
+        document.body
+      );
+    }
+
+    if (!offer || dismissed) return null;
+
+    return createPortal(
+      <TopChip
+        onDismiss={() => {
+          markDismissed(SESSION_DISMISS_KEY);
+          setDismissed(true);
+        }}
+      >
+        <div className="shrink-0 overflow-hidden rounded-xl border border-[#78b7ff]/12">
+          <AppIcon size={38} className="rounded-xl" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[12.5px] font-medium leading-snug text-white">
+            Cyllene Uyku Takipçisini indirmek ister misiniz?
+          </p>
+          <p className="mt-0.5 text-[10.5px] leading-4 text-white/42">
+            {installError ??
+              (platform === "ios" ? "Paylaş → Ana Ekrana Ekle" : "İndir’e basınca yükleme başlar")}
+          </p>
+        </div>
+        {platform === "ios" ? (
+          <div className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-[#1769ff] px-2.5 text-[11px] font-semibold text-white">
+            <Share className="h-3 w-3" />
+            İndir
+          </div>
+        ) : (
           <button
             type="button"
-            onClick={handleDismiss}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white/35 transition hover:bg-white/5 hover:text-white/70"
-            aria-label="Kapat"
+            onClick={() => void handleInstall()}
+            className="h-8 shrink-0 rounded-full bg-[#1769ff] px-3 text-[11px] font-semibold text-white transition active:scale-[0.97]"
           >
-            <X className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-1">
+              <Download className="h-3 w-3" />
+              İndir
+            </span>
           </button>
-        </div>
-      </div>,
+        )}
+      </TopChip>,
       document.body
     );
   }
 
-  if (!offer) return null;
+  if (embedded || !offer) return null;
 
   if (variant === "banner") {
     return (
