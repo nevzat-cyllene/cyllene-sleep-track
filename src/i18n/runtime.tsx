@@ -67,6 +67,10 @@ const extraMessages = {
       iosInstructionBefore: "Safari’de",
       addToHome: "Ana Ekrana Ekle",
     },
+    recordingPermission: {
+      chip: "Mikrofon izni istenir",
+      note: "Başlatınca tarayıcı mikrofon erişimi isteyecek; lütfen izin verin.",
+    },
   },
   en: {
     brand: {
@@ -101,6 +105,10 @@ const extraMessages = {
       download: "Install",
       iosInstructionBefore: "In Safari, use",
       addToHome: "Add to Home Screen",
+    },
+    recordingPermission: {
+      chip: "Microphone permission required",
+      note: "When you start, the browser will ask for microphone access; please allow it.",
     },
   },
   ku: {
@@ -137,6 +145,10 @@ const extraMessages = {
       iosInstructionBefore: "Di Safari de",
       addToHome: "Zêde bike ser ekrana sereke",
     },
+    recordingPermission: {
+      chip: "Destûra mikrofonê tê xwestin",
+      note: "Dema dest pê bikî, gerok dê destûra mikrofonê bixwaze; ji kerema xwe destûr bide.",
+    },
   },
   ar: {
     brand: {
@@ -172,6 +184,10 @@ const extraMessages = {
       iosInstructionBefore: "في Safari استخدم",
       addToHome: "إضافة إلى الشاشة الرئيسية",
     },
+    recordingPermission: {
+      chip: "سيُطلب إذن الميكروفون",
+      note: "عند البدء سيطلب المتصفح الوصول إلى الميكروفون؛ يرجى السماح.",
+    },
   },
   fa: {
     brand: {
@@ -206,6 +222,10 @@ const extraMessages = {
       download: "نصب",
       iosInstructionBefore: "در Safari از",
       addToHome: "افزودن به صفحه اصلی",
+    },
+    recordingPermission: {
+      chip: "اجازه میکروفون لازم است",
+      note: "وقتی شروع می‌کنید، مرورگر اجازه دسترسی به میکروفون را می‌خواهد؛ لطفاً اجازه دهید.",
     },
   },
 } as const satisfies Record<Locale, MessageTree>;
@@ -466,6 +486,20 @@ function getLocaleDirection(locale: Locale) {
   return localeOptions.find((option) => option.code === locale)?.dir ?? "ltr";
 }
 
+function detectLocaleFromLanguageTag(language: string): Locale | null {
+  const normalized = language.toLowerCase();
+  if (normalized.startsWith("tr")) return "tr";
+  if (normalized.startsWith("en")) return "en";
+  if (normalized.startsWith("ku") || normalized.startsWith("ckb") || normalized.startsWith("kmr")) {
+    return "ku";
+  }
+  if (normalized.startsWith("ar")) return "ar";
+  if (normalized.startsWith("fa") || normalized.startsWith("per") || normalized.startsWith("prs")) {
+    return "fa";
+  }
+  return null;
+}
+
 function getInitialLocale(): Locale {
   if (typeof window === "undefined") return "tr";
 
@@ -476,12 +510,17 @@ function getInitialLocale(): Locale {
     // localStorage may be unavailable in strict browser modes.
   }
 
-  const language = window.navigator.language?.toLowerCase() ?? "";
-  if (language.startsWith("tr")) return "tr";
-  if (language.startsWith("ku")) return "ku";
-  if (language.startsWith("ar")) return "ar";
-  if (language.startsWith("fa") || language.startsWith("per")) return "fa";
-  return "en";
+  const preferredLanguages =
+    window.navigator.languages && window.navigator.languages.length > 0
+      ? window.navigator.languages
+      : [window.navigator.language];
+
+  for (const language of preferredLanguages) {
+    const detected = detectLocaleFromLanguageTag(language ?? "");
+    if (detected) return detected;
+  }
+
+  return "tr";
 }
 
 function getByPath(source: unknown, path: string): unknown {

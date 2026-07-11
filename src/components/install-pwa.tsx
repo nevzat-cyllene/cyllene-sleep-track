@@ -49,11 +49,7 @@ function shouldOfferInstall() {
   if (isStandaloneDisplayMode()) return false;
   if (isEmbeddedBrowser()) return false;
   const platform = getDevicePlatform();
-  if (platform === "ios" || platform === "android") return true;
-  const touch = navigator.maxTouchPoints > 0;
-  const narrow = window.matchMedia("(max-width: 1024px)").matches;
-  const coarse = window.matchMedia("(pointer: coarse)").matches;
-  return touch && (narrow || coarse);
+  return platform === "ios" || platform === "android";
 }
 
 function wasDismissed(key: string) {
