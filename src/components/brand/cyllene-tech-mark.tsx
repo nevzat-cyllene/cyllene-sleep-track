@@ -11,7 +11,7 @@ interface CylleneTechMarkProps {
 export function CylleneTechMark({
   className,
   size = "sm",
-  caption = "Cyllene Tech ürünü",
+  caption = "Cyllene Uyku Takipçisi geliştirici",
 }: CylleneTechMarkProps) {
   const width = size === "md" ? 128 : 104;
 
@@ -22,11 +22,11 @@ export function CylleneTechMark({
         className
       )}
     >
-      <p className="text-[9px] font-medium uppercase tracking-[0.22em] text-white/28">
+      <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-white/28">
         {caption}
       </p>
       <Image
-        src="/brand/cyllene-tech.png"
+        src="/brand/cyllene-tech.webp"
         alt="Cyllene Tech"
         width={width}
         height={Math.round(width * 0.43)}
