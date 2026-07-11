@@ -334,7 +334,10 @@ export const messages = {
         severe: "Şiddetli",
         apnea: "Uyku apnesi",
         restlessLegs: "Huzursuz bacak",
+        snoring: "Horlama",
+        notReported: "Bildirilmedi",
       },
+      back: "Geri",
       socialChart: {
         title: "İdeal uykunuza 3 günde yaklaşın",
       },
@@ -1099,7 +1102,10 @@ export const messages = {
         severe: "Severe",
         apnea: "Sleep apnea",
         restlessLegs: "Restless legs",
+        snoring: "Snoring",
+        notReported: "Not reported",
       },
+      back: "Back",
       socialChart: {
         title: "Move closer to your ideal sleep in 3 days",
       },

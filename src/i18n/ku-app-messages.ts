@@ -390,6 +390,75 @@ export const kuAppMessages = {
       login: "Têkeve",
     },
   },
+  onboarding: {
+    intro: {
+      duration: "30 çirke",
+      eyebrow: "Profîla xewê ya te",
+      title: "Em rapora şevê li gorî te mîheng bikin.",
+      body:
+        "Bi sê bersivên kurt Cyllene zimanê rapora yekem û pêşîniyên analîzê kişîtirtir dike.",
+      chips: ["Zimanê skorê", "Rîtma şevê", "Nîşana şiyarbûnê"],
+      cta: "Profîlê dest pê bike",
+    },
+    progressSuffix: "mîhenga profîlê",
+    mute: "Bêdeng bike",
+    unmute: "Dengê veke",
+    back: "Paş",
+    ready: {
+      eyebrow: "Profîl amade ye",
+      title: "Rapora şeva yekem dê kişîtirtir dest pê bike.",
+      body:
+        "Em niha rasterast diçin ekrana tomarê. Dengê xav dîsa li ser amûrê dimîne; tenê metrikên kurte bi hesabê te re tên hevdemkirin.",
+      loadingCta: "Qada xewê tê amadekirin...",
+      cta: "Dest bi şeva yekem bike",
+      trust: "Analîza li ser amûrê, rapora sibehê ya sade",
+    },
+    questions: {
+      introSubtitle: "Em profîla te di 30 çirkeyan de ava bikin.",
+      satisfaction: {
+        title: "Tu ji xewa xwe çiqas razî yî?",
+        very: "Pir razî me",
+        neutral: "Normal",
+        unsatisfied: "Ne razî me",
+        veryUnsatisfied: "Qet ne razî me",
+      },
+      sleepHours: {
+        title: "Bi navînî çend saetan radizê?",
+        fourFive: "4–5 saet",
+        fiveSix: "5–6 saet",
+        sixSeven: "6–7 saet",
+        sevenEight: "7–8 saet",
+        eightPlus: "8 saet an zêdetir",
+      },
+      nightWaking: {
+        title: "Tu bi şevê şiyar dibî?",
+        rarely: "Kêm / qet",
+        sometimes: "Carinan",
+        often: "Pir caran",
+        nightly: "Hema her şev",
+      },
+      ready: {
+        title: "Profîla te amade ye",
+        subtitle:
+          "Dema tomara şeva yekem dest pê bike, zimanê raporê û pêşîniyên te li gorî wê diguherin.",
+      },
+    },
+    summary: {
+      sleepSatisfaction: "Razîbûna xewê",
+      targetSleepDuration: "Demjimêra xewê ya armanc",
+      nightWaking: "Şiyarbûna şevê",
+      health: "Tenduristî",
+      unknown: "Tune / nizanim",
+      severe: "Girîn",
+      apnea: "Apneya xewê",
+      restlessLegs: "Lingên bêaram",
+      snoring: "Xerxere",
+      notReported: "Nehatiye ragihandin",
+    },
+    socialChart: {
+      title: "Di 3 rojan de nêzîkî xewa îdeal bibe",
+    },
+  },
 } as const satisfies Record<string, unknown>;
 
 export type KuAppMessages = typeof kuAppMessages;

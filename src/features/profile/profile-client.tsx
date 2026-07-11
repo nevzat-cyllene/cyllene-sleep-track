@@ -25,8 +25,8 @@ export function ProfileClient({ profile, email }: ProfileClientProps) {
 
   useEffect(() => {
     const answers = getOnboardingAnswers();
-    if (answers) setSleepProfile(formatOnboardingSummary(answers));
-  }, []);
+    if (answers) setSleepProfile(formatOnboardingSummary(answers, t));
+  }, [t]);
 
   const signOut = async () => {
     const supabase = createClient();
