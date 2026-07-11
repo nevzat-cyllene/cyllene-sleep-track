@@ -32,6 +32,27 @@ export function float32ToWav(samples: Float32Array, sampleRate: number): Blob {
   return new Blob([buffer], { type: "audio/wav" });
 }
 
+export async function decodeWavBlob(blob: Blob): Promise<Float32Array | null> {
+  try {
+    const buffer = await blob.arrayBuffer();
+    const view = new DataView(buffer);
+    if (buffer.byteLength < 44) return null;
+
+    const dataOffset = 44;
+    const sampleCount = Math.floor((buffer.byteLength - dataOffset) / 2);
+    if (sampleCount <= 0) return null;
+
+    const samples = new Float32Array(sampleCount);
+    for (let i = 0; i < sampleCount; i++) {
+      const int16 = view.getInt16(dataOffset + i * 2, true);
+      samples[i] = int16 < 0 ? int16 / 0x8000 : int16 / 0x7fff;
+    }
+    return samples;
+  } catch {
+    return null;
+  }
+}
+
 export function formatEventTime(timestamp: number): string {
   return new Intl.DateTimeFormat("tr-TR", {
     hour: "2-digit",

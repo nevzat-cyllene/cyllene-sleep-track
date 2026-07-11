@@ -8,6 +8,87 @@ export interface StagePoint {
   db: number;
 }
 
+export interface StageBlock {
+  stage: SleepStage;
+  weight: number;
+}
+
+/** Evre şeridini sabit sayıda blokta gösterir — yüzlerce ince çizgi (CD izi) oluşmaz. */
+export function aggregateStageBand(
+  stages: StagePoint[],
+  durationMinutes: number,
+  maxBlocks = 40
+): StageBlock[] {
+  if (stages.length === 0 || durationMinutes <= 0) return [];
+
+  const blockCount = Math.min(maxBlocks, Math.max(6, Math.ceil(durationMinutes / 20)));
+  const span = durationMinutes / blockCount;
+  const blocks: StageBlock[] = [];
+
+  for (let i = 0; i < blockCount; i++) {
+    const start = i * span;
+    const end = (i + 1) * span;
+    const window = stages.filter((s) => s.minute >= start && s.minute < end);
+    if (window.length === 0) continue;
+
+    const counts: Record<SleepStage, number> = { awake: 0, light: 0, deep: 0 };
+    for (const s of window) counts[s.stage]++;
+
+    const stage = (Object.entries(counts) as [SleepStage, number][]).sort(
+      (a, b) => b[1] - a[1]
+    )[0]![0];
+
+    blocks.push({ stage, weight: 1 });
+  }
+
+  return blocks;
+}
+
+export function downsampleNoiseForChart(
+  samples: { minute: number; db: number }[],
+  maxPoints = 48
+): { minute: number; db: number }[] {
+  if (samples.length <= maxPoints) return samples;
+
+  const sorted = [...samples].sort((a, b) => a.minute - b.minute);
+  const maxMinute = Math.max(...sorted.map((s) => s.minute), 1);
+  const span = maxMinute / maxPoints;
+  const result: { minute: number; db: number }[] = [];
+
+  for (let i = 0; i < maxPoints; i++) {
+    const start = i * span;
+    const end = (i + 1) * span;
+    const window = sorted.filter((s) => s.minute >= start && s.minute < end);
+    if (window.length === 0) continue;
+    result.push({
+      minute: start + span / 2,
+      db: window.reduce((sum, item) => sum + item.db, 0) / window.length,
+    });
+  }
+
+  return result;
+}
+
+export function stageBandGradient(
+  blocks: StageBlock[],
+  colors: Record<SleepStage, string>
+): string {
+  if (blocks.length === 0) return "transparent";
+
+  const total = blocks.reduce((sum, block) => sum + block.weight, 0);
+  let position = 0;
+  const stops: string[] = [];
+
+  for (const block of blocks) {
+    const width = (block.weight / total) * 100;
+    const color = colors[block.stage];
+    stops.push(`${color} ${position}%`, `${color} ${position + width}%`);
+    position += width;
+  }
+
+  return `linear-gradient(90deg, ${stops.join(", ")})`;
+}
+
 export function estimateSleepStages(
   session: SleepSession,
   noiseSamples: SleepNoiseSample[]
@@ -41,6 +122,13 @@ export function formatWeekdayRange(startedAt: string, endedAt: string | null): s
   const month = dayFmt.format(start).split(" ")[1] ?? "";
   if (startDay === endDay) return `${weekday} ${startDay} ${month}`;
   return `${weekday} ${startDay}–${endDay} ${month}`;
+}
+
+export function formatSessionTimeRange(startedAt: string, endedAt: string | null): string {
+  const start = new Date(startedAt);
+  const end = endedAt ? new Date(endedAt) : start;
+  const fmt = new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-digit" });
+  return `${fmt.format(start)} – ${fmt.format(end)}`;
 }
 
 export type StatsPeriod = "days" | "weeks" | "months" | "all";

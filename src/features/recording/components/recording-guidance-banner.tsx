@@ -49,6 +49,10 @@ export function RecordingGuidanceBanner({
       ? getPreRecordingGuidance(platform, pwa)
       : getRecordingGuidance(platform, wakeLockStatus, pwa);
 
+  if (!guidance || (mode === "setup" && guidance.status === "ok")) {
+    return null;
+  }
+
   const styles = statusStyles[guidance.status];
   const Icon = styles.icon;
 
