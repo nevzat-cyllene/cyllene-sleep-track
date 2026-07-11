@@ -1,4 +1,11 @@
 import type { LocalSleepEvent, LocalSleepSession, SleepEventType } from "@/types";
+import {
+  formatKuDate,
+  formatKuDayMonth,
+  formatKuMonthYear,
+  isKuDateLocale,
+  resolveIntlLocale,
+} from "@/lib/locale-dates";
 
 export function calculateSleepScore(session: LocalSleepSession): number {
   const durationHours =
@@ -53,7 +60,7 @@ export function formatElapsedClock(ms: number): string {
 
 export function formatTime(date: Date | number | string, locale = "tr-TR"): string {
   const d = typeof date === "string" ? new Date(date) : typeof date === "number" ? new Date(date) : date;
-  return new Intl.DateTimeFormat(locale, {
+  return new Intl.DateTimeFormat(resolveIntlLocale(locale), {
     hour: "2-digit",
     minute: "2-digit",
   }).format(d);
@@ -88,11 +95,32 @@ export function formatElapsedParts(ms: number): { hours: string; minutes: string
 }
 
 export function formatDate(date: Date | string, locale = "tr-TR"): string {
-  return new Intl.DateTimeFormat(locale, {
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (isKuDateLocale(locale)) return formatKuDate(d, "short");
+  return new Intl.DateTimeFormat(resolveIntlLocale(locale), {
     day: "numeric",
     month: "short",
     year: "numeric",
-  }).format(typeof date === "string" ? new Date(date) : date);
+  }).format(d);
+}
+
+/** Month + year heading (journal groups, etc.). */
+export function formatMonthYear(date: Date | string, locale = "tr-TR"): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (isKuDateLocale(locale)) return formatKuMonthYear(d);
+  return new Intl.DateTimeFormat(resolveIntlLocale(locale), {
+    month: "long",
+    year: "numeric",
+  }).format(d);
+}
+
+export function formatDayMonth(date: Date | string, locale = "tr-TR"): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (isKuDateLocale(locale)) return formatKuDayMonth(d);
+  return new Intl.DateTimeFormat(resolveIntlLocale(locale), {
+    day: "numeric",
+    month: "short",
+  }).format(d);
 }
 
 export function dbToPercent(db: number): number {

@@ -6,12 +6,14 @@ import {
   Check,
   History,
   Languages,
+  Scale,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
   UserRound,
 } from "lucide-react";
 import { NightPickerSheet } from "@/components/app/night-picker-sheet";
+import { PrivacyLegalSheet } from "@/components/app/privacy-legal-sheet";
 import { createClient } from "@/lib/supabase/client";
 import { localeOptions, useI18n, type Locale } from "@/i18n/runtime";
 import type { SleepSession } from "@/types";
@@ -59,6 +61,7 @@ export function AppControlMenu() {
   const { locale, setLocale, t } = useI18n();
   const [open, setOpen] = React.useState(false);
   const [historyOpen, setHistoryOpen] = React.useState(false);
+  const [legalOpen, setLegalOpen] = React.useState(false);
   const [sessions, setSessions] = React.useState<SleepSession[]>([]);
   const [loadingSessions, setLoadingSessions] = React.useState(false);
   const userIdRef = React.useRef<string | null>(null);
@@ -156,6 +159,11 @@ export function AppControlMenu() {
     void ensureSessions(false);
   };
 
+  const openLegal = () => {
+    setOpen(false);
+    setLegalOpen(true);
+  };
+
   return (
     <>
       <div ref={rootRef} className="relative">
@@ -206,6 +214,13 @@ export function AppControlMenu() {
                 <span className="min-w-0 flex-1">
                   <span className="block">{t("appControl.history")}</span>
                   <span className="block text-[10px] text-white/35">{t("appControl.historyHint")}</span>
+                </span>
+              </ControlMenuButton>
+              <ControlMenuButton onClick={openLegal}>
+                <Scale className="h-4 w-4 text-[#8fc0ff]" />
+                <span className="min-w-0 flex-1">
+                  <span className="block">{t("appControl.legal")}</span>
+                  <span className="block text-[10px] text-white/35">{t("appControl.legalHint")}</span>
                 </span>
               </ControlMenuButton>
             </div>
@@ -277,6 +292,8 @@ export function AppControlMenu() {
           router.push(`/journal/${session.id}`);
         }}
       />
+
+      <PrivacyLegalSheet open={legalOpen} onOpenChange={setLegalOpen} />
     </>
   );
 }

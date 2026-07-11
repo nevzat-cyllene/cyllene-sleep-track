@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, BookOpen, CalendarDays, Clock3, MoonStar, Waves } from "lucide-react";
 import { toast } from "sonner";
-import { formatDate } from "@/lib/sleep-utils";
+import { formatDate, formatMonthYear } from "@/lib/sleep-utils";
 import { Button } from "@/components/ui/button";
 import { DeleteConfirmSheet } from "@/components/ui/delete-confirm-sheet";
 import { SwipeAction } from "@/components/ui/swipe-action";
@@ -24,10 +24,7 @@ interface JournalClientProps {
 function groupByMonth(sessions: SleepSession[], locale: string) {
   const groups = new Map<string, SleepSession[]>();
   for (const session of sessions) {
-    const key = new Intl.DateTimeFormat(locale, {
-      month: "long",
-      year: "numeric",
-    }).format(new Date(session.started_at));
+    const key = formatMonthYear(session.started_at, locale);
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(session);
   }

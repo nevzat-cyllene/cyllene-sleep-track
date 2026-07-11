@@ -53,8 +53,10 @@ export async function decodeWavBlob(blob: Blob): Promise<Float32Array | null> {
   }
 }
 
+import { resolveIntlLocale } from "@/lib/locale-dates";
+
 export function formatEventTime(timestamp: number, locale = "tr-TR"): string {
-  return new Intl.DateTimeFormat(locale, {
+  return new Intl.DateTimeFormat(resolveIntlLocale(locale), {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",

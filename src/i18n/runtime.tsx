@@ -38,6 +38,7 @@ function localeOverlay(locale: Locale): unknown {
       navigation: chromeMessages.ku.navigation,
       appControl: chromeMessages.ku.appControl,
       nightPicker: chromeMessages.ku.nightPicker,
+      privacyLegal: chromeMessages.ku.privacyLegal,
     };
   }
   return chromeMessages[locale];

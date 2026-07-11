@@ -1,4 +1,10 @@
 import type { SleepNoiseSample, SleepSession } from "@/types";
+import {
+  formatKuDayMonth,
+  formatKuWeekdayRange,
+  isKuDateLocale,
+  resolveIntlLocale,
+} from "@/lib/locale-dates";
 
 export type SleepStage = "awake" | "light" | "deep";
 
@@ -126,8 +132,11 @@ export function formatWeekdayRange(
 ): string {
   const start = new Date(startedAt);
   const end = endedAt ? new Date(endedAt) : start;
-  const weekday = new Intl.DateTimeFormat(locale, { weekday: "long" }).format(start);
-  const month = new Intl.DateTimeFormat(locale, { month: "long" }).format(start);
+  if (isKuDateLocale(locale)) return formatKuWeekdayRange(start, end);
+
+  const intlLocale = resolveIntlLocale(locale);
+  const weekday = new Intl.DateTimeFormat(intlLocale, { weekday: "long" }).format(start);
+  const month = new Intl.DateTimeFormat(intlLocale, { month: "long" }).format(start);
   const startDay = start.getDate();
   const endDay = end.getDate();
   const sameDay =
@@ -145,7 +154,10 @@ export function formatSessionTimeRange(
 ): string {
   const start = new Date(startedAt);
   const end = endedAt ? new Date(endedAt) : start;
-  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" });
+  const fmt = new Intl.DateTimeFormat(resolveIntlLocale(locale), {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   return `${fmt.format(start)} – ${fmt.format(end)}`;
 }
 
@@ -187,10 +199,12 @@ export function buildTrendData(
     const regularity = Math.round(Math.max(40, 100 - deviation * 12));
 
     return {
-      label: new Intl.DateTimeFormat(locale, {
-        day: "numeric",
-        month: "short",
-      }).format(new Date(session.started_at)),
+      label: isKuDateLocale(locale)
+        ? formatKuDayMonth(new Date(session.started_at))
+        : new Intl.DateTimeFormat(resolveIntlLocale(locale), {
+            day: "numeric",
+            month: "short",
+          }).format(new Date(session.started_at)),
       quality: session.sleep_score ?? 0,
       regularity,
     };
