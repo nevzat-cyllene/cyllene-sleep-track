@@ -4,9 +4,11 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useI18n } from "@/i18n/runtime";
 
 export function LandingHeroCta() {
   const { user, ready } = useAuthUser();
+  const { t } = useI18n();
 
   if (!ready) {
     return (
@@ -25,7 +27,7 @@ export function LandingHeroCta() {
           className="glow-purple rounded-2xl gap-2"
           render={<Link href="/sleep" prefetch />}
         >
-          Panele git <ArrowRight className="h-4 w-4" />
+          {t("marketing.hero.loggedInCta")} <ArrowRight className="h-4 w-4" />
         </Button>
         <Button
           size="lg"
@@ -33,7 +35,7 @@ export function LandingHeroCta() {
           className="rounded-2xl"
           render={<Link href="/journal" prefetch />}
         >
-          Uyku günlüğü
+          {t("marketing.hero.journalCta")}
         </Button>
       </div>
     );
@@ -46,7 +48,7 @@ export function LandingHeroCta() {
         className="glow-purple rounded-2xl gap-2"
         render={<Link href="/signup" prefetch />}
       >
-        Ücretsiz Başla <ArrowRight className="h-4 w-4" />
+        {t("marketing.hero.primaryCta")} <ArrowRight className="h-4 w-4" />
       </Button>
       <Button
         size="lg"
@@ -54,7 +56,7 @@ export function LandingHeroCta() {
         className="rounded-2xl"
         render={<Link href="/login" prefetch />}
       >
-        Giriş Yap
+        {t("marketing.hero.secondaryCta")}
       </Button>
     </div>
   );
