@@ -56,18 +56,98 @@ export function AppControlMenu() {
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const triggerRef = React.useRef<HTMLButtonElement | null>(null);
 
+  // #region agent log
+  React.useEffect(() => {
+    fetch("http://127.0.0.1:7668/ingest/6ebf33a3-e317-467b-8188-4ae3fc7f8fb1", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "d5fe36",
+      },
+      body: JSON.stringify({
+        sessionId: "d5fe36",
+        runId: "pre-fix",
+        hypothesisId: "C",
+        location: "app-control-menu.tsx:mount",
+        message: "AppControlMenu mounted (custom state menu, no DropdownMenu)",
+        data: {
+          hasDropdownImport: false,
+          locale,
+          usesCustomState: true,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, [locale]);
+  // #endregion
+
   React.useEffect(() => {
     if (!open) return;
+
+    // #region agent log
+    fetch("http://127.0.0.1:7668/ingest/6ebf33a3-e317-467b-8188-4ae3fc7f8fb1", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "d5fe36",
+      },
+      body: JSON.stringify({
+        sessionId: "d5fe36",
+        runId: "pre-fix",
+        hypothesisId: "B",
+        location: "app-control-menu.tsx:open-effect",
+        message: "Menu open listeners attached",
+        data: { open: true },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
 
     const closeOnPointerDown = (event: PointerEvent) => {
       const target = event.target;
       if (!(target instanceof Node)) return;
       if (rootRef.current?.contains(target)) return;
+      // #region agent log
+      fetch("http://127.0.0.1:7668/ingest/6ebf33a3-e317-467b-8188-4ae3fc7f8fb1", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "d5fe36",
+        },
+        body: JSON.stringify({
+          sessionId: "d5fe36",
+          runId: "pre-fix",
+          hypothesisId: "D",
+          location: "app-control-menu.tsx:outside-click",
+          message: "Closing menu from outside pointerdown",
+          data: { openWas: true },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       setOpen(false);
     };
 
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      // #region agent log
+      fetch("http://127.0.0.1:7668/ingest/6ebf33a3-e317-467b-8188-4ae3fc7f8fb1", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "d5fe36",
+        },
+        body: JSON.stringify({
+          sessionId: "d5fe36",
+          runId: "pre-fix",
+          hypothesisId: "D",
+          location: "app-control-menu.tsx:escape",
+          message: "Closing menu from Escape",
+          data: { key: event.key },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       setOpen(false);
       triggerRef.current?.focus();
     };
@@ -82,6 +162,24 @@ export function AppControlMenu() {
   }, [open]);
 
   const navigate = (href: string) => {
+    // #region agent log
+    fetch("http://127.0.0.1:7668/ingest/6ebf33a3-e317-467b-8188-4ae3fc7f8fb1", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "d5fe36",
+      },
+      body: JSON.stringify({
+        sessionId: "d5fe36",
+        runId: "pre-fix",
+        hypothesisId: "A",
+        location: "app-control-menu.tsx:navigate",
+        message: "Navigating via router.push",
+        data: { href },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     setOpen(false);
     router.prefetch(href);
     router.push(href);
@@ -99,7 +197,30 @@ export function AppControlMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={t("appControl.aria")}
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => {
+          setOpen((value) => {
+            const next = !value;
+            // #region agent log
+            fetch("http://127.0.0.1:7668/ingest/6ebf33a3-e317-467b-8188-4ae3fc7f8fb1", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Debug-Session-Id": "d5fe36",
+              },
+              body: JSON.stringify({
+                sessionId: "d5fe36",
+                runId: "pre-fix",
+                hypothesisId: "A",
+                location: "app-control-menu.tsx:trigger-click",
+                message: "Gear trigger clicked",
+                data: { prevOpen: value, nextOpen: next },
+                timestamp: Date.now(),
+              }),
+            }).catch(() => {});
+            // #endregion
+            return next;
+          });
+        }}
         className="group relative flex h-10 w-10 touch-manipulation items-center justify-center overflow-hidden rounded-full border border-white/[0.08] bg-white/[0.035] text-white/68 shadow-[inset_0_1px_0_rgba(255,255,255,.055)] transition duration-100 hover:border-[#78b7ff]/20 hover:bg-white/[0.07] hover:text-white active:scale-[0.96]"
       >
         <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_0%,rgba(120,183,255,.14),transparent_58%)] opacity-0 transition duration-150 group-hover:opacity-100" />
