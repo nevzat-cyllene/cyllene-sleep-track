@@ -45,7 +45,7 @@ export const kuAppMessages = {
     genericWithContext: "{{context}}: {{message}}",
   },
   wakeGreeting: {
-    morningTitle: "Sibeh baş",
+    morningTitle: "Roj baş",
     morningMessage: "Tomara xewê temam bû. Tê analîzkirin û li rojnivîskê tê zêdekirin.",
     wokeTitle: "Tu hişyar bûyî",
     wokeMessage: "Tomara xewê temam bû. Tê analîzkirin û li rojnivîskê tê zêdekirin.",
@@ -106,7 +106,7 @@ export const kuAppMessages = {
     trustBadge: "Analîza li ser amûrê",
     title: "Şev baş.",
     greetings: {
-      morning: "Sibeh baş.",
+      morning: "Roj baş.",
       afternoon: "Dem baş.",
       evening: "Êvar baş.",
       night: "Şev baş.",
