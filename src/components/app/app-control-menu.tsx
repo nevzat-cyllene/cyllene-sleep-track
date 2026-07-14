@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   Check,
@@ -64,9 +65,17 @@ export function AppControlMenu() {
   const [legalOpen, setLegalOpen] = React.useState(false);
   const [sessions, setSessions] = React.useState<SleepSession[]>([]);
   const [loadingSessions, setLoadingSessions] = React.useState(false);
+  const [menuPos, setMenuPos] = React.useState<{ top: number; right: number } | null>(null);
+  const [portalReady, setPortalReady] = React.useState(false);
   const userIdRef = React.useRef<string | null>(null);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
+  const menuRef = React.useRef<HTMLDivElement | null>(null);
   const triggerRef = React.useRef<HTMLButtonElement | null>(null);
+  const openedAtRef = React.useRef(0);
+
+  React.useEffect(() => {
+    setPortalReady(true);
+  }, []);
 
   const ensureSessions = React.useCallback(async (force = false) => {
     try {
@@ -114,18 +123,59 @@ export function AppControlMenu() {
     }
   }, [router]);
 
+  const updateMenuPosition = React.useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    setMenuPos({
+      top: Math.round(rect.bottom + 10),
+      right: Math.round(window.innerWidth - rect.right),
+    });
+  }, []);
+
+  React.useEffect(() => {
+    if (open) {
+      openedAtRef.current = Date.now();
+      updateMenuPosition();
+      void ensureSessions(false);
+    } else {
+      setMenuPos(null);
+    }
+
+    const header = document.querySelector("header.sticky");
+    if (header instanceof HTMLElement) {
+      if (open) header.setAttribute("data-control-menu-open", "true");
+      else header.removeAttribute("data-control-menu-open");
+    }
+
+    return () => {
+      header?.removeAttribute("data-control-menu-open");
+    };
+  }, [ensureSessions, open, updateMenuPosition]);
+
   React.useEffect(() => {
     if (!open) return;
-    void ensureSessions(false);
-  }, [ensureSessions, open]);
+
+    const onResize = () => updateMenuPosition();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onResize, true);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onResize, true);
+    };
+  }, [open, updateMenuPosition]);
 
   React.useEffect(() => {
     if (!open) return;
 
     const closeOnPointerDown = (event: PointerEvent) => {
+      // Ignore the same gesture that opened the menu (mobile ghost/outside race).
+      if (Date.now() - openedAtRef.current < 350) return;
+
       const target = event.target;
       if (!(target instanceof Node)) return;
       if (rootRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
       setOpen(false);
     };
 
@@ -164,30 +214,17 @@ export function AppControlMenu() {
     setLegalOpen(true);
   };
 
-  return (
-    <>
-      <div ref={rootRef} className="relative">
-        <button
-          ref={triggerRef}
-          type="button"
-          aria-haspopup="menu"
-          aria-expanded={open}
-          aria-label={t("appControl.aria")}
-          onClick={() => setOpen((value) => !value)}
-          className="group relative flex h-10 w-10 touch-manipulation items-center justify-center overflow-hidden rounded-full border border-white/[0.08] bg-white/[0.035] text-white/68 shadow-[inset_0_1px_0_rgba(255,255,255,.055)] transition duration-100 hover:border-[#78b7ff]/20 hover:bg-white/[0.07] hover:text-white active:scale-[0.96]"
-        >
-          <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_0%,rgba(120,183,255,.14),transparent_58%)] opacity-0 transition duration-150 group-hover:opacity-100" />
-          <SlidersHorizontal className="relative h-4.5 w-4.5 text-[#8fc0ff]" />
-        </button>
-
-        {open ? (
+  const menuPanel =
+    open && menuPos && portalReady
+      ? createPortal(
           <div
+            ref={menuRef}
             role="menu"
             aria-label={t("appControl.title")}
-            className="absolute right-0 top-[calc(100%+.65rem)] z-[80] w-[min(22rem,calc(100vw-1.25rem))] origin-top-right rounded-[1.45rem] border border-[#8dbdff]/14 bg-[#071124] p-2 text-white shadow-[0_24px_90px_rgba(0,5,24,.72),inset_0_1px_0_rgba(255,255,255,.07)]"
+            style={{ top: menuPos.top, right: menuPos.right }}
+            className="fixed z-[120] w-[min(22rem,calc(100vw-1.25rem))] max-h-[min(32rem,calc(100dvh-5.5rem))] origin-top-right overflow-y-auto overscroll-contain rounded-[1.45rem] border border-[#8dbdff]/14 bg-[#071124] p-2 text-white shadow-[0_24px_90px_rgba(0,5,24,.72),inset_0_1px_0_rgba(255,255,255,.07)]"
           >
             <div className="relative overflow-hidden rounded-[1.1rem] border border-[#8dbdff]/10 bg-[linear-gradient(145deg,rgba(21,94,255,.13),rgba(111,210,255,.045))] p-3">
-              <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-[#6fd2ff]/14 blur-3xl" />
               <div className="relative flex items-start gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#155eff]/16 text-[#9bd5ff]">
                   <Sparkles className="h-4.5 w-4.5" />
@@ -267,9 +304,29 @@ export function AppControlMenu() {
                 </div>
               </div>
             </div>
-          </div>
-        ) : null}
+          </div>,
+          document.body
+        )
+      : null;
+
+  return (
+    <>
+      <div ref={rootRef} className="relative">
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label={t("appControl.aria")}
+          onClick={() => setOpen((value) => !value)}
+          className="group relative flex h-10 w-10 touch-manipulation items-center justify-center overflow-hidden rounded-full border border-white/[0.08] bg-white/[0.035] text-white/68 shadow-[inset_0_1px_0_rgba(255,255,255,.055)] transition duration-100 hover:border-[#78b7ff]/20 hover:bg-white/[0.07] hover:text-white active:scale-[0.96]"
+        >
+          <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_0%,rgba(120,183,255,.14),transparent_58%)] opacity-0 transition duration-150 group-hover:opacity-100" />
+          <SlidersHorizontal className="relative h-4.5 w-4.5 text-[#8fc0ff]" />
+        </button>
       </div>
+
+      {menuPanel}
 
       <NightPickerSheet
         open={historyOpen}

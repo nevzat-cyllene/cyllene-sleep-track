@@ -27,7 +27,7 @@ export function AppTopbar() {
   const active = titlePaths.find((item) => pathname.startsWith(item.path)) ?? titlePaths[0];
 
   return (
-    <header className="sticky top-0 z-30 border-b border-white/[0.055] bg-[#050a16]/72 backdrop-blur-2xl">
+    <header className="sticky top-0 z-30 border-b border-white/[0.055] bg-[#050a16]/72 backdrop-blur-2xl data-[control-menu-open]:bg-[#050a16] data-[control-menu-open]:backdrop-blur-none">
       <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
         <SidebarTrigger className="-ml-1 hidden rounded-xl text-white/45 hover:bg-white/[0.06] hover:text-white md:flex" />
         <Link
